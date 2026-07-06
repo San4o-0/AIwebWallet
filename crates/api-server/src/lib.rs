@@ -14,9 +14,11 @@
 //! який сканує вихідний код на заборонені імена полів.
 
 pub mod ai;
+pub mod chains;
 pub mod config;
 pub mod dto;
 pub mod handlers;
+pub mod pricing;
 pub mod risk;
 pub mod routes;
 pub mod state;

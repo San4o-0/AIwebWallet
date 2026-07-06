@@ -44,27 +44,21 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
 
   initialize: async () => {
     const hasWallet = await walletCore.hasWallet();
-    // Стан сесії живе у background (service worker) — щоб не вимагати пароль
-    // на кожне відкриття попапа, поки не спрацював автолок.
+    // Стан сесії живе у background (service worker): розшифрована seed-фраза —
+    // тільки в його пам'яті, тож пароль не потрібен на кожне відкриття попапа,
+    // поки не спрацював автолок (або SW не заснув).
     const session = await sendToBackground({ type: MessageType.GetSessionState });
     if (!hasWallet) {
       set({ hasWallet, unlocked: false, screen: 'onboarding' });
       return;
     }
-    if (session.unlocked && session.address !== null) {
-      // Мок: акаунт відновлюємо з background-сесії лише як адресу.
-      // Після інтеграції WASM тут буде повторний unlock ядра з session key.
-      const account = get().account;
+    const sessionAccount = session.accounts[0];
+    if (session.unlocked && sessionAccount !== undefined) {
       set({
         hasWallet,
         unlocked: true,
         screen: 'home',
-        account:
-          account ?? {
-            index: 0,
-            name: 'Акаунт 1',
-            addresses: { evm: session.address, solana: '', bitcoin: '' },
-          },
+        account: get().account ?? sessionAccount,
       });
       return;
     }
@@ -73,13 +67,11 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
 
   unlock: async (password) => {
     try {
+      // Розшифрування vault (Argon2id + AES-GCM) відбувається у WASM-ядрі в
+      // background; сюди повертаються лише публічні акаунти.
       const accounts = await walletCore.unlock(password);
       const account = accounts[0];
       if (account === undefined) return 'Сховище порожнє.';
-      await sendToBackground({
-        type: MessageType.UnlockSession,
-        address: account.addresses.evm,
-      });
       set({ unlocked: true, account, screen: 'home' });
       return null;
     } catch (error) {
@@ -88,16 +80,13 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
   },
 
   lock: async () => {
+    // walletCore.lock() шле LockSession у background — той затирає seed-фразу.
     await walletCore.lock();
-    await sendToBackground({ type: MessageType.LockSession });
     set({ unlocked: false, screen: 'unlock' });
   },
 
   completeOnboarding: async (account) => {
-    await sendToBackground({
-      type: MessageType.UnlockSession,
-      address: account.addresses.evm,
-    });
+    // Сесію в background уже розблоковано під час створення vault.
     set({ hasWallet: true, unlocked: true, account, screen: 'home' });
   },
 }));

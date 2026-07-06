@@ -4,13 +4,18 @@
 //! (rule-based шаблони). Решта — мок із TODO.
 
 use axum::{extract::State, Json};
+use base64::Engine as _;
 use std::sync::Arc;
+use std::time::Duration;
+
+use chain_adapters::ChainId;
 
 use crate::dto::{
     BalanceChange, BroadcastRequest, BroadcastResponse, DecodeRequest, DecodedParam,
     DecodedTx, ExplainRequest, ExplainResponse, RiskReasonDto, RiskRequest, RiskResponse,
     SimulateRequest, SimulateResponse,
 };
+use crate::handlers::ApiError;
 use crate::risk::{parse_approve_calldata, RiskInput, RiskLevel, ERC20_TRANSFER_SELECTOR};
 use crate::state::AppState;
 
@@ -61,7 +66,7 @@ pub async fn decode(
             DecodedParam {
                 name: "value".into(),
                 kind: "uint256".into(),
-                value: format!("0x{}", hex::encode_32(&approve.value)),
+                value: format!("0x{}", hex::encode(approve.value)),
             },
         ];
     } else if hex.len() >= 8 && hex[..8].eq_ignore_ascii_case(ERC20_TRANSFER_SELECTOR) {
@@ -79,13 +84,6 @@ pub async fn decode(
     }
 
     Json(decoded)
-}
-
-/// Мінімальний hex-encode без зовнішнього крейта.
-mod hex {
-    pub fn encode_32(bytes: &[u8; 32]) -> String {
-        bytes.iter().map(|b| format!("{b:02x}")).collect()
-    }
 }
 
 // ---------------------------------------------------------------------------
@@ -159,16 +157,16 @@ pub async fn risk(
 }
 
 // ---------------------------------------------------------------------------
-// POST /v1/tx/explain — РЕАЛЬНА rule-based логіка + AI-заглушка (F4.1)
+// POST /v1/tx/explain — rule-based шаблони + OpenAI для нетривіальних (F4.1)
 // ---------------------------------------------------------------------------
 
 pub async fn explain(
     State(state): State<Arc<AppState>>,
     Json(req): Json<ExplainRequest>,
 ) -> Json<ExplainResponse> {
-    // TODO: для нетривіальних транзакцій викликати OpenAI (gpt-4o-mini через
-    // async-openai) з таймаутом 10 с; стандартні випадки — завжди шаблоном
-    // без API (ТЗ 4.3). Зараз AI-провайдер — заглушка, тому працює fallback.
+    // Провайдер сам вирішує (ТЗ 4.3): тривіальні транзакції — шаблоном без
+    // API; нетривіальні/high-risk — OpenAI gpt-4o-mini з таймаутом 10 с і
+    // внутрішнім fallback на rule-based. Err тут — лише «нема ключа».
     match state.ai_explainer.explain(&req).await {
         Ok(resp) => Json(resp),
         Err(_) => {
@@ -182,16 +180,94 @@ pub async fn explain(
 // POST /v1/tx/broadcast
 // ---------------------------------------------------------------------------
 
+/// Реальна трансляція в мережу через chain-adapters:
+/// eth_sendRawTransaction (EVM), sendTransaction (Solana),
+/// POST /tx mempool.space (BTC). Вхід — ТІЛЬКИ підписана транзакція
+/// (без ключів); підпис відбувається у розширенні.
+/// TODO: ретраї та відстеження статусу після трансляції.
 pub async fn broadcast(
-    State(_state): State<Arc<AppState>>,
+    State(state): State<Arc<AppState>>,
     Json(req): Json<BroadcastRequest>,
-) -> Json<BroadcastResponse> {
-    // TODO: tx-service — трансляція в мережу: eth_sendRawTransaction (Alloy),
-    // sendTransaction (Solana), mempool.space POST /tx (BTC); ретраї,
-    // відстеження статусу. Вхід — ТІЛЬКИ підписана транзакція (без ключів).
-    Json(BroadcastResponse {
-        tx_hash: "0xa1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2".into(),
-        chain: req.chain,
+) -> Result<Json<BroadcastResponse>, ApiError> {
+    let chain: ChainId = req
+        .chain
+        .parse()
+        .map_err(|_| ApiError::bad_request(format!("невідома мережа: {}", req.chain)))?;
+
+    let signed_tx = decode_signed_tx(chain, &req.signed_tx)?;
+    let adapter = state.adapter(chain);
+
+    let tx_hash = tokio::time::timeout(BROADCAST_TIMEOUT, adapter.broadcast(&signed_tx))
+        .await
+        .map_err(|_| {
+            ApiError::bad_gateway(format!(
+                "{chain}: таймаут трансляції ({} с)",
+                BROADCAST_TIMEOUT.as_secs()
+            ))
+        })??;
+
+    Ok(Json(BroadcastResponse {
+        tx_hash,
+        chain: chain.to_string(),
         status: "pending".into(),
-    })
+    }))
+}
+
+const BROADCAST_TIMEOUT: Duration = Duration::from_secs(10);
+
+/// Декодує підписану транзакцію: hex (з/без `0x`) для EVM/Bitcoin,
+/// base64 або hex для Solana.
+pub(crate) fn decode_signed_tx(chain: ChainId, signed: &str) -> Result<Vec<u8>, ApiError> {
+    let trimmed = signed.trim();
+    if trimmed.is_empty() {
+        return Err(ApiError::bad_request("порожня підписана транзакція"));
+    }
+    if let Some(hex_body) = trimmed.strip_prefix("0x").or_else(|| trimmed.strip_prefix("0X")) {
+        return hex::decode(hex_body)
+            .map_err(|e| ApiError::bad_request(format!("некоректний hex: {e}")));
+    }
+    match chain {
+        // Solana-транзакції традиційно передаються в base64.
+        ChainId::Solana => base64::engine::general_purpose::STANDARD
+            .decode(trimmed)
+            .or_else(|_| hex::decode(trimmed))
+            .map_err(|_| ApiError::bad_request("очікується base64 або hex")),
+        // EVM/Bitcoin — сирий hex без префікса.
+        _ => hex::decode(trimmed)
+            .map_err(|e| ApiError::bad_request(format!("некоректний hex: {e}"))),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn decode_signed_tx_evm_hex() {
+        assert_eq!(
+            decode_signed_tx(ChainId::Ethereum, "0x02f870").unwrap(),
+            vec![0x02, 0xf8, 0x70]
+        );
+        assert_eq!(
+            decode_signed_tx(ChainId::Bitcoin, "0200aa").unwrap(),
+            vec![0x02, 0x00, 0xaa]
+        );
+        assert!(decode_signed_tx(ChainId::Ethereum, "0xZZ").is_err());
+        assert!(decode_signed_tx(ChainId::Ethereum, "").is_err());
+    }
+
+    #[test]
+    fn decode_signed_tx_solana_base64_and_hex() {
+        // base64("hello") = aGVsbG8=
+        assert_eq!(
+            decode_signed_tx(ChainId::Solana, "aGVsbG8=").unwrap(),
+            b"hello".to_vec()
+        );
+        // hex теж приймається.
+        assert_eq!(
+            decode_signed_tx(ChainId::Solana, "0x0102").unwrap(),
+            vec![1, 2]
+        );
+        assert!(decode_signed_tx(ChainId::Solana, "!!!не-base64!!!").is_err());
+    }
 }

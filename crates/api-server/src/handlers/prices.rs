@@ -1,40 +1,43 @@
-//! GET /v1/prices — ціни (F2.5). МОК.
+//! GET /v1/prices — реальні ціни CoinGecko з кешем (F2.5).
+//!
+//! Кеш — in-memory, TTL 60 с (див. `crate::pricing`); при недоступності
+//! CoinGecko повертається застарілий кеш (fail-safe, ТЗ §1.2).
+//! TODO(redis): спільний кеш між репліками.
 
 use axum::{
     extract::{Query, State},
     Json,
 };
-use std::collections::HashMap;
 use std::sync::Arc;
 
-use crate::dto::{PriceInfo, PricesQuery, PricesResponse};
-use crate::handlers::now_secs;
+use crate::dto::{PricesQuery, PricesResponse};
+use crate::handlers::ApiError;
 use crate::state::AppState;
 
-pub async fn prices(
-    State(_state): State<Arc<AppState>>,
-    Query(q): Query<PricesQuery>,
-) -> Json<PricesResponse> {
-    // TODO: balance-service — CoinGecko /simple/price з кешем у Redis
-    // (TTL ~60 с), rate limit до CoinGecko, fallback на застарілий кеш.
-    let known: HashMap<&str, PriceInfo> = HashMap::from([
-        ("ethereum", PriceInfo { usd: 3500.00, usd_24h_change: 2.4 }),
-        ("solana", PriceInfo { usd: 170.00, usd_24h_change: -1.1 }),
-        ("bitcoin", PriceInfo { usd: 97_500.00, usd_24h_change: 0.8 }),
-        ("usd-coin", PriceInfo { usd: 1.00, usd_24h_change: 0.0 }),
-        ("matic-network", PriceInfo { usd: 0.52, usd_24h_change: -0.6 }),
-    ]);
+/// Захист від зловживання: скільки id можна запитати за раз.
+const MAX_IDS: usize = 50;
 
-    let prices = q
+pub async fn prices(
+    State(state): State<Arc<AppState>>,
+    Query(q): Query<PricesQuery>,
+) -> Result<Json<PricesResponse>, ApiError> {
+    let ids: Vec<String> = q
         .ids
         .split(',')
         .map(str::trim)
         .filter(|id| !id.is_empty())
-        .filter_map(|id| known.get(id).map(|p| (id.to_string(), p.clone())))
+        .map(str::to_string)
         .collect();
 
-    Json(PricesResponse {
-        prices,
-        updated_at: now_secs(),
-    })
+    if ids.is_empty() {
+        return Err(ApiError::bad_request("параметр ids порожній"));
+    }
+    if ids.len() > MAX_IDS {
+        return Err(ApiError::bad_request(format!(
+            "занадто багато ids (максимум {MAX_IDS})"
+        )));
+    }
+
+    let (prices, updated_at) = state.prices.get_prices(&ids).await;
+    Ok(Json(PricesResponse { prices, updated_at }))
 }

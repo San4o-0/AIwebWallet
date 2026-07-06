@@ -1,6 +1,9 @@
 node_modules/
 .wxt/
 .output/
+# Генерується `pnpm build:wasm` із crates/wallet-core (wasm-pack)
+src/wasm/pkg/
+public/wallet_core_bg.wasm
 stats.html
 stats-*.json
 .env

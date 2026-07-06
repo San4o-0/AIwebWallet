@@ -90,6 +90,9 @@ impl EvmAdapter {
 // ---------------------------------------------------------------------------
 
 /// Parse an Ethereum hex quantity (`"0x1b4"`) into `u128`.
+///
+/// Accepts zero-padded values too: `eth_call` returns full 32-byte ABI words
+/// (64 hex digits), so leading zeros are trimmed before the overflow check.
 pub(crate) fn parse_hex_quantity(s: &str) -> Result<u128, AdapterError> {
     let digits = s
         .strip_prefix("0x")
@@ -98,11 +101,15 @@ pub(crate) fn parse_hex_quantity(s: &str) -> Result<u128, AdapterError> {
     if digits.is_empty() {
         return Err(AdapterError::parse(format!("empty hex quantity: {s}")));
     }
-    if digits.len() > 32 {
+    let significant = digits.trim_start_matches('0');
+    if significant.is_empty() {
+        return Ok(0); // all zeros
+    }
+    if significant.len() > 32 {
         // Would overflow u128 (realistic balances/fees fit comfortably).
         return Err(AdapterError::parse(format!("hex quantity too large: {s}")));
     }
-    u128::from_str_radix(digits, 16)
+    u128::from_str_radix(significant, 16)
         .map_err(|e| AdapterError::parse(format!("bad hex quantity {s}: {e}")))
 }
 
@@ -332,6 +339,32 @@ mod tests {
         assert!(parse_hex_quantity("0xgg").is_err());
         // 33 hex digits > u128
         assert!(parse_hex_quantity("0x100000000000000000000000000000000").is_err());
+    }
+
+    #[test]
+    fn hex_quantity_accepts_zero_padded_abi_words() {
+        // eth_call returns full 32-byte words: leading zeros must not
+        // trigger the u128 overflow guard.
+        assert_eq!(
+            parse_hex_quantity(
+                "0x0000000000000000000000000000000000000000000000000000000002311112"
+            )
+            .unwrap(),
+            0x2311112
+        );
+        // All-zero word is a valid zero balance.
+        assert_eq!(
+            parse_hex_quantity(
+                "0x0000000000000000000000000000000000000000000000000000000000000000"
+            )
+            .unwrap(),
+            0
+        );
+        // A padded word whose significant part still overflows u128 is rejected.
+        assert!(parse_hex_quantity(
+            "0x0000000000000000000000000000000100000000000000000000000000000000"
+        )
+        .is_err());
     }
 
     #[test]

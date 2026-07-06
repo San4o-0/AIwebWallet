@@ -1,31 +1,31 @@
 /**
  * WalletCore — типізований інтерфейс крипто-ядра гаманця.
  *
- * ⚠️ УВАГА: тут МОК-імплементація для розробки UI.
- * Реальна імплементація прийде з `crates/wallet-core` (Rust), зібраного у WASM
- * через wasm-pack (артефакт кладеться в extension/wasm/), і покриє (ТЗ §3, §6):
+ * Реальна імплементація поверх Rust-ядра `crates/wallet-core`, зібраного у
+ * WASM (wasm-pack, `pnpm build:wasm` → src/wasm/pkg). Покриває (ТЗ §3, §6):
  *   - генерацію/валідацію BIP-39 seed-фрази (12/24 слова);
  *   - HD-деривацію: EVM m/44'/60'/0'/0/x, Solana m/44'/501'/x'/0',
  *     Bitcoin m/84'/0'/x'/0/0 (Native SegWit);
- *   - підписи secp256k1 / ed25519 / ECDSA(BTC);
+ *   - підписи secp256k1 (EVM) / ed25519 (Solana);
  *   - шифрування сховища: пароль → Argon2id → AES-256-GCM, zeroize у пам'яті.
- * Приватні ключі ніколи не залишають WASM-пам'ять; цей інтерфейс оперує лише
- * публічними даними та готовими підписами.
+ *
+ * Архітектура довіри:
+ *   - зашифрований vault лежить у chrome.storage.local (див. vault-storage.ts);
+ *   - розшифрована seed-фраза живе ТІЛЬКИ в пам'яті background service worker
+ *     (сесія з автолоком) — тому всі vault-операції popup делегує в background
+ *     через типізовані повідомлення (messaging.ts);
+ *   - у popup WASM використовується лише для операцій без секретів, що
+ *     персистяться: генерація/валідація мнемоніки під час онбордингу.
+ * Приватні ключі ніколи не залишають WASM-пам'ять background; цей інтерфейс
+ * оперує лише публічними даними та готовими підписами.
  */
-import { browser } from 'wxt/browser';
-
 import type { Chain } from './chains';
+import { MessageType, type PublicAccount, type VaultResult } from './messaging';
+import { sendToBackground } from './runtime';
+import { readEncryptedVault } from './vault-storage';
+import { loadWalletCoreWasm, toWasmError } from '../wasm';
 
-/** Публічне представлення акаунта — тільки адреси, жодних ключів. */
-export interface PublicAccount {
-  index: number;
-  name: string;
-  addresses: {
-    evm: string;
-    solana: string;
-    bitcoin: string;
-  };
-}
+export type { PublicAccount } from './messaging';
 
 /** Непідписана транзакція у JSON-представленні конкретної мережі. */
 export interface UnsignedTransaction {
@@ -56,117 +56,92 @@ export interface WalletCore {
 }
 
 // ---------------------------------------------------------------------------
-// Мок-імплементація (тимчасово, до інтеграції WASM)
+// Імплементація поверх WASM-ядра (popup-сторона)
 // ---------------------------------------------------------------------------
 
-const STORAGE_KEY = 'aiwallet:mock-vault';
-
-interface MockVault {
-  /** SHA-256 від пароля — ЛИШЕ ДЛЯ МОКА. У WASM-ядрі буде Argon2id + AES-GCM. */
-  passwordHash: string;
-  accounts: PublicAccount[];
+/** Розгортає VaultResult із background у значення або кидає Error для UI. */
+function unwrap<T>(result: VaultResult<T>): T {
+  if (!result.ok) throw new Error(result.error);
+  return result.value;
 }
 
-const MOCK_ACCOUNT: PublicAccount = {
-  index: 0,
-  name: 'Акаунт 1',
-  addresses: {
-    evm: '0x1F9840a85d5aF5bf1D1762F925BDADdC4201F984',
-    solana: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263',
-    bitcoin: 'bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4',
-  },
-};
-
-const MOCK_MNEMONIC_12 = [
-  'test', 'test', 'test', 'test', 'test', 'test',
-  'test', 'test', 'test', 'test', 'test', 'junk',
-];
-
-async function sha256Hex(input: string): Promise<string> {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input));
-  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('');
-}
-
-async function readVault(): Promise<MockVault | null> {
-  const stored = await browser.storage.local.get(STORAGE_KEY);
-  const raw: unknown = stored[STORAGE_KEY];
-  return typeof raw === 'string' ? (JSON.parse(raw) as MockVault) : null;
-}
-
-async function writeVault(vault: MockVault): Promise<void> {
-  await browser.storage.local.set({ [STORAGE_KEY]: JSON.stringify(vault) });
-}
-
-function randomHex(bytes: number): string {
-  const buf = crypto.getRandomValues(new Uint8Array(bytes));
-  return Array.from(buf, (b) => b.toString(16).padStart(2, '0')).join('');
-}
-
-class MockWalletCore implements WalletCore {
+class WasmWalletCore implements WalletCore {
   async hasWallet(): Promise<boolean> {
-    return (await readVault()) !== null;
+    return (await readEncryptedVault()) !== null;
   }
 
   async generateMnemonic(wordCount: 12 | 24): Promise<string[]> {
-    // Мок: реальна генерація ентропії + BIP-39 checksum — у crates/wallet-core.
-    return wordCount === 12
-      ? [...MOCK_MNEMONIC_12]
-      : [...MOCK_MNEMONIC_12, ...MOCK_MNEMONIC_12];
+    const wasm = await loadWalletCoreWasm();
+    try {
+      // Ентропія з crypto.getRandomValues (getrandom/js) + BIP-39 checksum у Rust.
+      return wasm.generateMnemonic(wordCount).split(' ');
+    } catch (error) {
+      throw toWasmError(error);
+    }
   }
 
-  async createWallet(_mnemonic: readonly string[], password: string): Promise<PublicAccount> {
-    const vault: MockVault = {
-      passwordHash: await sha256Hex(password),
-      accounts: [MOCK_ACCOUNT],
-    };
-    await writeVault(vault);
-    return MOCK_ACCOUNT;
+  async createWallet(mnemonic: readonly string[], password: string): Promise<PublicAccount> {
+    const result = await sendToBackground({
+      type: MessageType.VaultCreate,
+      mnemonic: mnemonic.join(' '),
+      password,
+      accountName: 'Акаунт 1',
+    });
+    return unwrap(result);
   }
 
   async importWallet(mnemonic: readonly string[], password: string): Promise<PublicAccount> {
     if (mnemonic.length !== 12 && mnemonic.length !== 24) {
       throw new Error('Seed-фраза має містити 12 або 24 слова.');
     }
+    // Швидка перевірка checksum локально (без Argon2id) для миттєвого фідбеку.
+    const wasm = await loadWalletCoreWasm();
+    if (!wasm.validateMnemonic(mnemonic.join(' '))) {
+      throw new Error('Невірна seed-фраза: слово поза словником BIP-39 або checksum не збігається.');
+    }
     return this.createWallet(mnemonic, password);
   }
 
   async unlock(password: string): Promise<PublicAccount[]> {
-    const vault = await readVault();
-    if (!vault) throw new Error('Гаманець не створено.');
-    if (vault.passwordHash !== (await sha256Hex(password))) {
-      throw new Error('Невірний пароль.');
-    }
-    return vault.accounts;
+    // Argon2id + AES-GCM decrypt виконується у WASM в background; seed-фраза
+    // залишається в пам'яті сесії SW і не повертається в popup.
+    const result = await sendToBackground({ type: MessageType.VaultUnlock, password });
+    return unwrap(result);
   }
 
   async lock(): Promise<void> {
-    // Мок: у WASM-ядрі тут zeroize розшифрованих ключів.
+    await sendToBackground({ type: MessageType.LockSession });
   }
 
   async deriveAccount(index: number, name: string): Promise<PublicAccount> {
-    const account: PublicAccount = {
-      ...MOCK_ACCOUNT,
+    const result = await sendToBackground({
+      type: MessageType.VaultDeriveAccount,
       index,
       name,
-      addresses: { ...MOCK_ACCOUNT.addresses, evm: `0x${randomHex(20)}` },
-    };
-    const vault = await readVault();
-    if (vault) {
-      await writeVault({ ...vault, accounts: [...vault.accounts, account] });
-    }
-    return account;
+    });
+    return unwrap(result);
   }
 
   async signTransaction(tx: UnsignedTransaction): Promise<string> {
-    // Мок-підпис: реальний піде через secp256k1/ed25519/ECDSA у WASM.
-    return `0xmocksigned_${tx.chain}_${randomHex(32)}`;
+    const result = await sendToBackground({
+      type: MessageType.VaultSignTransaction,
+      chain: tx.chain,
+      payload: tx.payload,
+      accountIndex: 0,
+    });
+    return unwrap(result);
   }
 
-  async signMessage(_chain: Chain, _message: string): Promise<string> {
-    return `0x${randomHex(65)}`;
+  async signMessage(chain: Chain, message: string): Promise<string> {
+    const result = await sendToBackground({
+      type: MessageType.VaultSignMessage,
+      chain,
+      message,
+      accountIndex: 0,
+    });
+    return unwrap(result);
   }
 }
 
-/** Єдина точка доступу до крипто-ядра. Після інтеграції WASM тут буде
- *  ліниве завантаження модуля: `await init(); return new WasmWalletCore();` */
-export const walletCore: WalletCore = new MockWalletCore();
+/** Єдина точка доступу до крипто-ядра (WASM завантажується ліниво). */
+export const walletCore: WalletCore = new WasmWalletCore();

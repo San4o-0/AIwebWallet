@@ -1,14 +1,20 @@
-//! ai-service: пояснення транзакцій (ТЗ F4, розділ 4.3).
+//! ai-service: пояснення транзакцій (ТЗ F4, розділ 4.3) і AI-чат (F7).
 //!
 //! Архітектура: trait [`ExplanationProvider`] з двома імплементаціями:
-//! - [`RuleBasedProvider`] — ПРАЦЮЄ вже зараз: шаблонні пояснення для
-//!   типових транзакцій (нативний переказ, ERC-20 transfer, approve).
-//!   За ТЗ 4.3 стандартні випадки пояснюються шаблоном БЕЗ виклику API.
-//! - [`OpenAiProvider`] — заглушка. TODO: async-openai (gpt-4o-mini) для
-//!   нетривіальних випадків; залежність свідомо НЕ додана, щоб не роздувати
-//!   збірку скелета.
+//! - [`RuleBasedProvider`] — шаблонні пояснення для типових транзакцій
+//!   (нативний переказ, ERC-20 transfer, approve). За ТЗ 4.3 стандартні
+//!   випадки пояснюються шаблоном БЕЗ виклику API.
+//! - [`OpenAiProvider`] (див. [`openai`]) — реальна інтеграція async-openai
+//!   (gpt-4o-mini) для нетривіальних/high-risk випадків; таймаут 10 с →
+//!   fallback на rule-based (fail-safe, ТЗ 1.2, 4.3).
 //!
-//! Fail-safe (ТЗ 1.2, 4.3): таймаут AI 10 с → fallback на rule-based.
+//! AI-чат із function calling (gpt-4o, F7.2) — у [`chat`] і [`tools`].
+
+pub mod chat;
+pub mod openai;
+pub mod tools;
+
+pub use openai::OpenAiProvider;
 
 use async_trait::async_trait;
 
@@ -54,14 +60,14 @@ pub enum Lang {
 }
 
 impl Lang {
-    fn from_opt(lang: Option<&str>) -> Self {
+    pub fn from_opt(lang: Option<&str>) -> Self {
         match lang {
             Some(l) if l.eq_ignore_ascii_case("en") => Lang::En,
             _ => Lang::Uk,
         }
     }
 
-    fn as_str(&self) -> &'static str {
+    pub fn as_str(&self) -> &'static str {
         match self {
             Lang::Uk => "uk",
             Lang::En => "en",
@@ -123,14 +129,28 @@ impl ExplanationProvider for RuleBasedProvider {
     }
 }
 
-enum TxKind {
+pub(crate) enum TxKind {
     NativeTransfer,
     Erc20Transfer,
     Approve { unlimited: bool },
     Other,
 }
 
-fn classify(d: &DecodedTx) -> TxKind {
+/// Чи є транзакція «тривіальною» — такою, що пояснюється шаблоном БЕЗ
+/// виклику OpenAI (кешування шаблонами, ТЗ 4.3): нативний переказ,
+/// стандартний ERC-20 transfer, обмежений approve. Нетривіальні/невідомі
+/// методи, необмежений approve та high-risk транзакції йдуть у AI.
+pub fn is_trivial(req: &ExplainRequest) -> bool {
+    if req.risk.as_ref().is_some_and(|r| r.level == "high") {
+        return false;
+    }
+    matches!(
+        classify(&req.decoded),
+        TxKind::NativeTransfer | TxKind::Erc20Transfer | TxKind::Approve { unlimited: false }
+    )
+}
+
+pub(crate) fn classify(d: &DecodedTx) -> TxKind {
     let selector = d
         .selector
         .as_deref()
@@ -226,45 +246,6 @@ fn fallback_text(d: &DecodedTx, lang: Lang) -> String {
             "You are interacting with contract {to} (method {method}). \
              Review the details before signing."
         ),
-    }
-}
-
-// ---------------------------------------------------------------------------
-// OpenAiProvider — заглушка
-// ---------------------------------------------------------------------------
-
-/// Заглушка AI-провайдера.
-///
-/// TODO: реалізувати через `async-openai`:
-/// - модель `gpt-4o-mini` для пояснень (ТЗ 4.3);
-/// - у prompt подавати ТІЛЬКИ структуровані декодовані дані як user-поля,
-///   ніколи як інструкції (захист від prompt injection, ТЗ розділ 6, п.5);
-/// - таймаут 10 с + fallback на RuleBasedProvider;
-/// - кеш шаблонних типів транзакцій (без виклику API);
-/// - rate limit і денний бюджет токенів на користувача.
-#[derive(Debug, Clone)]
-pub struct OpenAiProvider {
-    #[allow(dead_code)]
-    api_key: Option<String>,
-    #[allow(dead_code)]
-    model: String,
-}
-
-impl OpenAiProvider {
-    pub fn new(api_key: Option<String>) -> Self {
-        Self {
-            api_key,
-            model: "gpt-4o-mini".to_string(),
-        }
-    }
-}
-
-#[async_trait]
-impl ExplanationProvider for OpenAiProvider {
-    async fn explain(&self, _req: &ExplainRequest) -> Result<ExplainResponse, ProviderError> {
-        // TODO: виклик Chat Completions через async-openai; поки що провайдер
-        // сигналізує «не сконфігуровано», а хендлер робить fallback на rule-based.
-        Err(ProviderError::NotConfigured)
     }
 }
 
@@ -389,9 +370,67 @@ mod tests {
 
     #[tokio::test]
     async fn openai_stub_is_not_configured() {
+        // Нетривіальна транзакція (DecodedTx::default → Other) без ключа:
+        // провайдер сигналізує NotConfigured, хендлер робить fallback.
         let provider = OpenAiProvider::new(None);
         let decoded = DecodedTx::default();
         let err = provider.explain(&req(decoded, None)).await.unwrap_err();
         assert!(matches!(err, ProviderError::NotConfigured));
+    }
+
+    #[test]
+    fn trivial_cases_do_not_need_ai() {
+        // Тривіальні (шаблон без API, ТЗ 4.3): нативний переказ,
+        // ERC-20 transfer, обмежений approve.
+        let native = DecodedTx { action: "native_transfer".into(), ..Default::default() };
+        assert!(is_trivial(&req(native, None)));
+
+        let transfer = DecodedTx {
+            action: "contract_call".into(),
+            selector: Some("0xa9059cbb".into()),
+            ..Default::default()
+        };
+        assert!(is_trivial(&req(transfer, None)));
+
+        let limited_approve = DecodedTx {
+            action: "approve".into(),
+            unlimited: Some(false),
+            ..Default::default()
+        };
+        assert!(is_trivial(&req(limited_approve, None)));
+    }
+
+    #[test]
+    fn non_trivial_cases_need_ai() {
+        // Невідомий метод → AI.
+        let unknown = DecodedTx {
+            action: "contract_call".into(),
+            selector: Some("0xdeadbeef".into()),
+            ..Default::default()
+        };
+        assert!(!is_trivial(&req(unknown, None)));
+
+        // Необмежений approve → AI.
+        let unlimited = DecodedTx {
+            action: "approve".into(),
+            unlimited: Some(true),
+            ..Default::default()
+        };
+        assert!(!is_trivial(&req(unlimited, None)));
+
+        // High-risk навіть для тривіального типу → AI.
+        let mut r = req(
+            DecodedTx { action: "native_transfer".into(), ..Default::default() },
+            None,
+        );
+        r.risk = Some(RiskResponse {
+            level: "high".into(),
+            reasons: vec![RiskReasonDto {
+                code: "scam_address".into(),
+                message: "Адреса зі скам-списку".into(),
+            }],
+            requires_confirmation: true,
+        });
+        assert!(!is_trivial(&r));
     }
 }

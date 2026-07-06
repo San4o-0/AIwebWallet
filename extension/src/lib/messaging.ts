@@ -7,6 +7,18 @@
  * Файл НЕ імпортує API розширення — він бандлиться і в injected-скрипт,
  * який виконується в контексті сторінки без доступу до chrome.*.
  */
+import type { Chain } from './chains';
+
+/** Публічне представлення акаунта — тільки адреси, жодних ключів. */
+export interface PublicAccount {
+  index: number;
+  name: string;
+  addresses: {
+    evm: string;
+    solana: string;
+    bitcoin: string;
+  };
+}
 
 /** JSON-сумісне значення. Публічні інтерфейси не використовують `any`. */
 export type Json =
@@ -27,10 +39,18 @@ export enum MessageType {
   ProviderEvent = 'aiwallet/provider-event',
   /** Popup: отримати стан сесії. */
   GetSessionState = 'aiwallet/get-session-state',
-  /** Popup: позначити сесію розблокованою (після unlock у WASM-ядрі). */
-  UnlockSession = 'aiwallet/unlock-session',
-  /** Popup: заблокувати сесію. */
+  /** Popup: заблокувати сесію (zeroize seed-фрази в пам'яті background). */
   LockSession = 'aiwallet/lock-session',
+  /** Popup → background: створити vault із seed-фрази й пароля (WASM-ядро). */
+  VaultCreate = 'aiwallet/vault-create',
+  /** Popup → background: розблокувати vault паролем (Argon2id + AES-GCM). */
+  VaultUnlock = 'aiwallet/vault-unlock',
+  /** Popup → background: деривувати наступний акаунт (потрібна розблокована сесія). */
+  VaultDeriveAccount = 'aiwallet/vault-derive-account',
+  /** Popup → background: підписати транзакцію ключем із сесії. */
+  VaultSignTransaction = 'aiwallet/vault-sign-transaction',
+  /** Popup → background: підписати повідомлення ключем із сесії. */
+  VaultSignMessage = 'aiwallet/vault-sign-message',
   /** Popup: отримати чергу запитів на підпис. */
   GetPendingRequests = 'aiwallet/get-pending-requests',
   /** Popup: рішення користувача щодо запиту на підпис (F5.3). */
@@ -164,15 +184,50 @@ export interface BgGetSessionState {
   type: MessageType.GetSessionState;
 }
 
-export interface BgUnlockSession {
-  type: MessageType.UnlockSession;
-  /** Активна EVM-адреса, яку background віддає dApps через eth_accounts. */
-  address: string;
-}
-
 export interface BgLockSession {
   type: MessageType.LockSession;
 }
+
+// --- Vault-операції (popup → background; виконуються WASM-ядром у SW) ------
+
+export interface BgVaultCreate {
+  type: MessageType.VaultCreate;
+  /** Seed-фраза (пробіл-розділена). Живе лише в пам'яті popup/SW, не в storage. */
+  mnemonic: string;
+  password: string;
+  accountName: string;
+}
+
+export interface BgVaultUnlock {
+  type: MessageType.VaultUnlock;
+  password: string;
+}
+
+export interface BgVaultDeriveAccount {
+  type: MessageType.VaultDeriveAccount;
+  index: number;
+  name: string;
+}
+
+export interface BgVaultSignTransaction {
+  type: MessageType.VaultSignTransaction;
+  chain: Chain;
+  /** Серіалізований запит транзакції (EVM tx request / Solana message / BTC PSBT). */
+  payload: string;
+  accountIndex: number;
+}
+
+export interface BgVaultSignMessage {
+  type: MessageType.VaultSignMessage;
+  chain: Chain;
+  message: string;
+  accountIndex: number;
+}
+
+/** Результат vault-операції: успіх або текст помилки для UI. */
+export type VaultResult<T> =
+  | { ok: true; value: T }
+  | { ok: false; error: string };
 
 export interface BgGetPendingRequests {
   type: MessageType.GetPendingRequests;
@@ -187,10 +242,14 @@ export interface BgResolveApproval {
 export type BackgroundMessage =
   | BgRpcRequest
   | BgGetSessionState
-  | BgUnlockSession
   | BgLockSession
   | BgGetPendingRequests
-  | BgResolveApproval;
+  | BgResolveApproval
+  | BgVaultCreate
+  | BgVaultUnlock
+  | BgVaultDeriveAccount
+  | BgVaultSignTransaction
+  | BgVaultSignMessage;
 
 /** Стан сесії у service worker. */
 export interface SessionState {
@@ -198,6 +257,8 @@ export interface SessionState {
   address: string | null;
   /** Unix ms, коли спрацює автолок; null — заблоковано. */
   autoLockAt: number | null;
+  /** Публічні акаунти розблокованої сесії (порожньо, коли заблоковано). */
+  accounts: PublicAccount[];
 }
 
 /** Запит на підпис у черзі background (показується на екрані Approve). */
@@ -213,19 +274,41 @@ export interface PendingSignRequest {
 export interface BackgroundResponseMap {
   [MessageType.RpcRequest]: RpcOutcome;
   [MessageType.GetSessionState]: SessionState;
-  [MessageType.UnlockSession]: SessionState;
   [MessageType.LockSession]: SessionState;
   [MessageType.GetPendingRequests]: PendingSignRequest[];
   [MessageType.ResolveApproval]: { ok: boolean };
+  [MessageType.VaultCreate]: VaultResult<PublicAccount>;
+  [MessageType.VaultUnlock]: VaultResult<PublicAccount[]>;
+  [MessageType.VaultDeriveAccount]: VaultResult<PublicAccount>;
+  [MessageType.VaultSignTransaction]: VaultResult<string>;
+  [MessageType.VaultSignMessage]: VaultResult<string>;
 }
 
 const BACKGROUND_MESSAGE_TYPES: ReadonlySet<string> = new Set([
   MessageType.RpcRequest,
   MessageType.GetSessionState,
-  MessageType.UnlockSession,
   MessageType.LockSession,
   MessageType.GetPendingRequests,
   MessageType.ResolveApproval,
+  MessageType.VaultCreate,
+  MessageType.VaultUnlock,
+  MessageType.VaultDeriveAccount,
+  MessageType.VaultSignTransaction,
+  MessageType.VaultSignMessage,
+]);
+
+/**
+ * Типи повідомлень, що дозволені ЛИШЕ зі сторінок розширення (popup),
+ * а не з content script — background перевіряє sender.url.
+ */
+export const PRIVILEGED_MESSAGE_TYPES: ReadonlySet<string> = new Set([
+  MessageType.LockSession,
+  MessageType.ResolveApproval,
+  MessageType.VaultCreate,
+  MessageType.VaultUnlock,
+  MessageType.VaultDeriveAccount,
+  MessageType.VaultSignTransaction,
+  MessageType.VaultSignMessage,
 ]);
 
 export function isBackgroundMessage(value: unknown): value is BackgroundMessage {

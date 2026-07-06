@@ -1,7 +1,7 @@
 //! DTO (request/response) для всіх ендпоінтів `/v1` за розділом 5 ТЗ.
 //!
-//! ЛОКАЛЬНІ типи: без залежностей на wallet-core/chain-adapters —
-//! інтеграція спільних типів буде окремим кроком.
+//! Типи переважно локальні; спільні типи chain-adapters використовуються
+//! точково (FeeEstimate). Маппінг adapter → DTO живе у хендлерах.
 //!
 //! ПРАВИЛО БЕЗПЕКИ: жодне поле не приймає приватні ключі / seed / мнемоніку
 //! (див. lib.rs і tests/security.rs).
@@ -72,6 +72,10 @@ pub struct ChainBalance {
     pub native: TokenBalance,
     pub tokens: Vec<TokenBalance>,
     pub usd_value: f64,
+    /// Помилка мережі (RPC недоступний/таймаут). Часткові фейли не валять
+    /// відповідь (fail-safe, ТЗ §1.2): баланс нульовий, а причина — тут.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -376,6 +380,27 @@ pub struct PriceInfo {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PricesResponse {
     pub prices: HashMap<String, PriceInfo>,
+    pub updated_at: u64,
+}
+
+// ---------------------------------------------------------------------------
+// GET /v1/fees?chain=
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct FeeEstimateQuery {
+    /// "ethereum" | "polygon" | ... | "solana" | "bitcoin".
+    pub chain: Chain,
+}
+
+/// Три рівні комісії (slow/standard/fast, F3.2–F3.4) у нативних одиницях
+/// мережі — формат `chain_adapters::FeeEstimate` (eip1559 / sat_per_vbyte /
+/// solana priority).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FeeEstimateResponse {
+    pub chain: Chain,
+    pub estimate: chain_adapters::FeeEstimate,
+    /// Unix seconds.
     pub updated_at: u64,
 }
 

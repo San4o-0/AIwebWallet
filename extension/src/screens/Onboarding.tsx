@@ -1,6 +1,8 @@
 /**
  * Онбординг: створення нового гаманця або імпорт (F1.1, F1.2).
- * Форми-заглушки: крипто-операції підуть у WASM-ядро (crates/wallet-core).
+ * Крипто-операції виконує WASM-ядро (crates/wallet-core): реальна генерація
+ * BIP-39 фрази у popup, створення зашифрованого vault (Argon2id + AES-GCM) —
+ * у background; у chrome.storage.local потрапляє лише шифротекст.
  */
 import { useState } from 'react';
 

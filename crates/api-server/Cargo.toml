@@ -5,12 +5,14 @@ edition.workspace = true
 license.workspace = true
 description = "AI Wallet backend: Axum API gateway (balances, tx decode/simulate/risk/explain, chat, analytics)"
 
-# ВАЖЛИВО: жодних залежностей на wallet-core / chain-adapters —
-# інтеграція буде окремим кроком, DTO тут локальні.
+# ВАЖЛИВО: жодних залежностей на wallet-core — бекенд не бачить ключів.
+# chain-adapters підключено для реальних даних мереж (баланси, комісії,
+# broadcast, історія BTC/Solana).
 
 [dependencies]
+chain-adapters = { path = "../chain-adapters" }
 axum = "0.8"
-tokio = { version = "1", features = ["macros", "rt-multi-thread", "signal", "time"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "signal", "time", "sync"] }
 tower = "0.5"
 tower-http = { version = "0.6", features = ["cors", "trace"] }
 serde = { version = "1", features = ["derive"] }
@@ -20,8 +22,14 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 futures = "0.3"
 tokio-stream = { version = "0.1", features = ["time"] }
 async-trait = "0.1"
-# TODO: sqlx (PostgreSQL), fred (Redis), alloy (EVM), async-openai — додаються
-# на етапі інтеграції реальних сервісів, щоб не роздувати збірку скелета.
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+hex = "0.4"
+base64 = "0.22"
+# OpenAI-клієнт (ТЗ 4.3, F7.2): gpt-4o-mini для пояснень, gpt-4o для чату.
+# default-features = false + rustls: без нативного OpenSSL (як у reqwest вище).
+async-openai = { version = "0.41", default-features = false, features = ["rustls", "chat-completion"] }
+# TODO: sqlx (PostgreSQL), fred (Redis) — додаються на етапі інтеграції
+# реальних сервісів, щоб не роздувати збірку скелета.
 
 [dev-dependencies]
 tower = { version = "0.5", features = ["util"] }
