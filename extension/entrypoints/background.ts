@@ -10,7 +10,13 @@
 import { browser } from 'wxt/browser';
 import { defineBackground } from 'wxt/utils/define-background';
 
+import { broadcastTx, fetchTxParams } from '@/src/lib/api';
 import { CHAINS, type Chain } from '@/src/lib/chains';
+import {
+  decodePersonalSignMessage,
+  type Eip1559TxParams,
+  type SignedEvmTx,
+} from '@/src/lib/evm';
 import {
   MessageType,
   PRIVILEGED_MESSAGE_TYPES,
@@ -39,7 +45,9 @@ import {
 } from '@/src/lib/vault-storage';
 import { loadWalletCoreWasm, toWasmError } from '@/src/wasm';
 
-const MOCK_CHAIN_ID_HEX = '0x1'; // Ethereum mainnet (мок; буде перемикання мереж)
+/** Мережа для dApp-запитів (eth_chainId → 0x1). TODO: wallet_switchEthereumChain. */
+const DAPP_CHAIN: Chain = 'ethereum';
+const DAPP_CHAIN_ID_HEX = CHAINS[DAPP_CHAIN].evmChainIdHex ?? '0x1';
 const AUTO_LOCK_MS = 5 * 60_000;
 
 /** JSON-форма derivation::Addresses із WASM-ядра. */
@@ -185,23 +193,34 @@ export default defineBackground(() => {
     }
   }
 
-  async function sha256Hex(input: string): Promise<string> {
-    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input));
-    return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('');
+  /**
+   * Підпис EIP-1559 транзакції ключем активної сесії (реальний keccak256 +
+   * RLP + secp256k1 у WASM-ядрі). `txParamsJson` — JSON із рядковими числами
+   * (див. Eip1559TxParams). Повертає JSON `{"raw_tx":"0x02…","tx_hash":"0x…"}`.
+   */
+  async function signEvmTransactionWithSession(
+    txParamsJson: string,
+    accountIndex: number,
+  ): Promise<VaultResult<string>> {
+    if (sessionMnemonic === null) return { ok: false, error: 'Гаманець заблоковано.' };
+    try {
+      const wasm = await loadWalletCoreWasm();
+      touchAutoLock();
+      return { ok: true, value: wasm.signEvmTransaction(sessionMnemonic, accountIndex, txParamsJson) };
+    } catch (error) {
+      return vaultError(error);
+    }
   }
 
   /**
-   * Підпис довільного payload ключем активної сесії.
-   *
-   * РЕАЛЬНО: деривація ключа + підпис (secp256k1/ed25519) у WASM-ядрі.
-   * ЗАМОКАНО (MVP): для EVM підписується SHA-256-дайджест payload замість
-   * канонічного keccak256(EIP-191/RLP) — збірка EVM-транзакцій і keccak у JS
-   * прийдуть разом із chain-adapters. Bitcoin PSBT-підпис — TODO (ядро поки
-   * експортує xprv/WIF для BDK).
+   * Підпис повідомлення ключем активної сесії:
+   *  - EVM — реальний EIP-191 personal_sign (keccak256 + secp256k1, v ∈ {27,28});
+   *  - Solana — ed25519-підпис байтів (base58);
+   *  - Bitcoin — TODO (PSBT/BIP-322).
    */
-  async function signWithSession(
+  async function signMessageWithSession(
     chain: Chain,
-    payload: string,
+    message: string,
     accountIndex: number,
   ): Promise<VaultResult<string>> {
     if (sessionMnemonic === null) return { ok: false, error: 'Гаманець заблоковано.' };
@@ -210,24 +229,26 @@ export default defineBackground(() => {
       touchAutoLock();
       switch (CHAINS[chain].kind) {
         case 'evm': {
-          // TODO: keccak256 (EIP-191 / RLP tx hash) замість SHA-256-плейсхолдера.
-          const digest = await sha256Hex(payload);
-          const signature = wasm.signEvmHash(sessionMnemonic, accountIndex, digest);
-          return { ok: true, value: `0x${signature}` };
+          // dApp передає повідомлення hex-рядком (EIP-1193), UI — plain text.
+          const signature = wasm.personalSign(
+            sessionMnemonic,
+            accountIndex,
+            decodePersonalSignMessage(message),
+          );
+          return { ok: true, value: signature };
         }
         case 'solana': {
-          // Реальний ed25519-підпис байтів повідомлення, base58.
           const signature = wasm.signSolanaMessage(
             sessionMnemonic,
             accountIndex,
-            new TextEncoder().encode(payload),
+            new TextEncoder().encode(message),
           );
           return { ok: true, value: signature };
         }
         case 'bitcoin':
           return {
             ok: false,
-            error: 'Підпис Bitcoin-транзакцій буде доступний після інтеграції PSBT (BDK).',
+            error: 'Підпис Bitcoin буде доступний після інтеграції PSBT (BDK).',
           };
       }
     } catch (error) {
@@ -235,10 +256,22 @@ export default defineBackground(() => {
     }
   }
 
-  const vaultSignTransaction = (m: BgVaultSignTransaction): Promise<VaultResult<string>> =>
-    signWithSession(m.chain, m.payload, m.accountIndex);
+  /** VaultSignTransaction: для EVM payload — JSON параметрів EIP-1559 транзакції. */
+  function vaultSignTransaction(m: BgVaultSignTransaction): Promise<VaultResult<string>> {
+    switch (CHAINS[m.chain].kind) {
+      case 'evm':
+        return signEvmTransactionWithSession(m.payload, m.accountIndex);
+      case 'solana':
+        return signMessageWithSession(m.chain, m.payload, m.accountIndex);
+      case 'bitcoin':
+        return Promise.resolve({
+          ok: false,
+          error: 'Підпис Bitcoin-транзакцій буде доступний після інтеграції PSBT (BDK).',
+        });
+    }
+  }
   const vaultSignMessage = (m: BgVaultSignMessage): Promise<VaultResult<string>> =>
-    signWithSession(m.chain, m.message, m.accountIndex);
+    signMessageWithSession(m.chain, m.message, m.accountIndex);
 
   // -------------------------------------------------------------------------
   // Черга запитів на підпис (F3.5, F5.3).
@@ -270,29 +303,71 @@ export default defineBackground(() => {
     });
   }
 
+  /** Рядкове поле обʼєкта транзакції від dApp (params[0]). */
+  function txField(tx: Record<string, unknown>, key: string): string | undefined {
+    const value = tx[key];
+    return typeof value === 'string' && value.length > 0 ? value : undefined;
+  }
+
   /**
-   * Результат для схваленого користувачем запиту.
-   * Підпис іде через WASM-ядро (реальний secp256k1); для eth_sendTransaction
-   * повертається мок tx-хеш (без RLP-збірки та броадкасту — це chain-adapters).
+   * Повний цикл eth_sendTransaction від dApp (після схвалення користувачем):
+   * GET /v1/tx/params (nonce + EIP-1559 комісії з реальної ноди) → збірка
+   * type-2 транзакції → keccak256 + secp256k1-підпис у WASM → RLP →
+   * POST /v1/tx/broadcast → СПРАВЖНІЙ tx hash від ноди.
+   */
+  async function sendDappTransaction(request: PendingSignRequest): Promise<RpcOutcome> {
+    if (session.address === null) return { ok: false, error: RPC_ERRORS.unauthorized };
+    const rawTx = request.params[0];
+    if (typeof rawTx !== 'object' || rawTx === null || Array.isArray(rawTx)) {
+      return { ok: false, error: { code: -32602, message: 'Некоректні параметри транзакції.' } };
+    }
+    const tx = rawTx as Record<string, unknown>;
+    const data = txField(tx, 'data') ?? txField(tx, 'input');
+    const hasData = data !== undefined && data !== '0x';
+
+    try {
+      const params = await fetchTxParams(DAPP_CHAIN, session.address, hasData);
+      const txParams: Eip1559TxParams = {
+        chain_id: String(params.chain_id),
+        nonce: String(params.nonce),
+        // Тариф standard; вибір slow/fast користувачем — TODO (екран Approve).
+        max_priority_fee_per_gas: params.fees.standard.max_priority_fee_per_gas,
+        max_fee_per_gas: params.fees.standard.max_fee_per_gas,
+        // gas від dApp (hex) або консервативна оцінка бекенду.
+        gas_limit: txField(tx, 'gas') ?? params.gas_limit_estimate,
+        to: txField(tx, 'to'),
+        value: txField(tx, 'value') ?? '0',
+        data,
+      };
+      const signed = await signEvmTransactionWithSession(JSON.stringify(txParams), 0);
+      if (!signed.ok) return { ok: false, error: { code: -32603, message: signed.error } };
+      const { raw_tx } = JSON.parse(signed.value) as SignedEvmTx;
+      const { tx_hash } = await broadcastTx({ chain: DAPP_CHAIN, signed_tx: raw_tx });
+      return { ok: true, result: tx_hash };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Внутрішня помилка.';
+      return { ok: false, error: { code: -32603, message } };
+    }
+  }
+
+  /**
+   * Результат для схваленого користувачем запиту. Підпис — реальний
+   * (keccak256/EIP-191/EIP-1559 у WASM-ядрі), трансляція — через бекенд.
    */
   async function approvedOutcome(request: PendingSignRequest): Promise<RpcOutcome> {
     if (!session.unlocked) return { ok: false, error: RPC_ERRORS.unauthorized };
     switch (request.method) {
       case 'eth_requestAccounts':
         return { ok: true, result: session.address !== null ? [session.address] : [] };
-      case 'eth_sendTransaction': {
-        // РЕАЛЬНО підписуємо дайджест запиту ключем m/44'/60'/0'/0/0 у WASM,
-        // але транзакція не збирається і не броадкаститься (мок tx-хешу).
-        const signed = await signWithSession('ethereum', JSON.stringify(request.params), 0);
-        if (!signed.ok) return { ok: false, error: RPC_ERRORS.internal };
-        return { ok: true, result: `0x${await sha256Hex(signed.value)}` };
-      }
+      case 'eth_sendTransaction':
+        return sendDappTransaction(request);
       case 'personal_sign': {
+        // params: [message, address] (EIP-1193); message — hex або plain text.
         const message = typeof request.params[0] === 'string' ? request.params[0] : '';
-        const signed = await signWithSession('ethereum', message, 0);
+        const signed = await signMessageWithSession(DAPP_CHAIN, message, 0);
         return signed.ok
           ? { ok: true, result: signed.value }
-          : { ok: false, error: RPC_ERRORS.internal };
+          : { ok: false, error: { code: -32603, message: signed.error } };
       }
       case 'eth_accounts':
       case 'eth_chainId':
@@ -309,7 +384,7 @@ export default defineBackground(() => {
 
     switch (method) {
       case 'eth_chainId':
-        return { ok: true, result: MOCK_CHAIN_ID_HEX };
+        return { ok: true, result: DAPP_CHAIN_ID_HEX };
 
       case 'eth_accounts': {
         const accounts: Json = session.unlocked && session.address !== null ? [session.address] : [];

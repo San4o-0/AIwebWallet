@@ -131,6 +131,9 @@ pub struct HistoryItem {
 pub struct HistoryResponse {
     pub items: Vec<HistoryItem>,
     pub next_cursor: Option<String>,
+    /// Службова примітка (напр., «історія EVM потребує ETHERSCAN_API_KEY»).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub note: Option<String>,
 }
 
 // ---------------------------------------------------------------------------
@@ -197,6 +200,9 @@ pub struct SimulateRequest {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BalanceChange {
     pub address: String,
+    /// Людська назва активу ("Ether", "USD Coin", ...).
+    #[serde(default)]
+    pub asset: String,
     pub symbol: String,
     pub contract_address: Option<String>,
     pub before: String,
@@ -206,11 +212,18 @@ pub struct BalanceChange {
     pub usd_delta: f64,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SimulateResponse {
     pub success: bool,
+    /// `true` — зміни балансів пораховані реально (детермінована симуляція
+    /// або Alchemy). `false` — метод не розпізнано, у `warnings` пояснення.
+    pub simulated: bool,
+    /// `true`, якщо eth_call / simulateTransaction показав revert (F4.3).
+    pub will_revert: bool,
     /// Очікувані зміни балансів «до/після» (F4.3).
     pub balance_changes: Vec<BalanceChange>,
+    #[serde(default)]
+    pub warnings: Vec<String>,
     pub gas_used: Option<String>,
     pub gas_cost_usd: Option<f64>,
     /// Причина revert, якщо симуляція провалилась.
@@ -340,6 +353,9 @@ pub struct FeesResponse {
     pub total_fees_usd: f64,
     pub by_chain: Vec<ChainFees>,
     pub timeline: Vec<FeePoint>,
+    /// Службова примітка (напр., EVM-мережі пропущено без ETHERSCAN_API_KEY).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub note: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -359,6 +375,9 @@ pub struct SummaryResponse {
     pub tx_count: u32,
     pub by_category: Vec<CategorySummary>,
     pub by_chain: Vec<ChainFees>,
+    /// Службова примітка (напр., EVM-мережі пропущено без ETHERSCAN_API_KEY).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub note: Option<String>,
 }
 
 // ---------------------------------------------------------------------------

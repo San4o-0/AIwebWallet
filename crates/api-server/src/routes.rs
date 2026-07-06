@@ -25,6 +25,7 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         .route("/balances", post(handlers::balances::balances))
         .route("/history", get(handlers::history::history))
         .route("/fees", get(handlers::fees::fees))
+        .route("/tx/params", get(handlers::tx_params::tx_params))
         .route("/tx/decode", post(handlers::tx::decode))
         .route("/tx/simulate", post(handlers::tx::simulate))
         .route("/tx/risk", post(handlers::tx::risk))

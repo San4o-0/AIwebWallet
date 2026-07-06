@@ -8,6 +8,7 @@ pub mod health;
 pub mod history;
 pub mod prices;
 pub mod tx;
+pub mod tx_params;
 
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};

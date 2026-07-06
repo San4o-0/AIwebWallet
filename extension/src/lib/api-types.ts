@@ -124,13 +124,41 @@ export interface ExplainResponse {
   explanation: string;
 }
 
+/** Поля — snake_case: бекенд серіалізує DTO без rename (crates/api-server/dto.rs). */
 export interface BroadcastRequest {
   chain: Chain;
-  signedTx: string;
+  /** Підписана транзакція: `0x…`-hex (EVM). */
+  signed_tx: string;
 }
 
 export interface BroadcastResponse {
-  txHash: string;
+  tx_hash: string;
+  chain: Chain;
+  status: string;
+}
+
+// GET /v1/tx/params ---------------------------------------------------------
+
+/** Рівень комісії EIP-1559; значення — десяткові рядки у wei. */
+export interface FeeTier {
+  max_fee_per_gas: string;
+  max_priority_fee_per_gas: string;
+}
+
+/** Параметри для збірки EIP-1559 транзакції (nonce/gas/fees/chain_id). */
+export interface TxParams {
+  chain: Chain;
+  /** Числовий EIP-155 chain id (1 / 137 / 56 / 42161 / 8453). */
+  chain_id: number;
+  nonce: number;
+  /** Рекомендований gas limit (десятковий рядок). */
+  gas_limit_estimate: string;
+  fees: {
+    slow: FeeTier;
+    standard: FeeTier;
+    fast: FeeTier;
+  };
+  updated_at: number;
 }
 
 // POST /v1/chat (SSE) -----------------------------------------------------

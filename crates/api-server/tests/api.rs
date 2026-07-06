@@ -110,6 +110,115 @@ async fn tx_risk_plain_transfer_is_low() {
 }
 
 #[tokio::test]
+async fn evm_history_without_etherscan_key_is_graceful() {
+    // Config::default() не має ETHERSCAN_API_KEY → порожня історія з note,
+    // БЕЗ мережевих запитів і БЕЗ помилки (graceful degradation).
+    let resp = app()
+        .oneshot(
+            Request::builder()
+                .uri("/v1/history?address=0xd8da6bf26964af9d7eed9e03e53415d37aa96045&chain=ethereum")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(resp.status(), StatusCode::OK);
+    let json = body_json(resp).await;
+    assert!(json["items"].as_array().unwrap().is_empty());
+    assert!(json["note"]
+        .as_str()
+        .unwrap()
+        .contains("ETHERSCAN_API_KEY"));
+}
+
+#[tokio::test]
+async fn simulate_rejects_unknown_chain_and_bad_signer() {
+    // Невідома мережа → 400.
+    let body = json!({
+        "chain": "dogecoin",
+        "tx_request": {},
+        "signer": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045"
+    });
+    let resp = app()
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri("/v1/tx/simulate")
+                .header(header::CONTENT_TYPE, "application/json")
+                .body(Body::from(body.to_string()))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
+
+    // Некоректний підписант для мережі → 400.
+    let body = json!({
+        "chain": "ethereum",
+        "tx_request": {},
+        "signer": "не-адреса"
+    });
+    let resp = app()
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri("/v1/tx/simulate")
+                .header(header::CONTENT_TYPE, "application/json")
+                .body(Body::from(body.to_string()))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
+}
+
+#[tokio::test]
+async fn analytics_rejects_unknown_period_and_bad_address() {
+    // Період перевіряється ДО збору історії → без мережі.
+    let resp = app()
+        .oneshot(
+            Request::builder()
+                .uri("/v1/analytics/fees?address=bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq&period=14d")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
+
+    // Нерозпізнана адреса → 400 (EVM-гілка без ключа теж без мережі).
+    let resp = app()
+        .oneshot(
+            Request::builder()
+                .uri("/v1/analytics/summary?address=%21%21%21&period=30d")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
+}
+
+#[tokio::test]
+async fn analytics_for_evm_address_without_key_returns_note() {
+    // EVM-адреса без ETHERSCAN_API_KEY: мережі пропущено, note пояснює чому.
+    let resp = app()
+        .oneshot(
+            Request::builder()
+                .uri("/v1/analytics/fees?address=0xd8da6bf26964af9d7eed9e03e53415d37aa96045&period=30d")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(resp.status(), StatusCode::OK);
+    let json = body_json(resp).await;
+    assert_eq!(json["total_fees_usd"], 0.0);
+    assert!(json["note"].as_str().unwrap().contains("ETHERSCAN_API_KEY"));
+}
+
+#[tokio::test]
 async fn tx_explain_returns_ukrainian_rule_based_text() {
     let body = json!({
         "decoded": {

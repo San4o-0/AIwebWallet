@@ -8,7 +8,7 @@ use wasm_bindgen::prelude::*;
 use zeroize::Zeroizing;
 
 use crate::error::WalletError;
-use crate::{derivation, mnemonic, vault};
+use crate::{derivation, evm_tx, mnemonic, vault};
 
 fn js_err(e: WalletError) -> JsValue {
     JsValue::from_str(&e.to_string())
@@ -101,6 +101,62 @@ pub fn sign_evm_hash(
     let signer = derivation::evm::EvmSigner::from_seed(&seed, index).map_err(js_err)?;
     let signature = signer.sign_hash(&hash).map_err(js_err)?;
     Ok(hex::encode(signature.to_bytes()))
+}
+
+/// Sign an EIP-1559 (type-2) transaction with the EVM key at
+/// `m/44'/60'/0'/0/{index}`.
+///
+/// `tx_params_json` — JSON with string quantities (hex `0x…` or decimal):
+/// `{chain_id, nonce, max_priority_fee_per_gas, max_fee_per_gas, gas_limit,
+///   to?, value?, data?}`.
+/// Returns JSON `{"raw_tx": "0x02…", "tx_hash": "0x…"}` — the raw tx is
+/// ready for `eth_sendRawTransaction`, `tx_hash = keccak256(raw_tx)`.
+#[wasm_bindgen(js_name = signEvmTransaction)]
+pub fn sign_evm_transaction(
+    mnemonic_phrase: &str,
+    index: u32,
+    tx_params_json: &str,
+) -> Result<String, JsValue> {
+    let tx = evm_tx::TxEip1559::from_json(tx_params_json).map_err(js_err)?;
+    let seed = seed_from(mnemonic_phrase)?;
+    let signer = derivation::evm::EvmSigner::from_seed(&seed, index).map_err(js_err)?;
+    let (raw, hash) = tx.sign(&signer).map_err(js_err)?;
+    Ok(format!(
+        r#"{{"raw_tx":"0x{}","tx_hash":"0x{}"}}"#,
+        hex::encode(raw),
+        hex::encode(hash)
+    ))
+}
+
+/// EIP-191 `personal_sign` with the EVM key at `m/44'/60'/0'/0/{index}`.
+/// `message` — raw message bytes (the JS side decodes dApp hex payloads).
+/// Returns the 65-byte signature `r || s || v` (`v` ∈ {27, 28}) as `0x…` hex.
+#[wasm_bindgen(js_name = personalSign)]
+pub fn personal_sign(
+    mnemonic_phrase: &str,
+    index: u32,
+    message: &[u8],
+) -> Result<String, JsValue> {
+    let seed = seed_from(mnemonic_phrase)?;
+    let signer = derivation::evm::EvmSigner::from_seed(&seed, index).map_err(js_err)?;
+    let signature = evm_tx::personal_sign(&signer, message).map_err(js_err)?;
+    Ok(format!("0x{}", hex::encode(signature)))
+}
+
+/// ABI-encode ERC-20 `transfer(to, amount)` calldata.
+/// `amount` — decimal or hex (`0x…`) string in token base units.
+/// Returns `0x…` hex calldata.
+#[wasm_bindgen(js_name = erc20TransferCalldata)]
+pub fn erc20_transfer_calldata(to: &str, amount: &str) -> Result<String, JsValue> {
+    let amount = amount.trim();
+    let parsed = if let Some(h) = amount.strip_prefix("0x") {
+        u128::from_str_radix(h, 16)
+    } else {
+        amount.parse::<u128>()
+    }
+    .map_err(|_| js_err(WalletError::InvalidInput(format!("некоректна сума: {amount}"))))?;
+    let data = evm_tx::erc20_transfer_calldata(to, parsed).map_err(js_err)?;
+    Ok(format!("0x{}", hex::encode(data)))
 }
 
 /// Sign arbitrary bytes with the Solana key at `m/44'/501'/{index}'/0'`.

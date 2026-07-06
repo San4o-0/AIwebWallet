@@ -23,6 +23,7 @@ import type {
   RiskResult,
   SimulateRequest,
   SimulationResult,
+  TxParams,
 } from './api-types';
 import type { Chain } from './chains';
 import type { PendingSignRequest } from './messaging';
@@ -57,7 +58,15 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     signal: init?.signal ?? AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
   if (!response.ok) {
-    throw new ApiError(response.status, `API ${path} → HTTP ${response.status}`);
+    // Бекенд повертає {"error": "..."} — дістаємо людський текст, якщо є.
+    let detail = `HTTP ${response.status}`;
+    try {
+      const body = (await response.json()) as { error?: string };
+      if (typeof body.error === 'string' && body.error.length > 0) detail = body.error;
+    } catch {
+      /* тіло не JSON — залишаємо HTTP-статус */
+    }
+    throw new ApiError(response.status, detail);
   }
   return (await response.json()) as T;
 }
@@ -73,6 +82,24 @@ async function withMockFallback<T>(real: () => Promise<T>, mock: () => T): Promi
   } catch (error) {
     console.warn('[aiwallet] Бекенд недоступний, використовую мок-дані:', error);
     return mock();
+  }
+}
+
+/**
+ * Критичні операції (підпис/broadcast) без мок-fallback: перетворює мережеві
+ * помилки на зрозумілий текст для користувача.
+ */
+async function withBackendRequired<T>(real: () => Promise<T>, action: string): Promise<T> {
+  try {
+    return await real();
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw new Error(`Не вдалося ${action}: ${error.message}`);
+    }
+    throw new Error(
+      `Не вдалося ${action}: бекенд недоступний (${API_BASE_URL}). ` +
+        'Запустіть api-server і повторіть спробу.',
+    );
   }
 }
 
@@ -120,11 +147,32 @@ export function explainTx(req: ExplainRequest): Promise<ExplainResponse> {
   return post<ExplainResponse>('/tx/explain', req);
 }
 
-/** POST /v1/tx/broadcast — трансляція підписаної транзакції. */
+/**
+ * GET /v1/tx/params — nonce, gas limit та EIP-1559 комісії для збірки
+ * транзакції. БЕЗ мок-fallback: без реальних параметрів підписувати не можна.
+ */
+export function fetchTxParams(
+  chain: Chain,
+  from: string,
+  isToken = false,
+): Promise<TxParams> {
+  const params = new URLSearchParams({ chain, from });
+  if (isToken) params.set('token', '1');
+  return withBackendRequired(
+    () => request<TxParams>(`/tx/params?${params.toString()}`),
+    'отримати параметри транзакції',
+  );
+}
+
+/**
+ * POST /v1/tx/broadcast — трансляція підписаної транзакції.
+ * БЕЗ мок-fallback: якщо бекенд недоступний — зрозуміла помилка,
+ * жодних фейкових tx-хешів.
+ */
 export function broadcastTx(req: BroadcastRequest): Promise<BroadcastResponse> {
-  return withMockFallback(
+  return withBackendRequired(
     () => post<BroadcastResponse>('/tx/broadcast', req),
-    () => ({ txHash: `0xmock${Math.random().toString(16).slice(2, 10)}…` }),
+    'транслювати транзакцію',
   );
 }
 

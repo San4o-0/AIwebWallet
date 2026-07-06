@@ -1,7 +1,9 @@
 //! POST /v1/tx/* — decode, simulate, risk, explain, broadcast.
 //!
-//! РЕАЛЬНА логіка вже зараз: `risk` (rule-based risk-engine) та `explain`
-//! (rule-based шаблони). Решта — мок із TODO.
+//! РЕАЛЬНА логіка: `simulate` (детермінована симуляція + eth_call /
+//! simulateTransaction, див. `crate::simulation`), `risk` (rule-based
+//! risk-engine), `explain` (rule-based шаблони + OpenAI), `broadcast`
+//! (chain-adapters). `decode` — спрощена класифікація з TODO.
 
 use axum::{extract::State, Json};
 use base64::Engine as _;
@@ -11,8 +13,8 @@ use std::time::Duration;
 use chain_adapters::ChainId;
 
 use crate::dto::{
-    BalanceChange, BroadcastRequest, BroadcastResponse, DecodeRequest, DecodedParam,
-    DecodedTx, ExplainRequest, ExplainResponse, RiskReasonDto, RiskRequest, RiskResponse,
+    BroadcastRequest, BroadcastResponse, DecodeRequest, DecodedParam, DecodedTx,
+    ExplainRequest, ExplainResponse, RiskReasonDto, RiskRequest, RiskResponse,
     SimulateRequest, SimulateResponse,
 };
 use crate::handlers::ApiError;
@@ -90,39 +92,27 @@ pub async fn decode(
 // POST /v1/tx/simulate
 // ---------------------------------------------------------------------------
 
+/// РЕАЛЬНА симуляція (F4.3): детермінований EVM (баланси до/після через
+/// адаптери + eth_call на revert; з ALCHEMY_API_KEY — simulateAssetChanges),
+/// реальний simulateTransaction для Solana, UTXO-математика для Bitcoin.
+/// Логіка — у `crate::simulation`.
 pub async fn simulate(
-    State(_state): State<Arc<AppState>>,
+    State(state): State<Arc<AppState>>,
     Json(req): Json<SimulateRequest>,
-) -> Json<SimulateResponse> {
-    // TODO: tx-service — Alchemy simulateAssetChanges / Tenderly (EVM),
-    // simulateTransaction (Solana); для BTC — розрахунок UTXO/комісії.
-    Json(SimulateResponse {
-        success: true,
-        balance_changes: vec![
-            BalanceChange {
-                address: req.signer.clone(),
-                symbol: "ETH".into(),
-                contract_address: None,
-                before: "1.25".into(),
-                after: "1.0489".into(),
-                delta: "-0.2011".into(),
-                usd_delta: -703.85,
-            },
-            BalanceChange {
-                address: req.signer,
-                symbol: "USDC".into(),
-                contract_address: Some("0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48".into()),
-                before: "532.10".into(),
-                after: "1230.50".into(),
-                delta: "+698.40".into(),
-                usd_delta: 698.40,
-            },
-        ],
-        gas_used: Some("142500".into()),
-        gas_cost_usd: Some(3.85),
-        revert_reason: None,
-    })
+) -> Result<Json<SimulateResponse>, ApiError> {
+    let resp = tokio::time::timeout(SIMULATE_TIMEOUT, state.simulator.simulate(&req, &state.prices))
+        .await
+        .map_err(|_| {
+            ApiError::bad_gateway(format!(
+                "{}: таймаут симуляції ({} с)",
+                req.chain,
+                SIMULATE_TIMEOUT.as_secs()
+            ))
+        })??;
+    Ok(Json(resp))
 }
+
+const SIMULATE_TIMEOUT: Duration = Duration::from_secs(15);
 
 // ---------------------------------------------------------------------------
 // POST /v1/tx/risk — РЕАЛЬНА rule-based логіка (F5.1–F5.5)

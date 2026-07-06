@@ -20,6 +20,7 @@
 
 pub mod derivation;
 pub mod error;
+pub mod evm_tx;
 pub mod mnemonic;
 pub mod vault;
 
@@ -31,6 +32,7 @@ pub use derivation::evm::{EvmSignature, EvmSigner};
 pub use derivation::solana::SolanaSigner;
 pub use derivation::{derive_addresses, DerivedAddresses};
 pub use error::WalletError;
+pub use evm_tx::{eip191_hash, erc20_transfer_calldata, keccak256, personal_sign, TxEip1559};
 pub use mnemonic::{generate_mnemonic, mnemonic_to_seed, validate_mnemonic, WordCount};
 pub use vault::{
     decrypt_vault, encrypt_vault, encrypt_vault_with_params, AccountMeta, EncryptedVault,

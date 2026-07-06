@@ -35,7 +35,7 @@ pub mod types;
 pub use bitcoin::BitcoinAdapter;
 pub use error::AdapterError;
 pub use evm::{EvmAdapter, TokenConfig};
-pub use solana::SolanaAdapter;
+pub use solana::{SolanaAdapter, SolanaSimulation};
 pub use types::{
     Address, ChainId, FeeEstimate, FeeRate, TokenBalance, TransactionRecord, TxRequest, TxStatus,
 };
@@ -72,6 +72,16 @@ pub trait ChainAdapter: Send + Sync {
         amount: u128,
         token: Option<&Address>,
     ) -> Result<TxRequest, AdapterError>;
+
+    /// Next account nonce (`eth_getTransactionCount`, pending block).
+    /// EVM-only: non-EVM adapters keep the default `Unsupported` error.
+    async fn get_transaction_count(&self, address: &Address) -> Result<u64, AdapterError> {
+        let _ = address;
+        Err(AdapterError::Unsupported(format!(
+            "{}: nonce is an EVM-only concept",
+            self.chain()
+        )))
+    }
 
     /// Broadcast a fully signed transaction; returns the tx hash / signature / txid.
     async fn broadcast(&self, signed_tx: &[u8]) -> Result<String, AdapterError>;

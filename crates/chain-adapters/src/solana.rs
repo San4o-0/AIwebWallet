@@ -46,6 +46,34 @@ impl SolanaAdapter {
             )))
         }
     }
+
+    /// Real `simulateTransaction` over RPC (api-server F4.3).
+    ///
+    /// `tx` — serialized transaction bytes (signed or unsigned).
+    /// `sigVerify: false` + `replaceRecentBlockhash: true` allow simulating
+    /// unsigned/stale-blockhash transactions.
+    pub async fn simulate_transaction(&self, tx: &[u8]) -> Result<SolanaSimulation, AdapterError> {
+        if tx.is_empty() {
+            return Err(AdapterError::InvalidInput("empty transaction".into()));
+        }
+        let encoded = base64::engine::general_purpose::STANDARD.encode(tx);
+        let result: RpcEnvelope<SolanaSimulation> = self
+            .rpc
+            .call(
+                "simulateTransaction",
+                json!([
+                    encoded,
+                    {
+                        "encoding": "base64",
+                        "sigVerify": false,
+                        "replaceRecentBlockhash": true,
+                        "commitment": "confirmed"
+                    }
+                ]),
+            )
+            .await?;
+        Ok(result.value)
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -158,6 +186,34 @@ pub(crate) fn fee_estimate_from_prioritization(fees: &[PrioritizationFee]) -> Fe
         slow: make(slow),
         standard: make(standard),
         fast: make(fast),
+    }
+}
+
+/// Result of `simulateTransaction` (the `value` of the RPC envelope).
+#[derive(Debug, Clone, Deserialize)]
+pub struct SolanaSimulation {
+    /// Non-null when the transaction would fail.
+    pub err: Option<serde_json::Value>,
+    /// Program logs emitted during simulation.
+    #[serde(default)]
+    pub logs: Option<Vec<String>>,
+    /// Compute units consumed.
+    #[serde(rename = "unitsConsumed")]
+    pub units_consumed: Option<u64>,
+}
+
+impl SolanaSimulation {
+    /// `true` when the simulated transaction would fail on-chain.
+    pub fn would_fail(&self) -> bool {
+        self.err.is_some()
+    }
+
+    /// Short human-readable failure reason, if any.
+    pub fn error_summary(&self) -> Option<String> {
+        self.err.as_ref().map(|e| match e {
+            serde_json::Value::String(s) => s.clone(),
+            other => other.to_string(),
+        })
     }
 }
 
@@ -475,6 +531,45 @@ mod tests {
         assert_eq!(records[1].status, TxStatus::Failed);
         assert_eq!(records[1].timestamp, None);
         assert_eq!(records[0].chain, ChainId::Solana);
+    }
+
+    #[test]
+    fn parse_simulate_transaction_result() {
+        // Successful simulation (trimmed real-shaped response value).
+        let ok = r#"{
+            "context": { "slot": 312041331 },
+            "value": {
+                "err": null,
+                "logs": [
+                    "Program 11111111111111111111111111111111 invoke [1]",
+                    "Program 11111111111111111111111111111111 success"
+                ],
+                "unitsConsumed": 150,
+                "returnData": null,
+                "accounts": null
+            }
+        }"#;
+        let parsed: RpcEnvelope<SolanaSimulation> = serde_json::from_str(ok).unwrap();
+        assert!(!parsed.value.would_fail());
+        assert_eq!(parsed.value.units_consumed, Some(150));
+        assert_eq!(parsed.value.logs.as_ref().unwrap().len(), 2);
+
+        // Failing simulation.
+        let failed = r#"{
+            "context": { "slot": 312041331 },
+            "value": {
+                "err": { "InstructionError": [0, { "Custom": 1 }] },
+                "logs": [],
+                "unitsConsumed": 0
+            }
+        }"#;
+        let parsed: RpcEnvelope<SolanaSimulation> = serde_json::from_str(failed).unwrap();
+        assert!(parsed.value.would_fail());
+        assert!(parsed
+            .value
+            .error_summary()
+            .unwrap()
+            .contains("InstructionError"));
     }
 
     #[tokio::test]

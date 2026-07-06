@@ -21,6 +21,10 @@ use crate::ChainAdapter;
 const SELECTOR_BALANCE_OF: [u8; 4] = [0x70, 0xa0, 0x82, 0x31];
 /// ERC-20 `transfer(address,uint256)` selector.
 const SELECTOR_TRANSFER: [u8; 4] = [0xa9, 0x05, 0x9c, 0xbb];
+/// ERC-20 `decimals()` selector.
+const SELECTOR_DECIMALS: [u8; 4] = [0x31, 0x3c, 0xe5, 0x67];
+/// ERC-20 `symbol()` selector.
+const SELECTOR_SYMBOL: [u8; 4] = [0x95, 0xd8, 0x9b, 0x41];
 
 /// A token the adapter should track. Without an indexer the adapter cannot
 /// *discover* tokens (TZ §F2.3 relies on an indexer for that), so the token
@@ -83,6 +87,84 @@ impl EvmAdapter {
             )))
         }
     }
+
+    /// Generic `eth_call` against the latest block.
+    ///
+    /// Used by the api-server transaction simulator (F4.3) to verify that a
+    /// call does not revert. Returns the raw hex result (`"0x..."`); a revert
+    /// surfaces as [`AdapterError::Rpc`] whose message usually contains the
+    /// revert reason.
+    pub async fn eth_call(
+        &self,
+        from: Option<&str>,
+        to: &str,
+        value: Option<u128>,
+        data: Option<&str>,
+    ) -> Result<String, AdapterError> {
+        let mut call = serde_json::Map::new();
+        if let Some(from) = from {
+            call.insert("from".into(), json!(from));
+        }
+        call.insert("to".into(), json!(to));
+        if let Some(value) = value {
+            call.insert("value".into(), json!(format!("0x{value:x}")));
+        }
+        if let Some(data) = data {
+            call.insert("data".into(), json!(data));
+        }
+        self.rpc.call("eth_call", json!([call, "latest"])).await
+    }
+
+    /// `eth_estimateGas` for a prospective transaction. A revert surfaces as
+    /// [`AdapterError::Rpc`].
+    pub async fn estimate_gas(
+        &self,
+        from: Option<&str>,
+        to: &str,
+        value: Option<u128>,
+        data: Option<&str>,
+    ) -> Result<u128, AdapterError> {
+        let mut call = serde_json::Map::new();
+        if let Some(from) = from {
+            call.insert("from".into(), json!(from));
+        }
+        call.insert("to".into(), json!(to));
+        if let Some(value) = value {
+            call.insert("value".into(), json!(format!("0x{value:x}")));
+        }
+        if let Some(data) = data {
+            call.insert("data".into(), json!(data));
+        }
+        let gas: String = self.rpc.call("eth_estimateGas", json!([call])).await?;
+        parse_hex_quantity(&gas)
+    }
+
+    /// ERC-20 `balanceOf(owner)` for an arbitrary token contract.
+    pub async fn erc20_balance(&self, token: &str, owner: &str) -> Result<u128, AdapterError> {
+        let calldata = erc20_balance_of_calldata(owner)?;
+        let result = self.eth_call(None, token, None, Some(&calldata)).await?;
+        if result == "0x" {
+            Ok(0)
+        } else {
+            parse_hex_quantity(&result)
+        }
+    }
+
+    /// ERC-20 `decimals()`. Errors if the contract does not implement it.
+    pub async fn erc20_decimals(&self, token: &str) -> Result<u8, AdapterError> {
+        let calldata = format!("0x{}", hex::encode(SELECTOR_DECIMALS));
+        let result = self.eth_call(None, token, None, Some(&calldata)).await?;
+        let value = parse_hex_quantity(&result)?;
+        u8::try_from(value)
+            .map_err(|_| AdapterError::parse(format!("decimals out of range: {value}")))
+    }
+
+    /// ERC-20 `symbol()`. `None` when the contract returns nothing decodable.
+    pub async fn erc20_symbol(&self, token: &str) -> Result<Option<String>, AdapterError> {
+        let calldata = format!("0x{}", hex::encode(SELECTOR_SYMBOL));
+        let result = self.eth_call(None, token, None, Some(&calldata)).await?;
+        Ok(decode_abi_string(&result))
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -144,6 +226,39 @@ pub(crate) fn erc20_transfer_calldata(to: &str, amount: u128) -> Result<Vec<u8>,
     data.extend_from_slice(&[0u8; 16]);
     data.extend_from_slice(&amount.to_be_bytes());
     Ok(data)
+}
+
+/// Decode an ABI-encoded return value into a UTF-8 string.
+///
+/// Handles both the standard dynamic `string` encoding
+/// (offset + length + bytes) and the legacy `bytes32` symbols some old
+/// tokens (MKR-style) return. `None` when nothing decodable.
+pub(crate) fn decode_abi_string(result: &str) -> Option<String> {
+    let hex_body = result.strip_prefix("0x").unwrap_or(result);
+    let bytes = hex::decode(hex_body).ok()?;
+    if bytes.is_empty() {
+        return None;
+    }
+    let text = if bytes.len() >= 64 && bytes[..31].iter().all(|b| *b == 0) && bytes[31] == 0x20 {
+        // Dynamic string: word 0 = offset (0x20), word 1 = length, then data.
+        let len = u64::from_be_bytes(bytes[56..64].try_into().ok()?) as usize;
+        if bytes[32..56].iter().any(|b| *b != 0) || bytes.len() < 64 + len {
+            return None;
+        }
+        String::from_utf8(bytes[64..64 + len].to_vec()).ok()?
+    } else if bytes.len() == 32 {
+        // bytes32: NUL-padded ASCII.
+        let end = bytes.iter().position(|b| *b == 0).unwrap_or(32);
+        String::from_utf8(bytes[..end].to_vec()).ok()?
+    } else {
+        return None;
+    };
+    let trimmed = text.trim();
+    if trimmed.is_empty() {
+        None
+    } else {
+        Some(trimmed.to_string())
+    }
 }
 
 /// Shape of an `eth_feeHistory` response.
@@ -295,6 +410,18 @@ impl ChainAdapter for EvmAdapter {
         })
     }
 
+    async fn get_transaction_count(&self, address: &Address) -> Result<u64, AdapterError> {
+        self.check_chain(address)?;
+        // "pending" — щоб послідовні надсилання не конфліктували за nonce.
+        let hex_count: String = self
+            .rpc
+            .call("eth_getTransactionCount", json!([address.as_str(), "pending"]))
+            .await?;
+        let count = parse_hex_quantity(&hex_count)?;
+        u64::try_from(count)
+            .map_err(|_| AdapterError::parse(format!("nonce завеликий: {hex_count}")))
+    }
+
     async fn broadcast(&self, signed_tx: &[u8]) -> Result<String, AdapterError> {
         if signed_tx.is_empty() {
             return Err(AdapterError::InvalidInput("empty signed transaction".into()));
@@ -385,6 +512,32 @@ mod tests {
             hex::encode(&data),
             "a9059cbb000000000000000000000000d8da6bf26964af9d7eed9e03e53415d37aa96045\
              00000000000000000000000000000000000000000000000000000000000f4240"
+        );
+    }
+
+    #[test]
+    fn abi_string_decoding() {
+        // Dynamic string "USDC" (real USDC symbol() return shape).
+        let dynamic = concat!(
+            "0x",
+            "0000000000000000000000000000000000000000000000000000000000000020",
+            "0000000000000000000000000000000000000000000000000000000000000004",
+            "5553444300000000000000000000000000000000000000000000000000000000"
+        );
+        assert_eq!(decode_abi_string(dynamic).as_deref(), Some("USDC"));
+
+        // Legacy bytes32 "MKR".
+        let bytes32 = "0x4d4b520000000000000000000000000000000000000000000000000000000000";
+        assert_eq!(decode_abi_string(bytes32).as_deref(), Some("MKR"));
+
+        assert_eq!(decode_abi_string("0x"), None);
+        assert_eq!(decode_abi_string("0xzz"), None);
+        // All-zero word decodes to nothing.
+        assert_eq!(
+            decode_abi_string(
+                "0x0000000000000000000000000000000000000000000000000000000000000000"
+            ),
+            None
         );
     }
 

@@ -1,8 +1,9 @@
 //! GET /v1/history — історія транзакцій (F3.6, F4.4).
 //!
 //! Реальні дані для Bitcoin (mempool.space) і Solana (getSignaturesForAddress)
-//! через chain-adapters. EVM — мок із TODO: plain JSON-RPC не вміє перелічити
-//! транзакції адреси, потрібен індексер (Alchemy/Etherscan/власний).
+//! через chain-adapters. EVM — через індексер Etherscan API v2
+//! (`crate::indexer`, потрібен ETHERSCAN_API_KEY; без ключа — порожній
+//! список із полем `note`, graceful degradation).
 
 use axum::{
     extract::{Query, State},
@@ -15,7 +16,8 @@ use chain_adapters::{Address, ChainId, TransactionRecord, TxStatus};
 
 use crate::chains::{format_base_units, native_coingecko_id};
 use crate::dto::{HistoryItem, HistoryQuery, HistoryResponse, TxCategory};
-use crate::handlers::{now_secs, ApiError};
+use crate::handlers::ApiError;
+use crate::indexer;
 use crate::state::AppState;
 
 const HISTORY_TIMEOUT: Duration = Duration::from_secs(10);
@@ -32,10 +34,7 @@ pub async fn history(
         .map_err(|_| ApiError::bad_request(format!("невідома мережа: {:?}", q.chain)))?;
 
     if chain.is_evm() {
-        // TODO(indexer): plain JSON-RPC не перелічує транзакції адреси.
-        // Потрібен індексер (Alchemy getAssetTransfers / Etherscan / власний
-        // indexer-крейт із ТЗ §3) + категоризація (F6.2) і описи ai-service.
-        return Ok(Json(evm_mock_history(chain)));
+        return evm_history(&state, chain, &q).await.map(Json);
     }
 
     let address = Address::new(chain, q.address.clone()).map_err(ApiError::from)?;
@@ -69,7 +68,53 @@ pub async fn history(
         items.truncate(limit as usize);
     }
 
-    Ok(Json(HistoryResponse { items, next_cursor }))
+    Ok(Json(HistoryResponse { items, next_cursor, note: None }))
+}
+
+/// EVM-історія через індексер Etherscan v2 (кеш TTL 30 с усередині).
+async fn evm_history(
+    state: &AppState,
+    chain: ChainId,
+    q: &HistoryQuery,
+) -> Result<HistoryResponse, ApiError> {
+    // Валідація адреси тим самим механізмом, що й для інших мереж.
+    let address = Address::new(chain, q.address.clone()).map_err(ApiError::from)?;
+
+    if !state.indexer.enabled() {
+        // Graceful: без ключа не падаємо, а чесно пояснюємо (ТЗ §1.2).
+        return Ok(HistoryResponse {
+            items: Vec::new(),
+            next_cursor: None,
+            note: Some(indexer::NO_KEY_NOTE.to_string()),
+        });
+    }
+
+    // Ціна нативної монети — для fee_usd (фейл цін не валить історію).
+    let (prices, _) = state
+        .prices
+        .get_prices(&[native_coingecko_id(chain).to_string()])
+        .await;
+    let native_usd = prices
+        .get(native_coingecko_id(chain))
+        .map(|p| p.usd)
+        .unwrap_or(0.0);
+
+    let mut items = tokio::time::timeout(
+        HISTORY_TIMEOUT,
+        state.indexer.history(chain, address.as_str(), native_usd),
+    )
+    .await
+    .map_err(|_| {
+        ApiError::bad_gateway(format!(
+            "{chain}: таймаут історії ({} с)",
+            HISTORY_TIMEOUT.as_secs()
+        ))
+    })??;
+
+    if let Some(limit) = q.limit {
+        items.truncate(limit as usize);
+    }
+    Ok(HistoryResponse { items, next_cursor: None, note: None })
 }
 
 /// Маппінг adapter-запису в DTO історії з людським описом українською.
@@ -147,56 +192,6 @@ fn shorten(addr: &str) -> String {
         addr.to_string()
     } else {
         format!("{}…{}", &addr[..6], &addr[addr.len() - 4..])
-    }
-}
-
-/// EVM: мок, доки немає індексера (див. TODO вище).
-fn evm_mock_history(chain: ChainId) -> HistoryResponse {
-    let now = now_secs();
-    let chain = chain.to_string();
-    HistoryResponse {
-        items: vec![
-            HistoryItem {
-                tx_hash: "0x8f3b1c9e42a7d5f6b0a1e2c3d4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3".into(),
-                chain: chain.clone(),
-                timestamp: now - 3600,
-                category: TxCategory::Transfer,
-                description: "Отримано 150 USDC від 0xab58…ec9b".into(),
-                direction: "in".into(),
-                amount: "150".into(),
-                symbol: "USDC".into(),
-                counterparty: Some("0xab5801a7d398351b8be11c439e05c5b3259aec9b".into()),
-                fee_usd: 0.0,
-                status: "confirmed".into(),
-            },
-            HistoryItem {
-                tx_hash: "0x1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b".into(),
-                chain: chain.clone(),
-                timestamp: now - 86_400,
-                category: TxCategory::Approve,
-                description: "Надано Uniswap Router дозвіл витрачати до 500 USDC".into(),
-                direction: "out".into(),
-                amount: "0".into(),
-                symbol: "USDC".into(),
-                counterparty: Some("0x66a9893cc07d91d95644aedd05d03f95e1dba8af".into()),
-                fee_usd: 1.42,
-                status: "confirmed".into(),
-            },
-            HistoryItem {
-                tx_hash: "0x9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d".into(),
-                chain,
-                timestamp: now - 2 * 86_400,
-                category: TxCategory::Swap,
-                description: "Обмін 0.2 ETH на 698.4 USDC через Uniswap".into(),
-                direction: "self".into(),
-                amount: "0.2".into(),
-                symbol: "ETH".into(),
-                counterparty: Some("0x66a9893cc07d91d95644aedd05d03f95e1dba8af".into()),
-                fee_usd: 3.87,
-                status: "confirmed".into(),
-            },
-        ],
-        next_cursor: None,
     }
 }
 

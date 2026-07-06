@@ -18,6 +18,14 @@ pub struct Config {
     /// Ключ OpenAI API. Env: `OPENAI_API_KEY`.
     /// TODO: використовується провайдером ai::OpenAiProvider (async-openai).
     pub openai_api_key: Option<String>,
+    /// Ключ Etherscan API v2 (один на всі EVM-мережі, F3.6/F6). Env:
+    /// `ETHERSCAN_API_KEY`. Без ключа історія EVM повертається порожньою
+    /// з полем `note` (graceful degradation, не падає).
+    pub etherscan_api_key: Option<String>,
+    /// Ключ Alchemy (опційний, F4.3): якщо задано, /v1/tx/simulate для EVM
+    /// використовує `alchemy_simulateAssetChanges` замість детермінованої
+    /// симуляції. Env: `ALCHEMY_API_KEY`.
+    pub alchemy_api_key: Option<String>,
     /// CORS allowlist (origin розширення). Env: `ALLOWED_ORIGINS` (через кому).
     /// TODO: у проді — тільки extension origin (ТЗ розділ 6, п.6).
     pub allowed_origins: Vec<String>,
@@ -44,6 +52,9 @@ pub struct RpcConfig {
     pub mempool_space: String,
     /// Env: `COINGECKO_API_URL` (корінь CoinGecko API v3).
     pub coingecko: String,
+    /// Env: `ETHERSCAN_API_URL` (корінь Etherscan API v2 — один ендпоінт
+    /// на всі EVM-мережі, мережа обирається параметром `chainid`).
+    pub etherscan: String,
 }
 
 impl RpcConfig {
@@ -58,6 +69,7 @@ impl RpcConfig {
             solana: var("SOLANA_RPC_URL", defaults::SOLANA_RPC_URL),
             mempool_space: var("MEMPOOL_SPACE_URL", defaults::MEMPOOL_SPACE_URL),
             coingecko: var("COINGECKO_API_URL", defaults::COINGECKO_API_URL),
+            etherscan: var("ETHERSCAN_API_URL", defaults::ETHERSCAN_API_URL),
         }
     }
 }
@@ -73,6 +85,7 @@ impl Default for RpcConfig {
             solana: defaults::SOLANA_RPC_URL.into(),
             mempool_space: defaults::MEMPOOL_SPACE_URL.into(),
             coingecko: defaults::COINGECKO_API_URL.into(),
+            etherscan: defaults::ETHERSCAN_API_URL.into(),
         }
     }
 }
@@ -87,6 +100,7 @@ pub mod defaults {
     pub const SOLANA_RPC_URL: &str = "https://api.mainnet-beta.solana.com";
     pub const MEMPOOL_SPACE_URL: &str = "https://mempool.space/api";
     pub const COINGECKO_API_URL: &str = "https://api.coingecko.com/api/v3";
+    pub const ETHERSCAN_API_URL: &str = "https://api.etherscan.io/v2/api";
 }
 
 impl Config {
@@ -110,6 +124,12 @@ impl Config {
             database_url: env::var("DATABASE_URL").ok(),
             redis_url: env::var("REDIS_URL").ok(),
             openai_api_key: env::var("OPENAI_API_KEY").ok(),
+            etherscan_api_key: env::var("ETHERSCAN_API_KEY")
+                .ok()
+                .filter(|k| !k.trim().is_empty()),
+            alchemy_api_key: env::var("ALCHEMY_API_KEY")
+                .ok()
+                .filter(|k| !k.trim().is_empty()),
             allowed_origins,
             rpc: RpcConfig::from_env(),
         }
@@ -123,6 +143,8 @@ impl Default for Config {
             database_url: None,
             redis_url: None,
             openai_api_key: None,
+            etherscan_api_key: None,
+            alchemy_api_key: None,
             allowed_origins: Vec::new(),
             rpc: RpcConfig::default(),
         }
