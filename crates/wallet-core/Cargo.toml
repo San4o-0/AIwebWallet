@@ -1,0 +1,48 @@
+[package]
+name = "wallet-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "AI Wallet crypto core: BIP-39 mnemonics, HD derivation (EVM/Solana/Bitcoin), signing, encrypted vault"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# Mnemonics / seeds
+bip39 = { version = "2.1", features = ["rand"] }
+
+# EVM (secp256k1 + keccak256)
+k256 = { version = "0.13", features = ["ecdsa"] }
+sha3 = "0.10"
+
+# Solana (SLIP-0010 ed25519 + base58)
+ed25519-dalek = { version = "2.1", features = ["zeroize"] }
+slip10_ed25519 = "0.1"
+bs58 = "0.5"
+
+# Bitcoin (BIP-32/84, bech32 addresses, WIF)
+bitcoin = "0.32"
+
+# Vault encryption
+aes-gcm = "0.10"
+argon2 = "0.5"
+rand = "0.8"
+
+# Common
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "1"
+zeroize = { version = "1.8", features = ["derive"] }
+hex = "0.4"
+
+# WASM bindings (feature-gated so native builds do not pull them)
+wasm-bindgen = { version = "0.2", optional = true }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+# Make OS randomness work in browsers (crypto.getRandomValues)
+getrandom = { version = "0.2", features = ["js"] }
+
+[features]
+default = []
+wasm = ["dep:wasm-bindgen"]

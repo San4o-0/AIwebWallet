@@ -1,0 +1,10 @@
+/target
+node_modules/
+dist/
+.output/
+.wxt/
+*.wasm
+pkg/
+.env
+.env.local
+*.log

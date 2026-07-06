@@ -1,0 +1,17 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/wallet-core",
+    "crates/chain-adapters",
+    "crates/api-server",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[profile.release]
+lto = true
+opt-level = "z"
+strip = true

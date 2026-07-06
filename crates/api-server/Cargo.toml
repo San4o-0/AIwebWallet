@@ -1,0 +1,28 @@
+[package]
+name = "api-server"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "AI Wallet backend: Axum API gateway (balances, tx decode/simulate/risk/explain, chat, analytics)"
+
+# ВАЖЛИВО: жодних залежностей на wallet-core / chain-adapters —
+# інтеграція буде окремим кроком, DTO тут локальні.
+
+[dependencies]
+axum = "0.8"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "signal", "time"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors", "trace"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+futures = "0.3"
+tokio-stream = { version = "0.1", features = ["time"] }
+async-trait = "0.1"
+# TODO: sqlx (PostgreSQL), fred (Redis), alloy (EVM), async-openai — додаються
+# на етапі інтеграції реальних сервісів, щоб не роздувати збірку скелета.
+
+[dev-dependencies]
+tower = { version = "0.5", features = ["util"] }
+http-body-util = "0.1"
