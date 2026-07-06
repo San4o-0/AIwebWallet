@@ -5,11 +5,23 @@ import { defineConfig } from 'wxt';
 // Докладніше: https://wxt.dev/api/config.html
 export default defineConfig({
   modules: ['@wxt-dev/module-react'],
-  manifest: {
+  manifest: ({ browser }) => ({
     name: 'AI Wallet',
     description:
       'Non-custodial криптогаманець з AI-помічником: пояснення транзакцій, аналіз ризиків, чат.',
     permissions: ['storage', 'alarms'],
+    // Явний ID для Firefox (about:debugging приймає і без нього, але для
+    // підпису/оновлень addons.mozilla.org ID обов'язковий).
+    ...(browser === 'firefox'
+      ? {
+          browser_specific_settings: {
+            gecko: {
+              id: 'ai-wallet@aiwallet.dev',
+              strict_min_version: '115.0',
+            },
+          },
+        }
+      : {}),
     // WASM-ядро (crates/wallet-core): MV3 вимагає 'wasm-unsafe-eval' для
     // WebAssembly.instantiate у extension pages та background service worker.
     content_security_policy: {
@@ -23,7 +35,7 @@ export default defineConfig({
         matches: ['<all_urls>'],
       },
     ],
-  },
+  }),
   vite: () => ({
     plugins: [tailwindcss()],
     build: {
