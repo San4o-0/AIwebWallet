@@ -10,7 +10,14 @@
 import { useState } from 'react';
 
 import { BrandMark } from '@/src/components/icons';
-import { Button, Eyebrow, Field, ScreenTitle, Textarea } from '@/src/components/ui';
+import {
+  Button,
+  Eyebrow,
+  Field,
+  ScreenTitle,
+  SeedPhraseTextarea,
+  StepHeader,
+} from '@/src/components/ui';
 import { walletCore } from '@/src/lib/wallet-core';
 import { useWalletStore } from '@/src/store/wallet';
 
@@ -30,38 +37,6 @@ export default function Onboarding() {
       {mode === 'create' && <CreateFlow onBack={() => setMode('choice')} />}
       {mode === 'import' && <ImportFlow onBack={() => setMode('choice')} />}
     </div>
-  );
-}
-
-/** Шапка кроку: eyebrow «Крок N з M · Назва» + серифний заголовок. */
-function StepHeader({
-  step,
-  total,
-  section,
-  title,
-}: {
-  step: number;
-  total: number;
-  section: string;
-  title: string;
-}) {
-  return (
-    <header>
-      <Eyebrow className="mb-1">
-        Крок {step} з {total} · {section}
-      </Eyebrow>
-      <ScreenTitle>{title}</ScreenTitle>
-      <div className="mt-3 flex gap-1.5" aria-hidden>
-        {Array.from({ length: total }, (_, index) => (
-          <span
-            key={index}
-            className={`h-0.5 flex-1 rounded-full ${
-              index < step ? 'bg-brass' : 'bg-hairline'
-            }`}
-          />
-        ))}
-      </div>
-    </header>
   );
 }
 
@@ -312,14 +287,11 @@ function ImportFlow({ onBack }: { onBack: () => void }) {
         ))}
       </div>
 
-      <Textarea
+      <SeedPhraseTextarea
         label={source === 'mnemonic' ? 'Seed-фраза (12 або 24 слова)' : 'Приватний ключ'}
         value={phrase}
         onChange={(e) => setPhrase(e.target.value)}
-        rows={3}
-        placeholder={source === 'mnemonic' ? 'слово слово слово …' : '0x…'}
-        className="font-mono"
-        spellCheck={false}
+        placeholder={source === 'mnemonic' ? undefined : '0x…'}
       />
       <Field
         label={addingWallet ? 'Пароль нового гаманця' : 'Новий пароль'}

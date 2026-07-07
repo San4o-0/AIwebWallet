@@ -23,6 +23,7 @@ import type { Chain } from './chains';
 import {
   MessageType,
   type PublicAccount,
+  type RestoreErrorCode,
   type VaultResult,
   type WalletsState,
 } from './messaging';
@@ -30,7 +31,21 @@ import { sendToBackground } from './runtime';
 import { hasAnyVault } from './vault-storage';
 import { loadWalletCoreWasm, toWasmError } from '../wasm';
 
-export type { PublicAccount, WalletsState, WalletSummary } from './messaging';
+export type { PublicAccount, RestoreErrorCode, WalletsState, WalletSummary } from './messaging';
+
+/**
+ * Типізована помилка відновлення пароля seed-фразою: UI розрізняє коди
+ * (напр. 'wallet-mismatch' → пропозиція «Відновити як новий гаманець»).
+ */
+export class RestoreError extends Error {
+  constructor(
+    readonly code: RestoreErrorCode,
+    message: string,
+  ) {
+    super(message);
+    this.name = 'RestoreError';
+  }
+}
 
 /** Непідписана транзакція у JSON-представленні конкретної мережі. */
 export interface UnsignedTransaction {
@@ -54,6 +69,14 @@ export interface WalletCore {
   importWallet(mnemonic: readonly string[], password: string): Promise<PublicAccount>;
   /** Розблокувати АКТИВНИЙ гаманець паролем; повертає акаунти або кидає помилку. */
   unlock(password: string): Promise<PublicAccount[]>;
+  /**
+   * «Забув пароль»: відновити доступ до АКТИВНОГО гаманця його seed-фразою
+   * і задати новий пароль. Background верифікує належність фрази (деривовані
+   * адреси проти публічних accounts запису) і замінює лише шифротекст у тому
+   * самому VaultRecord (id/name/accounts зберігаються), розблоковуючи сесію.
+   * Кидає RestoreError із типізованим кодом.
+   */
+  restorePassword(mnemonic: readonly string[], newPassword: string): Promise<PublicAccount[]>;
   /** Список гаманців (публічні метадані) + id активного. */
   listWallets(): Promise<WalletsState>;
   /**
@@ -136,6 +159,26 @@ class WasmWalletCore implements WalletCore {
     // залишається в пам'яті сесії SW і не повертається в popup.
     const result = await sendToBackground({ type: MessageType.VaultUnlock, password });
     return unwrap(result);
+  }
+
+  async restorePassword(
+    mnemonic: readonly string[],
+    newPassword: string,
+  ): Promise<PublicAccount[]> {
+    // Фраза йде лише в background (пам'ять SW) — ніколи у storage.
+    const result = await sendToBackground({
+      type: MessageType.RestoreVaultPassword,
+      phrase: mnemonic.join(' '),
+      newPassword,
+    });
+    if (result === undefined) {
+      throw new RestoreError(
+        'internal',
+        'Background-скрипт не відповідає. Перезапустіть розширення.',
+      );
+    }
+    if (!result.ok) throw new RestoreError(result.code, result.error);
+    return result.value;
   }
 
   async lock(): Promise<void> {

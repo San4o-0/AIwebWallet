@@ -15,6 +15,7 @@ export default function Unlock() {
   const wallets = useWalletStore((s) => s.wallets);
   const activeWalletId = useWalletStore((s) => s.activeWalletId);
   const switchWallet = useWalletStore((s) => s.switchWallet);
+  const startRestorePassword = useWalletStore((s) => s.startRestorePassword);
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -129,9 +130,19 @@ export default function Unlock() {
         {error !== null && <p className="mt-2 text-left text-xs text-terra">{error}</p>}
       </div>
 
-      <Button type="submit" className="w-full" disabled={busy || password.length === 0}>
-        {busy ? 'Розблокування…' : 'Розблокувати'}
-      </Button>
+      <div className="flex w-full flex-col items-center gap-3">
+        <Button type="submit" className="w-full" disabled={busy || password.length === 0}>
+          {busy ? 'Розблокування…' : 'Розблокувати'}
+        </Button>
+        {/* Тихий вихід для тих, хто забув пароль: відновлення seed-фразою */}
+        <button
+          type="button"
+          onClick={startRestorePassword}
+          className="text-xs text-muted underline-offset-2 transition-colors hover:text-ink hover:underline"
+        >
+          Забули пароль?
+        </button>
+      </div>
 
       <p className="max-w-[280px] text-xs leading-relaxed text-muted/80">
         Пароль розшифровує сховище локально й нікуди не надсилається. У кожного

@@ -201,6 +201,50 @@ export async function addVaultRecord(params: {
   return record;
 }
 
+/** Деривовані адреси акаунта index=0 (JSON-форма derivation::Addresses без index). */
+export interface DerivedAddresses {
+  evm: string;
+  solana: string;
+  bitcoin: string;
+}
+
+/**
+ * Чи належить seed-фраза САМЕ цьому гаманцю: деривовані з фрази адреси
+ * акаунта index=0 порівнюються з ПУБЛІЧНИМИ адресами запису (accounts
+ * зберігаються відкрито, тож перевірка не потребує пароля).
+ *
+ * EVM порівнюється без регістру (EIP-55 checksum-регістр не має значення)
+ * і є обов'язковим; Solana/Bitcoin звіряються, лише якщо запис має непорожні
+ * значення (захист від старих/часткових записів).
+ */
+export function mnemonicOwnsRecord(
+  derived: DerivedAddresses,
+  record: Pick<VaultRecord, 'accounts'>,
+): boolean {
+  const primary =
+    record.accounts.find((account) => account.index === 0) ?? record.accounts[0];
+  if (primary === undefined) return false;
+  const { evm, solana, bitcoin } = primary.addresses;
+  if (evm.length === 0 || evm.toLowerCase() !== derived.evm.toLowerCase()) return false;
+  if (solana.length > 0 && solana !== derived.solana) return false;
+  if (bitcoin.length > 0 && bitcoin !== derived.bitcoin) return false;
+  return true;
+}
+
+/**
+ * Замінює ЛИШЕ шифротекст гаманця (флоу «забув пароль»: та сама фраза,
+ * новий пароль). id, name, createdAt і публічні accounts зберігаються.
+ * Повертає оновлений запис.
+ */
+export async function replaceVaultCiphertext(id: string, vault: string): Promise<VaultRecord> {
+  const vaults = await listVaultRecords();
+  const current = vaults.find((record) => record.id === id);
+  if (current === undefined) throw new Error('Гаманець не знайдено.');
+  const updated: VaultRecord = { ...current, vault };
+  await writeVaults(vaults.map((record) => (record.id === id ? updated : record)));
+  return updated;
+}
+
 /** Оновлює публічні акаунти гаманця (після деривації нового акаунта). */
 export async function updateVaultAccounts(id: string, accounts: PublicAccount[]): Promise<void> {
   const vaults = await listVaultRecords();

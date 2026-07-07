@@ -16,6 +16,7 @@ import Chat from '@/src/screens/Chat';
 import Home from '@/src/screens/Home';
 import Onboarding from '@/src/screens/Onboarding';
 import Receive from '@/src/screens/Receive';
+import RestoreWallet from '@/src/screens/RestoreWallet';
 import Send from '@/src/screens/Send';
 import Settings from '@/src/screens/Settings';
 import Unlock from '@/src/screens/Unlock';
@@ -34,7 +35,8 @@ const isApproveView =
   new URLSearchParams(window.location.search).get('view') === 'approve';
 
 export default function App() {
-  const { hasWallet, unlocked, screen, setScreen, initialize, addingWallet } = useWalletStore();
+  const { hasWallet, unlocked, screen, setScreen, initialize, addingWallet, restoringPassword } =
+    useWalletStore();
 
   useEffect(() => {
     void initialize();
@@ -58,7 +60,9 @@ export default function App() {
   // Режим «додати гаманець»: той самий онбординг без вітальних кроків,
   // на весь екран (без нижньої навігації).
   if (addingWallet && screen === 'onboarding') return <Onboarding />;
-  if (!unlocked) return <Unlock />;
+  // «Забули пароль?»: повноекранний степер відновлення seed-фразою
+  // (без нижньої навігації, як онбординг у режимі додавання).
+  if (!unlocked) return restoringPassword ? <RestoreWallet /> : <Unlock />;
 
   const renderScreen = () => {
     switch (screen) {

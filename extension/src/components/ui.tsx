@@ -72,6 +72,25 @@ export function Textarea({ label, className = '', ...rest }: TextareaProps) {
   );
 }
 
+/**
+ * Поле вводу seed-фрази (онбординг-імпорт і відновлення пароля): mono,
+ * без spellcheck/автозаповнення — фраза не має потрапляти у словники браузера.
+ */
+export function SeedPhraseTextarea({ className = '', ...rest }: TextareaProps) {
+  return (
+    <Textarea
+      rows={3}
+      placeholder="слово слово слово …"
+      spellCheck={false}
+      autoComplete="off"
+      autoCapitalize="off"
+      autoCorrect="off"
+      {...rest}
+      className={`font-mono ${className}`}
+    />
+  );
+}
+
 export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
 }
@@ -148,6 +167,41 @@ export function ScreenHeader({
       <Eyebrow className="mb-1">{eyebrow}</Eyebrow>
       <ScreenTitle>{title}</ScreenTitle>
       {children}
+    </header>
+  );
+}
+
+/**
+ * Шапка кроку багатокрокового флоу (онбординг, відновлення пароля):
+ * eyebrow «Крок N з M · Розділ» + серифний заголовок + латунні прогрес-риски.
+ */
+export function StepHeader({
+  step,
+  total,
+  section,
+  title,
+}: {
+  step: number;
+  total: number;
+  section: string;
+  title: string;
+}) {
+  return (
+    <header>
+      <Eyebrow className="mb-1">
+        Крок {step} з {total} · {section}
+      </Eyebrow>
+      <ScreenTitle>{title}</ScreenTitle>
+      <div className="mt-3 flex gap-1.5" aria-hidden>
+        {Array.from({ length: total }, (_, index) => (
+          <span
+            key={index}
+            className={`h-0.5 flex-1 rounded-full ${
+              index < step ? 'bg-brass' : 'bg-hairline'
+            }`}
+          />
+        ))}
+      </div>
     </header>
   );
 }

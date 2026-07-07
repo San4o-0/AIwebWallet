@@ -63,6 +63,14 @@ export enum MessageType {
   RenameWallet = 'aiwallet/rename-wallet',
   /** Popup → background: видалити гаманець (шифротекст зникає назавжди). */
   RemoveWallet = 'aiwallet/remove-wallet',
+  /**
+   * Popup → background: «забув пароль» — відновити доступ до АКТИВНОГО
+   * гаманця його seed-фразою: верифікація належності фрази (деривація адрес
+   * і порівняння з публічними accounts запису) → новий шифротекст із новим
+   * паролем у ТОМУ САМОМУ VaultRecord (id/name/accounts зберігаються) →
+   * розблокування сесії.
+   */
+  RestoreVaultPassword = 'aiwallet/restore-vault-password',
 }
 
 // --- Мульти-гаманець: публічні метадані для UI --------------------------------
@@ -260,6 +268,33 @@ export type VaultResult<T> =
   | { ok: true; value: T }
   | { ok: false; error: string };
 
+// --- Відновлення пароля seed-фразою («забув пароль») ------------------------
+
+export interface BgRestoreVaultPassword {
+  type: MessageType.RestoreVaultPassword;
+  /** Seed-фраза (пробіл-розділена). Живе лише в пам'яті popup/SW, не в storage. */
+  phrase: string;
+  newPassword: string;
+}
+
+/** Типізовані причини відмови відновлення — UI розрізняє їх по-різному. */
+export type RestoreErrorCode =
+  /** Фраза не проходить BIP-39 (слово поза словником / checksum). */
+  | 'invalid-phrase'
+  /** Фраза валідна, але деривовані адреси не збігаються з цим гаманцем. */
+  | 'wallet-mismatch'
+  /** Активного гаманця немає (сховище порожнє). */
+  | 'no-wallet'
+  /** Новий пароль не проходить правила (мінімум 8 символів). */
+  | 'weak-password'
+  /** Інша помилка (WASM/storage). */
+  | 'internal';
+
+/** Результат RestoreVaultPassword: успіх (акаунти розблокованої сесії) або типізована помилка. */
+export type RestoreVaultResult =
+  | { ok: true; value: PublicAccount[] }
+  | { ok: false; code: RestoreErrorCode; error: string };
+
 export interface BgGetPendingRequests {
   type: MessageType.GetPendingRequests;
 }
@@ -306,7 +341,8 @@ export type BackgroundMessage =
   | BgListWallets
   | BgSwitchWallet
   | BgRenameWallet
-  | BgRemoveWallet;
+  | BgRemoveWallet
+  | BgRestoreVaultPassword;
 
 /** Стан сесії у service worker. */
 export interface SessionState {
@@ -347,6 +383,7 @@ export interface BackgroundResponseMap {
   [MessageType.SwitchWallet]: VaultResult<WalletsState>;
   [MessageType.RenameWallet]: VaultResult<WalletsState>;
   [MessageType.RemoveWallet]: VaultResult<WalletsState>;
+  [MessageType.RestoreVaultPassword]: RestoreVaultResult;
 }
 
 const BACKGROUND_MESSAGE_TYPES: ReadonlySet<string> = new Set([
@@ -364,6 +401,7 @@ const BACKGROUND_MESSAGE_TYPES: ReadonlySet<string> = new Set([
   MessageType.SwitchWallet,
   MessageType.RenameWallet,
   MessageType.RemoveWallet,
+  MessageType.RestoreVaultPassword,
 ]);
 
 /**
@@ -382,6 +420,7 @@ export const PRIVILEGED_MESSAGE_TYPES: ReadonlySet<string> = new Set([
   MessageType.SwitchWallet,
   MessageType.RenameWallet,
   MessageType.RemoveWallet,
+  MessageType.RestoreVaultPassword,
 ]);
 
 export function isBackgroundMessage(value: unknown): value is BackgroundMessage {

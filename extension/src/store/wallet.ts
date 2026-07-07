@@ -6,7 +6,19 @@ import { create } from 'zustand';
 
 import { MessageType, type SessionState, type WalletsState } from '@/src/lib/messaging';
 import { sendToBackground } from '@/src/lib/runtime';
-import { walletCore, type PublicAccount, type WalletSummary } from '@/src/lib/wallet-core';
+import {
+  RestoreError,
+  walletCore,
+  type PublicAccount,
+  type RestoreErrorCode,
+  type WalletSummary,
+} from '@/src/lib/wallet-core';
+
+/** Помилка відновлення пароля для UI: код + текст (null — успіх). */
+export interface RestoreFailure {
+  code: RestoreErrorCode;
+  message: string;
+}
 
 export type Screen =
   | 'onboarding'
@@ -35,6 +47,12 @@ interface WalletStore {
    * гаманці не чіпаються, у нового — власний пароль.
    */
   addingWallet: boolean;
+  /**
+   * Флоу «Забули пароль?» з Unlock: повноекранний степер RestoreWallet
+   * (пароль не відновлюється — гаманець відновлюється seed-фразою з новим
+   * паролем у тому самому записі).
+   */
+  restoringPassword: boolean;
 
   setScreen: (screen: Screen) => void;
   /** Початкова ініціалізація при відкритті попапа. */
@@ -57,6 +75,19 @@ interface WalletStore {
   startAddWallet: () => void;
   /** Скасувати додавання і повернутись до Settings. */
   cancelAddWallet: () => void;
+
+  /** Відкрити флоу «Забули пароль?» (з екрана Unlock). */
+  startRestorePassword: () => void;
+  /** Скасувати відновлення і повернутись до Unlock. */
+  cancelRestorePassword: () => void;
+  /**
+   * Відновити доступ до активного гаманця seed-фразою + новим паролем.
+   * Успіх — сесію розблоковано (Home); повертає null або типізовану помилку.
+   */
+  restorePassword: (
+    mnemonic: readonly string[],
+    newPassword: string,
+  ) => Promise<RestoreFailure | null>;
 }
 
 /** Активний гаманець зі списку (для назви в шапці/Unlock). */
@@ -75,6 +106,7 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
   wallets: [],
   activeWalletId: null,
   addingWallet: false,
+  restoringPassword: false,
 
   setScreen: (screen) => set({ screen }),
 
@@ -96,6 +128,7 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
         wallets: [],
         activeWalletId: null,
         addingWallet: false,
+        restoringPassword: false,
       });
       return;
     }
@@ -145,7 +178,14 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
 
   completeOnboarding: async (account) => {
     // Сесію в background уже розблоковано під час створення vault.
-    set({ hasWallet: true, unlocked: true, account, screen: 'home', addingWallet: false });
+    set({
+      hasWallet: true,
+      unlocked: true,
+      account,
+      screen: 'home',
+      addingWallet: false,
+      restoringPassword: false,
+    });
     await get().refreshWallets();
   },
 
@@ -226,4 +266,35 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
   startAddWallet: () => set({ addingWallet: true, screen: 'onboarding' }),
 
   cancelAddWallet: () => set({ addingWallet: false, screen: 'settings' }),
+
+  startRestorePassword: () => set({ restoringPassword: true }),
+
+  cancelRestorePassword: () => set({ restoringPassword: false, screen: 'unlock' }),
+
+  restorePassword: async (mnemonic, newPassword) => {
+    try {
+      // Верифікація належності фрази + заміна шифротексту — у background;
+      // сесія там уже розблокована при успіху.
+      const accounts = await walletCore.restorePassword(mnemonic, newPassword);
+      const account = accounts[0];
+      if (account === undefined) {
+        return { code: 'internal', message: 'Сховище порожнє.' };
+      }
+      set({
+        unlocked: true,
+        account,
+        screen: 'home',
+        restoringPassword: false,
+      });
+      return null;
+    } catch (error) {
+      if (error instanceof RestoreError) {
+        return { code: error.code, message: error.message };
+      }
+      return {
+        code: 'internal',
+        message: error instanceof Error ? error.message : 'Не вдалося відновити гаманець.',
+      };
+    }
+  },
 }));

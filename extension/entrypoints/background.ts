@@ -26,6 +26,7 @@ import {
   type BgRemoveWallet,
   type BgRenameWallet,
   type BgResolveApproval,
+  type BgRestoreVaultPassword,
   type BgRpcRequest,
   type BgSwitchWallet,
   type BgVaultCreate,
@@ -36,6 +37,7 @@ import {
   type Json,
   type PendingSignRequest,
   type PublicAccount,
+  type RestoreVaultResult,
   type RpcOutcome,
   type SessionState,
   type VaultResult,
@@ -46,8 +48,10 @@ import {
   getActiveVaultId,
   getActiveVaultRecord,
   listVaultRecords,
+  mnemonicOwnsRecord,
   removeVaultRecord,
   renameVaultRecord,
+  replaceVaultCiphertext,
   setActiveVaultId,
   updateVaultAccounts,
   type VaultRecord,
@@ -219,6 +223,80 @@ export default defineBackground(() => {
       return { ok: true, value: account };
     } catch (error) {
       return vaultError(error);
+    }
+  }
+
+  /**
+   * «Забув пароль» (RestoreVaultPassword, тільки з popup): пароль не
+   * відновлюється за дизайном — натомість seed-фраза (головний ключ)
+   * доводить володіння гаманцем і задає НОВИЙ пароль:
+   *
+   *  1. BIP-39-валідація фрази (без Argon2id — швидко);
+   *  2. верифікація належності: deriveAddresses(phrase, 0) звіряється з
+   *     ПУБЛІЧНИМИ адресами активного VaultRecord (mnemonicOwnsRecord) —
+   *     чужа фраза дає типізовану помилку 'wallet-mismatch' і НІЧОГО не змінює;
+   *  3. createVault(фраза, новий пароль) → заміна ЛИШЕ шифротексту в тому
+   *     самому записі (id/name/createdAt/accounts зберігаються);
+   *  4. розблокування сесії новим станом.
+   */
+  async function restoreVaultPassword(
+    message: BgRestoreVaultPassword,
+  ): Promise<RestoreVaultResult> {
+    const record = await getActiveVaultRecord();
+    if (record === null) {
+      return { ok: false, code: 'no-wallet', error: 'Гаманець не створено.' };
+    }
+    if (message.newPassword.length < 8) {
+      return {
+        ok: false,
+        code: 'weak-password',
+        error: 'Пароль має містити щонайменше 8 символів.',
+      };
+    }
+    try {
+      const wasm = await loadWalletCoreWasm();
+      // Нормалізація як в імпорті: зайві пробіли/регістр не мають ламати фразу.
+      const phrase = message.phrase.trim().toLowerCase().split(/\s+/).join(' ');
+      if (!wasm.validateMnemonic(phrase)) {
+        return {
+          ok: false,
+          code: 'invalid-phrase',
+          error:
+            'Невірна seed-фраза: слово поза словником BIP-39 або checksum не збігається.',
+        };
+      }
+      const derived = JSON.parse(wasm.deriveAddresses(phrase, 0)) as WasmAddresses;
+      if (!mnemonicOwnsRecord(derived, record)) {
+        return {
+          ok: false,
+          code: 'wallet-mismatch',
+          error: 'Ця фраза належить іншому гаманцю. Перевірте слова.',
+        };
+      }
+      const accountName = record.accounts[0]?.name ?? 'Акаунт 1';
+      // Новий шифротекст: Argon2id → AES-256-GCM з НОВИМ паролем (повільно — ок).
+      const encryptedVault = wasm.createVault(phrase, message.newPassword, accountName);
+      // Секрети попередньої сесії (якщо була) затираються ДО заміни.
+      lockSession();
+      const updated = await replaceVaultCiphertext(record.id, encryptedVault);
+      const accounts: PublicAccount[] =
+        updated.accounts.length > 0
+          ? updated.accounts
+          : [
+              {
+                index: 0,
+                name: accountName,
+                addresses: {
+                  evm: derived.evm,
+                  solana: derived.solana,
+                  bitcoin: derived.bitcoin,
+                },
+              },
+            ];
+      unlockSession(updated, phrase, accounts);
+      return { ok: true, value: accounts };
+    } catch (error) {
+      return { ok: false, code: 'internal', error: toWasmError(error).message };
     }
   }
 
@@ -547,6 +625,8 @@ export default defineBackground(() => {
         return renameWallet(message);
       case MessageType.RemoveWallet:
         return removeWallet(message);
+      case MessageType.RestoreVaultPassword:
+        return restoreVaultPassword(message);
     }
   }
 
