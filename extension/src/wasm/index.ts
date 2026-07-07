@@ -23,13 +23,38 @@ export type WalletCoreWasm = typeof wasm;
 let loading: Promise<WalletCoreWasm> | null = null;
 
 /**
- * Ініціалізує WASM-модуль один раз на контекст (popup / service worker)
- * і повертає його експорти. Повторні виклики повертають той самий проміс.
+ * Ініціалізація з fallback для Firefox: `WebAssembly.instantiateStreaming`
+ * вимагає MIME `application/wasm`; для moz-extension:// ресурсів Firefox може
+ * віддати Response, на якому streaming-інстанціація кидає TypeError (а
+ * вбудований fallback wasm-bindgen спрацьовує не для всіх Response.type).
+ * Тоді повторюємо через fetch → arrayBuffer → WebAssembly.instantiate.
+ */
+async function initialize(): Promise<WalletCoreWasm> {
+  const url = browser.runtime.getURL('/wallet_core_bg.wasm');
+  try {
+    await initWasm({ module_or_path: url });
+  } catch (streamingError) {
+    console.warn(
+      '[aiwallet] instantiateStreaming не вдалась, fallback на ArrayBuffer:',
+      streamingError,
+    );
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Не вдалося завантажити WASM-ядро: HTTP ${response.status}`);
+    await initWasm({ module_or_path: await response.arrayBuffer() });
+  }
+  return wasm;
+}
+
+/**
+ * Ініціалізує WASM-модуль один раз на контекст (popup / background)
+ * і повертає його експорти. Повторні виклики повертають той самий проміс;
+ * невдала спроба НЕ кешується — наступний виклик пробує знову.
  */
 export function loadWalletCoreWasm(): Promise<WalletCoreWasm> {
-  loading ??= initWasm({
-    module_or_path: browser.runtime.getURL('/wallet_core_bg.wasm'),
-  }).then(() => wasm);
+  loading ??= initialize().catch((error: unknown) => {
+    loading = null;
+    throw error;
+  });
   return loading;
 }
 

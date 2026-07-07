@@ -43,7 +43,7 @@ export default function Activity() {
         </div>
       )}
 
-      {!isLoading && (data?.items.length ?? 0) === 0 && (
+      {!isLoading && (data?.items?.length ?? 0) === 0 && (
         <EmptyState>Транзакцій поки немає</EmptyState>
       )}
 
@@ -60,7 +60,8 @@ export default function Activity() {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-xs font-medium text-zinc-400">
-                    {CATEGORY_LABEL[tx.category]} · {CHAINS[tx.chain].label}
+                    {CATEGORY_LABEL[tx.category] ?? tx.category} ·{' '}
+                    {CHAINS[tx.chain]?.label ?? tx.chain}
                   </span>
                   {tx.amountUsd !== null && (
                     <span

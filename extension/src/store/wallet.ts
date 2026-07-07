@@ -4,7 +4,7 @@
  */
 import { create } from 'zustand';
 
-import { MessageType } from '@/src/lib/messaging';
+import { MessageType, type SessionState } from '@/src/lib/messaging';
 import { sendToBackground } from '@/src/lib/runtime';
 import { walletCore, type PublicAccount } from '@/src/lib/wallet-core';
 
@@ -43,26 +43,39 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
   setScreen: (screen) => set({ screen }),
 
   initialize: async () => {
-    const hasWallet = await walletCore.hasWallet();
-    // Стан сесії живе у background (service worker): розшифрована seed-фраза —
-    // тільки в його пам'яті, тож пароль не потрібен на кожне відкриття попапа,
-    // поки не спрацював автолок (або SW не заснув).
-    const session = await sendToBackground({ type: MessageType.GetSessionState });
+    // Захисна ініціалізація: якщо storage або background недоступні (напр.
+    // background упав на старті), попап НЕ повинен зависнути на спінері чи
+    // впасти в чорний екран — деградуємо до onboarding/unlock з логом причини.
+    let hasWallet = false;
+    try {
+      hasWallet = await walletCore.hasWallet();
+    } catch (error) {
+      console.error('[aiwallet] Не вдалося прочитати сховище гаманця:', error);
+    }
     if (!hasWallet) {
-      set({ hasWallet, unlocked: false, screen: 'onboarding' });
+      set({ hasWallet: false, unlocked: false, screen: 'onboarding' });
       return;
     }
-    const sessionAccount = session.accounts[0];
-    if (session.unlocked && sessionAccount !== undefined) {
+    // Стан сесії живе у background: розшифрована seed-фраза — тільки в його
+    // пам'яті, тож пароль не потрібен на кожне відкриття попапа, поки не
+    // спрацював автолок (або background-контекст не перезапустився).
+    let session: SessionState | undefined;
+    try {
+      session = await sendToBackground({ type: MessageType.GetSessionState });
+    } catch (error) {
+      console.error('[aiwallet] Background не відповідає на GetSessionState:', error);
+    }
+    const sessionAccount = session?.accounts?.[0];
+    if (session?.unlocked === true && sessionAccount !== undefined) {
       set({
-        hasWallet,
+        hasWallet: true,
         unlocked: true,
         screen: 'home',
         account: get().account ?? sessionAccount,
       });
       return;
     }
-    set({ hasWallet, unlocked: false, screen: 'unlock' });
+    set({ hasWallet: true, unlocked: false, screen: 'unlock' });
   },
 
   unlock: async (password) => {

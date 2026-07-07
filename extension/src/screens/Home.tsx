@@ -100,7 +100,7 @@ export default function Home() {
         <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
           Токени
         </h2>
-        {!isLoading && (portfolio?.tokens.length ?? 0) === 0 && (
+        {!isLoading && (portfolio?.tokens?.length ?? 0) === 0 && (
           <EmptyState>Токенів поки немає</EmptyState>
         )}
         <div className="flex flex-col gap-1.5">

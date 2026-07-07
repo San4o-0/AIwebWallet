@@ -25,6 +25,7 @@ import type {
   SimulationResult,
   TxParams,
 } from './api-types';
+import type { TokenBalance } from './api-types';
 import type { Chain } from './chains';
 import type { PendingSignRequest } from './messaging';
 import {
@@ -104,12 +105,122 @@ async function withBackendRequired<T>(real: () => Promise<T>, action: string): P
 }
 
 // ---------------------------------------------------------------------------
+// Нормалізація wire-форматів бекенду (crates/api-server серіалізує DTO у
+// snake_case, а суми — у базових одиницях). БЕЗ нормалізації розбіжність
+// форм (`portfolio.tokens === undefined`) валила React-дерево попапа —
+// у Firefox це проявлялось як повністю чорний екран після онбордингу.
+// ---------------------------------------------------------------------------
+
+/** Токен у wire-форматі /v1/balances: суми в базових одиницях (wei/lamports). */
+interface WireTokenBalance {
+  symbol: string;
+  name: string;
+  contract_address: string | null;
+  amount: string;
+  decimals: number;
+  usd_value: number;
+}
+
+interface WireChainBalances {
+  chain: Chain;
+  address: string;
+  native: WireTokenBalance;
+  tokens: WireTokenBalance[];
+  usd_value: number;
+}
+
+interface WirePortfolio {
+  total_usd: number;
+  chains: WireChainBalances[];
+  /** Unix seconds останнього оновлення цін. */
+  prices_updated_at: number;
+}
+
+/** «14142755499043161546915» (18 dec) → «14142.755499» — без втрати точності BigInt. */
+function formatBaseUnits(raw: string, decimals: number): string {
+  try {
+    const value = BigInt(raw);
+    const sign = value < 0n ? '-' : '';
+    const abs = value < 0n ? -value : value;
+    const base = 10n ** BigInt(decimals);
+    const whole = abs / base;
+    const fraction = (abs % base)
+      .toString()
+      .padStart(decimals, '0')
+      .slice(0, 6)
+      .replace(/0+$/, '');
+    return fraction.length > 0 ? `${sign}${whole.toString()}.${fraction}` : `${sign}${whole.toString()}`;
+  } catch {
+    return raw; // не BigInt-рядок — показуємо як є
+  }
+}
+
+function toTokenBalance(chain: Chain, token: WireTokenBalance, isNative: boolean): TokenBalance {
+  const amount = formatBaseUnits(token.amount, token.decimals);
+  const amountNumber = Number(amount);
+  return {
+    chain,
+    symbol: token.symbol,
+    name: token.name,
+    amount,
+    decimals: token.decimals,
+    usdPrice: Number.isFinite(amountNumber) && amountNumber > 0 ? token.usd_value / amountNumber : 0,
+    usdValue: token.usd_value,
+    isNative,
+    contractAddress: token.contract_address,
+  };
+}
+
+/**
+ * Приводить відповідь /v1/balances до UI-форми Portfolio. Приймає і цільову
+ * форму (якщо бекенд колись перейде на camelCase), і поточний wire-формат;
+ * невідома форма → помилка → withMockFallback підставить мок (fail-safe).
+ */
+function normalizePortfolio(raw: unknown): Portfolio {
+  const value = raw as Partial<Portfolio> & Partial<WirePortfolio>;
+  if (Array.isArray(value.tokens) && typeof value.totalUsd === 'number') {
+    return value as Portfolio;
+  }
+  if (Array.isArray(value.chains)) {
+    const tokens: TokenBalance[] = [];
+    for (const chainBalances of value.chains) {
+      tokens.push(toTokenBalance(chainBalances.chain, chainBalances.native, true));
+      for (const token of chainBalances.tokens) {
+        tokens.push(toTokenBalance(chainBalances.chain, token, false));
+      }
+    }
+    const updatedAtSec = typeof value.prices_updated_at === 'number' ? value.prices_updated_at : 0;
+    return {
+      totalUsd:
+        typeof value.total_usd === 'number'
+          ? value.total_usd
+          : tokens.reduce((sum, t) => sum + t.usdValue, 0),
+      tokens,
+      updatedAt: new Date(updatedAtSec > 0 ? updatedAtSec * 1000 : Date.now()).toISOString(),
+    };
+  }
+  throw new Error('Невідомий формат відповіді /v1/balances');
+}
+
+/** Приводить /v1/history до HistoryResponse (бекенд шле next_cursor). */
+function normalizeHistory(raw: unknown): HistoryResponse {
+  const value = raw as Partial<HistoryResponse> & { next_cursor?: string | null };
+  return {
+    items: Array.isArray(value.items) ? value.items : [],
+    nextCursor: value.nextCursor ?? value.next_cursor ?? null,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Ендпоінти (ТЗ §5)
 // ---------------------------------------------------------------------------
 
 /** POST /v1/balances — агрегований портфель по всіх мережах (F2.1). */
 export function fetchPortfolio(req: BalancesRequest): Promise<Portfolio> {
-  return withMockFallback(() => post<Portfolio>('/balances', req), mockPortfolio);
+  return withMockFallback(
+    async () => normalizePortfolio(await post<unknown>('/balances', req)),
+    mockPortfolio,
+  );
 }
 
 /** GET /v1/history — історія транзакцій з людськими описами (F3.6). */
@@ -122,7 +233,7 @@ export function fetchHistory(
   if (chain) params.set('chain', chain);
   if (cursor) params.set('cursor', cursor);
   return withMockFallback(
-    () => request<HistoryResponse>(`/history?${params.toString()}`),
+    async () => normalizeHistory(await request<unknown>(`/history?${params.toString()}`)),
     mockHistory,
   );
 }

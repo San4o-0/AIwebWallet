@@ -60,7 +60,13 @@ export interface WalletCore {
 // ---------------------------------------------------------------------------
 
 /** Розгортає VaultResult із background у значення або кидає Error для UI. */
-function unwrap<T>(result: VaultResult<T>): T {
+function unwrap<T>(result: VaultResult<T> | undefined): T {
+  // У Firefox sendMessage може резолвитись undefined, якщо background не
+  // відповів (наприклад, упав на старті) — даємо зрозумілу помилку замість
+  // TypeError у рендері.
+  if (result === undefined) {
+    throw new Error('Background-скрипт не відповідає. Перезапустіть розширення.');
+  }
   if (!result.ok) throw new Error(result.error);
   return result.value;
 }
