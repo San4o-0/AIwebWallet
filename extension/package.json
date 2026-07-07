@@ -14,13 +14,20 @@
     "postinstall": "wxt prepare"
   },
   "dependencies": {
+    "@fontsource/fraunces": "^5.2.9",
+    "@fontsource/golos-text": "^5.2.8",
+    "@fontsource/instrument-sans": "^5.2.8",
+    "@fontsource/jetbrains-mono": "^5.2.8",
+    "@fontsource/lora": "^5.2.8",
     "@tanstack/react-query": "^5.90.0",
+    "qrcode": "^1.5.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.13",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^18.3.24",
     "@types/react-dom": "^18.3.7",
     "@wxt-dev/module-react": "^1.1.3",

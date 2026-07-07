@@ -1,21 +1,32 @@
-import { useEffect } from 'react';
+import { useEffect, type ComponentType } from 'react';
 
 import { useWalletStore, type Screen } from '@/src/store/wallet';
+import {
+  IconActivity,
+  IconChat,
+  IconHome,
+  IconMore,
+  IconQr,
+  type IconProps,
+} from '@/src/components/icons';
 import { Spinner } from '@/src/components/ui';
 import Activity from '@/src/screens/Activity';
 import Approve from '@/src/screens/Approve';
 import Chat from '@/src/screens/Chat';
 import Home from '@/src/screens/Home';
 import Onboarding from '@/src/screens/Onboarding';
+import Receive from '@/src/screens/Receive';
 import Send from '@/src/screens/Send';
+import Settings from '@/src/screens/Settings';
 import Unlock from '@/src/screens/Unlock';
 
 /** Вкладки нижньої навігації (доступні після розблокування). */
-const TABS: { screen: Screen; label: string; icon: string }[] = [
-  { screen: 'home', label: 'Гаманець', icon: '◆' },
-  { screen: 'send', label: 'Надіслати', icon: '↗' },
-  { screen: 'activity', label: 'Активність', icon: '≡' },
-  { screen: 'chat', label: 'AI-чат', icon: '✦' },
+const TABS: { screen: Screen; label: string; icon: ComponentType<IconProps> }[] = [
+  { screen: 'home', label: 'Головна', icon: IconHome },
+  { screen: 'activity', label: 'Активність', icon: IconActivity },
+  { screen: 'receive', label: 'Отримати', icon: IconQr },
+  { screen: 'chat', label: 'Чат', icon: IconChat },
+  { screen: 'settings', label: 'Ще', icon: IconMore },
 ];
 
 /** Окреме вікно підтвердження підпису відкривається з ?view=approve. */
@@ -52,8 +63,12 @@ export default function App() {
         return <Send />;
       case 'activity':
         return <Activity />;
+      case 'receive':
+        return <Receive />;
       case 'chat':
         return <Chat />;
+      case 'settings':
+        return <Settings />;
       case 'approve':
         return <Approve />;
       case 'home':
@@ -64,21 +79,35 @@ export default function App() {
   };
 
   return (
-    <div className="flex min-h-[600px] flex-1 flex-col">
-      <main className="flex flex-1 flex-col overflow-y-auto">{renderScreen()}</main>
-      <nav className="grid grid-cols-4 border-t border-zinc-800/80 bg-zinc-950/95">
+    <div className="relative flex h-full flex-col">
+      {/* Контент скролиться під фіксованим меню; екрани самі додають pb. */}
+      <main className="h-full min-h-0 flex-1 overflow-y-auto">{renderScreen()}</main>
+
+      {/* Закріплена нижня навігація */}
+      <nav
+        aria-label="Основна навігація"
+        className="fixed inset-x-0 bottom-0 z-20 grid h-14 grid-cols-5 border-t border-hairline bg-bg/95 backdrop-blur-sm"
+      >
         {TABS.map((tab) => {
           const active = screen === tab.screen;
+          const Icon = tab.icon;
           return (
             <button
               key={tab.screen}
               type="button"
               onClick={() => setScreen(tab.screen)}
-              className={`flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium transition-colors ${
-                active ? 'text-emerald-400' : 'text-zinc-500 hover:text-zinc-300'
+              aria-current={active ? 'page' : undefined}
+              className={`relative flex flex-col items-center justify-center gap-1 text-[11px] font-medium tracking-wide transition-colors ${
+                active ? 'text-brass' : 'text-muted hover:text-ink'
               }`}
             >
-              <span className="text-base leading-none">{tab.icon}</span>
+              {/* Латунна риска над активною вкладкою */}
+              <span
+                className={`absolute -top-px left-1/2 h-0.5 w-6 -translate-x-1/2 rounded-full bg-brass transition-opacity ${
+                  active ? 'opacity-100' : 'opacity-0'
+                }`}
+              />
+              <Icon size={19} />
               {tab.label}
             </button>
           );

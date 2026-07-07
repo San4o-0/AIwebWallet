@@ -5,7 +5,8 @@
  */
 import { useEffect, useRef, useState } from 'react';
 
-import { Button, ScreenTitle } from '@/src/components/ui';
+import { IconSend, IconSparkle } from '@/src/components/icons';
+import { Eyebrow, ScreenTitle } from '@/src/components/ui';
 import { streamChat } from '@/src/lib/api';
 import type { ChatMessage } from '@/src/lib/api-types';
 import { useWalletStore } from '@/src/store/wallet';
@@ -59,7 +60,10 @@ export default function Chat() {
       console.warn('[aiwallet] Стрім чату перервано:', error);
       setMessages([
         ...history,
-        { role: 'assistant', content: answer || 'Вибачте, сталася помилка. Спробуйте ще раз.' },
+        {
+          role: 'assistant',
+          content: answer || 'Відповідь не отримано: зв’язок перервався. Надішліть питання ще раз.',
+        },
       ]);
     } finally {
       setStreaming(false);
@@ -68,28 +72,32 @@ export default function Chat() {
   };
 
   return (
-    <div className="flex h-full flex-1 flex-col">
-      <div className="border-b border-zinc-800/80 p-4 pb-3">
-        <ScreenTitle>AI-помічник</ScreenTitle>
-        <p className="text-xs text-zinc-500">
+    <div className="flex h-full flex-col pb-14">
+      <div className="border-b border-hairline p-5 pb-4">
+        <Eyebrow className="mb-1">Помічник</Eyebrow>
+        <ScreenTitle>AI-чат</ScreenTitle>
+        <p className="mt-1.5 text-xs leading-relaxed text-muted">
           Відповідає на питання про вашу активність. Не може підписувати транзакції.
         </p>
       </div>
 
-      <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-4">
+      <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-5">
         {messages.length === 0 && (
-          <div className="my-auto flex flex-col gap-2">
-            <p className="mb-1 text-center text-sm text-zinc-500">Спробуйте запитати:</p>
-            {SUGGESTIONS.map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => void send(s)}
-                className="rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 py-2.5 text-left text-sm text-zinc-300 transition-colors hover:border-emerald-500/40 hover:text-zinc-100"
-              >
-                {s}
-              </button>
-            ))}
+          <div className="my-auto flex flex-col items-center gap-3">
+            <IconSparkle size={22} className="text-brass" />
+            <Eyebrow>Спробуйте запитати</Eyebrow>
+            <div className="flex w-full flex-col gap-2">
+              {SUGGESTIONS.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => void send(s)}
+                  className="rounded-xl border border-hairline bg-surface px-3.5 py-2.5 text-left text-sm text-ink transition-colors hover:border-brass/50"
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
@@ -98,12 +106,12 @@ export default function Chat() {
             key={index}
             className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
               message.role === 'user'
-                ? 'self-end bg-emerald-500/15 text-emerald-50'
-                : 'self-start border border-zinc-800/70 bg-zinc-900/70 text-zinc-200'
+                ? 'self-end rounded-br-md border border-brass/25 bg-brass/10 text-ink'
+                : 'self-start rounded-bl-md border border-hairline bg-surface text-ink'
             }`}
           >
             {message.content.length === 0 && streaming ? (
-              <span className="animate-pulse text-zinc-500">думаю…</span>
+              <span className="animate-pulse text-muted">думаю…</span>
             ) : (
               message.content
             )}
@@ -113,7 +121,7 @@ export default function Chat() {
       </div>
 
       <form
-        className="flex gap-2 border-t border-zinc-800/80 p-3"
+        className="flex gap-2 border-t border-hairline p-3"
         onSubmit={(e) => {
           e.preventDefault();
           void send(input);
@@ -123,11 +131,16 @@ export default function Chat() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Запитайте про свої фінанси…"
-          className="flex-1 rounded-xl border border-zinc-800 bg-zinc-900 px-3.5 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-emerald-500/70"
+          className="flex-1 rounded-xl border border-hairline bg-surface px-3.5 py-2.5 text-sm text-ink outline-none transition-colors placeholder:text-muted/50 focus:border-brass"
         />
-        <Button type="submit" disabled={streaming || input.trim().length === 0}>
-          ↑
-        </Button>
+        <button
+          type="submit"
+          disabled={streaming || input.trim().length === 0}
+          aria-label="Надіслати повідомлення"
+          className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brass text-bg transition-colors hover:bg-brass-bright disabled:cursor-not-allowed disabled:bg-raised disabled:text-muted/60"
+        >
+          <IconSend size={17} />
+        </button>
       </form>
     </div>
   );

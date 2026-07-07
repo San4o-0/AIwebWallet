@@ -3,10 +3,14 @@
  * Крипто-операції виконує WASM-ядро (crates/wallet-core): реальна генерація
  * BIP-39 фрази у popup, створення зашифрованого vault (Argon2id + AES-GCM) —
  * у background; у chrome.storage.local потрапляє лише шифротекст.
+ *
+ * Дизайн: крокований потік «приватного банку»; seed-фраза показується як
+ * документ — нумерований список слів у mono на картці з hairline-рамкою.
  */
 import { useState } from 'react';
 
-import { Button, Card, Field, ScreenTitle } from '@/src/components/ui';
+import { BrandMark } from '@/src/components/icons';
+import { Button, Eyebrow, Field, ScreenTitle, Textarea } from '@/src/components/ui';
 import { walletCore } from '@/src/lib/wallet-core';
 import { useWalletStore } from '@/src/store/wallet';
 
@@ -16,7 +20,7 @@ export default function Onboarding() {
   const [mode, setMode] = useState<Mode>('choice');
 
   return (
-    <div className="flex flex-1 flex-col gap-4 p-5">
+    <div className="flex h-full flex-col overflow-y-auto p-5">
       {mode === 'choice' && <Choice onSelect={setMode} />}
       {mode === 'create' && <CreateFlow onBack={() => setMode('choice')} />}
       {mode === 'import' && <ImportFlow onBack={() => setMode('choice')} />}
@@ -24,24 +28,60 @@ export default function Onboarding() {
   );
 }
 
+/** Шапка кроку: eyebrow «Крок N з M · Назва» + серифний заголовок. */
+function StepHeader({
+  step,
+  total,
+  section,
+  title,
+}: {
+  step: number;
+  total: number;
+  section: string;
+  title: string;
+}) {
+  return (
+    <header>
+      <Eyebrow className="mb-1">
+        Крок {step} з {total} · {section}
+      </Eyebrow>
+      <ScreenTitle>{title}</ScreenTitle>
+      <div className="mt-3 flex gap-1.5" aria-hidden>
+        {Array.from({ length: total }, (_, index) => (
+          <span
+            key={index}
+            className={`h-0.5 flex-1 rounded-full ${
+              index < step ? 'bg-brass' : 'bg-hairline'
+            }`}
+          />
+        ))}
+      </div>
+    </header>
+  );
+}
+
 function Choice({ onSelect }: { onSelect: (mode: Mode) => void }) {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
-      <div>
-        <div className="mb-3 text-4xl">◆</div>
-        <ScreenTitle>AI Wallet</ScreenTitle>
-        <p className="mt-2 text-sm text-zinc-400">
-          Non-custodial гаманець, який пояснює транзакції простою мовою і попереджає про
-          ризики.
+    <div className="flex flex-1 flex-col items-center justify-center gap-8 text-center">
+      <div className="animate-rise flex flex-col items-center">
+        <BrandMark size={52} />
+        <h1 className="mt-5 font-display text-[28px] font-semibold leading-none text-ink">
+          AI Wallet
+        </h1>
+        <div className="mt-4 h-px w-24 bg-brass/60" aria-hidden />
+        <Eyebrow className="mt-2">Приватний цифровий сейф</Eyebrow>
+        <p className="mt-4 max-w-[280px] text-sm leading-relaxed text-muted">
+          Non-custodial гаманець, який пояснює транзакції простою мовою і
+          попереджає про ризики.
         </p>
       </div>
-      <div className="flex w-full flex-col gap-3">
+      <div className="flex w-full flex-col gap-2.5">
         <Button onClick={() => onSelect('create')}>Створити новий гаманець</Button>
         <Button variant="secondary" onClick={() => onSelect('import')}>
           Імпортувати наявний
         </Button>
       </div>
-      <p className="text-xs text-zinc-600">
+      <p className="max-w-[280px] text-xs leading-relaxed text-muted/80">
         Ключі зберігаються лише на вашому пристрої, зашифровані паролем.
       </p>
     </div>
@@ -85,10 +125,11 @@ function CreateFlow({ onBack }: { onBack: () => void }) {
 
   if (step === 'password') {
     return (
-      <div className="flex flex-1 flex-col gap-4">
-        <ScreenTitle>Створення гаманця</ScreenTitle>
-        <p className="text-sm text-zinc-400">
-          Пароль шифрує сховище на цьому пристрої (Argon2id + AES-256-GCM у ядрі).
+      <div className="flex min-h-full flex-1 flex-col gap-5">
+        <StepHeader step={1} total={2} section="Захист" title="Пароль сховища" />
+        <p className="text-sm leading-relaxed text-muted">
+          Пароль шифрує сховище на цьому пристрої (Argon2id + AES-256-GCM у ядрі)
+          і потрібен для кожного розблокування.
         </p>
         <Field
           label="Пароль"
@@ -103,8 +144,8 @@ function CreateFlow({ onBack }: { onBack: () => void }) {
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
         />
-        {error !== null && <p className="text-xs text-red-400">{error}</p>}
-        <div className="mt-auto flex flex-col gap-2">
+        {error !== null && <p className="text-xs text-terra">{error}</p>}
+        <div className="mt-auto flex flex-col gap-2 pt-4">
           <Button onClick={() => void toBackup()}>Далі</Button>
           <Button variant="ghost" onClick={onBack}>
             Назад
@@ -115,32 +156,47 @@ function CreateFlow({ onBack }: { onBack: () => void }) {
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-4">
-      <ScreenTitle>Резервна фраза</ScreenTitle>
-      <p className="text-sm text-zinc-400">
-        Запишіть 12 слів у надійному місці. Це єдиний спосіб відновити гаманець (F1.1).
+    <div className="flex min-h-full flex-1 flex-col gap-5">
+      <StepHeader step={2} total={2} section="Резервна копія" title="Резервна фраза" />
+      <p className="text-sm leading-relaxed text-muted">
+        Запишіть 12 слів у надійному місці офлайн. Це єдиний спосіб відновити
+        гаманець.
       </p>
-      <Card>
-        <ol className="grid grid-cols-3 gap-x-3 gap-y-2 text-sm">
+
+      {/* Seed-фраза як документ: hairline-рамка, нумерований mono-список */}
+      <div className="animate-rise rounded-[14px] border border-hairline bg-surface">
+        <div className="flex items-baseline justify-between border-b border-hairline px-4 py-2.5">
+          <Eyebrow>Документ відновлення</Eyebrow>
+          <span className="eyebrow text-[10px]">12 слів</span>
+        </div>
+        <ol className="grid grid-cols-2 gap-x-6 gap-y-2.5 px-5 py-4">
           {mnemonic.map((word, i) => (
-            <li key={`${i}-${word}`} className="flex gap-1.5">
-              <span className="w-4 text-right text-zinc-600">{i + 1}.</span>
-              <span className="font-mono text-zinc-200">{word}</span>
+            <li key={`${i}-${word}`} className="flex items-baseline gap-2.5">
+              <span className="w-5 shrink-0 text-right font-mono text-[11px] tabular-nums text-muted/70">
+                {i + 1}
+              </span>
+              <span className="font-mono text-[13px] text-ink">{word}</span>
             </li>
           ))}
         </ol>
-      </Card>
-      <label className="flex items-start gap-2 text-sm text-zinc-300">
+        <div className="border-t border-hairline px-4 py-2.5">
+          <p className="text-[11px] leading-relaxed text-muted">
+            Нікому не показуйте цю фразу. Служба підтримки її ніколи не питає.
+          </p>
+        </div>
+      </div>
+
+      <label className="flex items-start gap-2.5 text-sm leading-snug text-ink">
         <input
           type="checkbox"
           checked={saved}
           onChange={(e) => setSaved(e.target.checked)}
-          className="mt-0.5 accent-emerald-500"
+          className="mt-0.5 size-4 accent-brass"
         />
         Я записав(ла) фразу і розумію, що її втрата означає втрату коштів.
       </label>
-      {error !== null && <p className="text-xs text-red-400">{error}</p>}
-      <div className="mt-auto flex flex-col gap-2">
+      {error !== null && <p className="text-xs text-terra">{error}</p>}
+      <div className="mt-auto flex flex-col gap-2 pt-2">
         <Button disabled={!saved || busy} onClick={() => void finish()}>
           {busy ? 'Створення…' : 'Завершити'}
         </Button>
@@ -182,34 +238,47 @@ function ImportFlow({ onBack }: { onBack: () => void }) {
   };
 
   return (
-    <div className="flex flex-1 flex-col gap-4">
-      <ScreenTitle>Імпорт гаманця</ScreenTitle>
-      <div className="grid grid-cols-2 gap-2">
-        <Button
-          variant={source === 'mnemonic' ? 'primary' : 'secondary'}
-          onClick={() => setSource('mnemonic')}
-        >
-          Seed-фраза
-        </Button>
-        <Button
-          variant={source === 'privateKey' ? 'primary' : 'secondary'}
-          onClick={() => setSource('privateKey')}
-        >
-          Приватний ключ
-        </Button>
+    <div className="flex min-h-full flex-1 flex-col gap-5">
+      <StepHeader step={1} total={1} section="Відновлення" title="Імпорт гаманця" />
+
+      {/* Перемикач джерела */}
+      <div
+        className="grid grid-cols-2 gap-1 rounded-xl border border-hairline bg-surface p-1"
+        role="tablist"
+        aria-label="Джерело імпорту"
+      >
+        {(
+          [
+            { id: 'mnemonic', label: 'Seed-фраза' },
+            { id: 'privateKey', label: 'Приватний ключ' },
+          ] as const
+        ).map((option) => (
+          <button
+            key={option.id}
+            type="button"
+            role="tab"
+            aria-selected={source === option.id}
+            onClick={() => setSource(option.id)}
+            className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+              source === option.id
+                ? 'bg-raised text-brass'
+                : 'text-muted hover:text-ink'
+            }`}
+          >
+            {option.label}
+          </button>
+        ))}
       </div>
-      <label className="block">
-        <span className="mb-1.5 block text-xs font-medium text-zinc-400">
-          {source === 'mnemonic' ? 'Seed-фраза (12 або 24 слова)' : 'Приватний ключ'}
-        </span>
-        <textarea
-          value={phrase}
-          onChange={(e) => setPhrase(e.target.value)}
-          rows={3}
-          placeholder={source === 'mnemonic' ? 'слово слово слово …' : '0x…'}
-          className="w-full resize-none rounded-xl border border-zinc-800 bg-zinc-900 px-3.5 py-2.5 font-mono text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-emerald-500/70"
-        />
-      </label>
+
+      <Textarea
+        label={source === 'mnemonic' ? 'Seed-фраза (12 або 24 слова)' : 'Приватний ключ'}
+        value={phrase}
+        onChange={(e) => setPhrase(e.target.value)}
+        rows={3}
+        placeholder={source === 'mnemonic' ? 'слово слово слово …' : '0x…'}
+        className="font-mono"
+        spellCheck={false}
+      />
       <Field
         label="Новий пароль"
         type="password"
@@ -217,8 +286,8 @@ function ImportFlow({ onBack }: { onBack: () => void }) {
         onChange={(e) => setPassword(e.target.value)}
         placeholder="Мінімум 8 символів"
       />
-      {error !== null && <p className="text-xs text-red-400">{error}</p>}
-      <div className="mt-auto flex flex-col gap-2">
+      {error !== null && <p className="text-xs text-terra">{error}</p>}
+      <div className="mt-auto flex flex-col gap-2 pt-4">
         <Button disabled={busy || phrase.trim().length === 0} onClick={() => void doImport()}>
           {busy ? 'Імпорт…' : 'Імпортувати'}
         </Button>

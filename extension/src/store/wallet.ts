@@ -14,7 +14,9 @@ export type Screen =
   | 'home'
   | 'send'
   | 'activity'
+  | 'receive'
   | 'chat'
+  | 'settings'
   | 'approve';
 
 interface WalletStore {

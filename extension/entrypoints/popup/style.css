@@ -1,6 +1,143 @@
+/*
+ * Дизайн-система «цифровий приватний банк»: теплий графіт, слонова кістка,
+ * латунний акцент. Єдина темна тема. Жодних градієнтів і неону.
+ *
+ * Шрифти — ТІЛЬКИ бандлом через @fontsource (CSP розширення блокує CDN).
+ * Fraunces та Instrument Sans не мають кирилиці, тому в стеках стоять
+ * кирилічні компаньйони (Lora / Golos Text) — @fontsource-файли з
+ * unicode-range підхоплюють лише потрібні гліфи.
+ */
 @import "tailwindcss";
 
-/* Темна тема за замовчуванням */
+/*
+ * @font-face вручну (замість готових css @fontsource): підключаємо ТІЛЬКИ
+ * woff2-сабсети — без legacy .woff-фолбеків (економія ~170 КБ бандла).
+ * unicode-range — стандартні діапазони Google Fonts (latin / cyrillic).
+ */
+@font-face {
+  font-family: "Fraunces";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url("@fontsource/fraunces/files/fraunces-latin-500-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Fraunces";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url("@fontsource/fraunces/files/fraunces-latin-600-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Lora";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url("@fontsource/lora/files/lora-cyrillic-500-normal.woff2") format("woff2");
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: "Lora";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url("@fontsource/lora/files/lora-cyrillic-600-normal.woff2") format("woff2");
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: "Instrument Sans";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url("@fontsource/instrument-sans/files/instrument-sans-latin-400-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Instrument Sans";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url("@fontsource/instrument-sans/files/instrument-sans-latin-500-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Instrument Sans";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url("@fontsource/instrument-sans/files/instrument-sans-latin-600-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Golos Text";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url("@fontsource/golos-text/files/golos-text-cyrillic-400-normal.woff2") format("woff2");
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: "Golos Text";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url("@fontsource/golos-text/files/golos-text-cyrillic-500-normal.woff2") format("woff2");
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: "Golos Text";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url("@fontsource/golos-text/files/golos-text-cyrillic-600-normal.woff2") format("woff2");
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url("@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@theme {
+  /* Кольори */
+  --color-bg: #121014; /* теплий графіт */
+  --color-surface: #1b181e; /* картки */
+  --color-raised: #242028; /* підняті поверхні */
+  --color-hairline: #2e2933; /* волосяні бордери */
+  --color-ink: #f2efe6; /* слонова кістка */
+  --color-muted: #9c95a3; /* вторинний текст */
+  --color-brass: #c9a96a; /* латунь: CTA, активний таб, фокус */
+  --color-brass-bright: #d9bc80; /* латунь hover */
+  --color-sage: #8faf8b; /* позитив / низький ризик */
+  --color-amber: #d0a054; /* попередження / середній ризик */
+  --color-terra: #c96a5a; /* небезпека / високий ризик */
+
+  /* Типографіка */
+  --font-display: "Fraunces", "Lora", Georgia, serif;
+  --font-sans: "Instrument Sans", "Golos Text", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+
+  /* Ритм */
+  --radius-card: 14px;
+}
+
 :root {
   color-scheme: dark;
 }
@@ -12,24 +149,109 @@ body {
 }
 
 body {
-  width: 360px;
-  min-height: 600px;
-  background-color: #09090b; /* zinc-950 */
-  color: #f4f4f5; /* zinc-100 */
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  width: 380px;
+  height: 600px;
+  overflow: hidden;
+  background-color: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 #root {
   display: flex;
   flex-direction: column;
-  min-height: 600px;
+  width: 380px;
+  height: 600px;
+  overflow: hidden;
+}
+
+/* Видимий фокус — латунне кільце (клавіатурна навігація) */
+:focus-visible {
+  outline: 2px solid var(--color-brass);
+  outline-offset: 2px;
+}
+
+/* Поля вводу мають власний фокус-стан: латунний бордер + тонке кільце,
+   без другого зовнішнього кільця (щоб не подвоювався індикатор). */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+  border-color: var(--color-brass);
+  box-shadow: 0 0 0 1px var(--color-brass);
 }
 
 /* Тонкий скролбар у списках */
 *::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
 }
 *::-webkit-scrollbar-thumb {
-  background-color: #3f3f46; /* zinc-700 */
+  background-color: var(--color-hairline);
   border-radius: 3px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* --- Наскрізна структурна мова: eyebrow small-caps + hairline --- */
+
+/* Дрібний small-caps підпис над/під блоками */
+@utility eyebrow {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+/* Старостильні мінускульні цифри для великих серифних сум (якщо доступно) */
+@utility figures-oldstyle {
+  font-variant-numeric: oldstyle-nums;
+  font-feature-settings: "onum" 1;
+}
+
+/* Один осмислений transition на екран: м'яка поява суми/блоку */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@utility animate-rise {
+  animation: rise-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Скелетон завантаження — без градієнтів, лише пульс поверхні */
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@utility skeleton {
+  background-color: var(--color-raised);
+  border-radius: 8px;
+  animation: skeleton-pulse 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

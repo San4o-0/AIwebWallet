@@ -10,7 +10,8 @@
  */
 import { useMemo, useState } from 'react';
 
-import { Button, Card, Field, ScreenTitle } from '@/src/components/ui';
+import { IconCheck, IconChevronLeft } from '@/src/components/icons';
+import { Button, Field, ScreenHeader, Select } from '@/src/components/ui';
 import { broadcastTx, fetchTxParams } from '@/src/lib/api';
 import { CHAINS, CHAIN_IDS, type Chain } from '@/src/lib/chains';
 import {
@@ -29,6 +30,7 @@ const NATIVE_ASSET = '__native__';
 
 export default function Send() {
   const account = useWalletStore((s) => s.account);
+  const setScreen = useWalletStore((s) => s.setScreen);
   const [chain, setChain] = useState<Chain>('ethereum');
   const [asset, setAsset] = useState<string>(NATIVE_ASSET);
   const [recipient, setRecipient] = useState('');
@@ -115,54 +117,53 @@ export default function Send() {
 
   return (
     <form
-      className="flex flex-1 flex-col gap-4 p-4"
+      className="flex min-h-full flex-col gap-5 p-5 pb-24"
       onSubmit={(e) => {
         e.preventDefault();
         void submit();
       }}
     >
-      <ScreenTitle>Надіслати</ScreenTitle>
+      <button
+        type="button"
+        onClick={() => setScreen('home')}
+        className="-ml-2 flex w-fit items-center gap-0.5 rounded-lg px-2 py-1.5 text-sm text-muted transition-colors hover:bg-raised hover:text-ink"
+      >
+        <IconChevronLeft size={16} />
+        Головна
+      </button>
 
-      <label className="block">
-        <span className="mb-1.5 block text-xs font-medium text-zinc-400">Мережа</span>
-        <select
-          value={chain}
-          onChange={(e) => selectChain(e.target.value as Chain)}
-          className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3.5 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/70"
-        >
-          {CHAIN_IDS.map((id) => (
-            <option key={id} value={id}>
-              {CHAINS[id].label} ({CHAINS[id].symbol})
-            </option>
-          ))}
-        </select>
-      </label>
+      <ScreenHeader eyebrow="Переказ" title="Надіслати" />
+
+      <Select label="Мережа" value={chain} onChange={(e) => selectChain(e.target.value as Chain)}>
+        {CHAIN_IDS.map((id) => (
+          <option key={id} value={id}>
+            {CHAINS[id].label} ({CHAINS[id].symbol})
+          </option>
+        ))}
+      </Select>
 
       {tokens.length > 0 && (
-        <label className="block">
-          <span className="mb-1.5 block text-xs font-medium text-zinc-400">Актив</span>
-          <select
-            value={asset}
-            onChange={(e) => setAsset(e.target.value)}
-            className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3.5 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/70"
-          >
-            <option value={NATIVE_ASSET}>
-              {CHAINS[chain].symbol} (нативна монета)
+        <Select label="Актив" value={asset} onChange={(e) => setAsset(e.target.value)}>
+          <option value={NATIVE_ASSET}>{CHAINS[chain].symbol} (нативна монета)</option>
+          {tokens.map((t) => (
+            <option key={t.symbol} value={t.symbol}>
+              {t.symbol} (ERC-20)
             </option>
-            {tokens.map((t) => (
-              <option key={t.symbol} value={t.symbol}>
-                {t.symbol} (ERC-20)
-              </option>
-            ))}
-          </select>
-        </label>
+          ))}
+        </Select>
       )}
 
       <Field
         label="Адреса отримувача"
         value={recipient}
         onChange={(e) => setRecipient(e.target.value)}
-        placeholder={CHAINS[chain].kind === 'evm' ? '0x…' : CHAINS[chain].kind === 'solana' ? 'Base58-адреса' : 'bc1…'}
+        placeholder={
+          CHAINS[chain].kind === 'evm'
+            ? '0x…'
+            : CHAINS[chain].kind === 'solana'
+              ? 'Base58-адреса'
+              : 'bc1…'
+        }
         className="font-mono"
         spellCheck={false}
       />
@@ -175,17 +176,20 @@ export default function Send() {
         inputMode="decimal"
       />
 
-      {error !== null && <p className="text-xs text-red-400">{error}</p>}
+      {error !== null && <p className="text-xs leading-relaxed text-terra">{error}</p>}
       {txHash !== null && (
-        <Card className="border-emerald-500/30 bg-emerald-500/5">
-          <p className="text-sm text-emerald-300">Транзакцію надіслано в мережу</p>
-          <p className="mt-1 break-all font-mono text-xs text-zinc-400">{txHash}</p>
-        </Card>
+        <div className="animate-rise rounded-[14px] border border-sage/40 bg-sage/10 p-4">
+          <p className="flex items-center gap-2 text-sm font-medium text-sage">
+            <IconCheck size={16} />
+            Транзакцію надіслано в мережу
+          </p>
+          <p className="mt-2 break-all font-mono text-xs leading-relaxed text-muted">{txHash}</p>
+        </div>
       )}
 
-      <div className="mt-auto">
-        <p className="mb-2 text-xs text-zinc-600">
-          Комісія: рівень «standard» з EIP-1559-оцінки ноди (GET /v1/tx/params).
+      <div className="sticky bottom-14 -mx-5 mt-auto border-t border-hairline bg-bg px-5 pb-3 pt-3">
+        <p className="mb-2.5 text-xs leading-relaxed text-muted">
+          Комісія: рівень «standard» з EIP-1559-оцінки ноди.
         </p>
         <Button type="submit" className="w-full" disabled={busy || account === null}>
           {busy ? 'Підписання…' : 'Переглянути та надіслати'}
