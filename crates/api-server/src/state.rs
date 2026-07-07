@@ -57,16 +57,25 @@ impl AppState {
                  через rule-based шаблони, /v1/chat стрімить мок-відповідь"
             );
         }
-        let ai_explainer: Arc<dyn ExplanationProvider> =
-            Arc::new(OpenAiProvider::new(openai_key.clone()));
-        let chat_ai = openai_key.map(|k| Arc::new(ChatAi::new(k)));
+        let ai_explainer: Arc<dyn ExplanationProvider> = Arc::new(OpenAiProvider::with_options(
+            openai_key.clone(),
+            config.openai_api_base.clone(),
+            config.ai_explain_model.clone(),
+        ));
+        let chat_ai = openai_key.map(|k| {
+            Arc::new(ChatAi::with_options(
+                k,
+                config.openai_api_base.clone(),
+                config.ai_chat_model.clone(),
+            ))
+        });
         if config.etherscan_api_key.is_none() {
             tracing::warn!(
                 "ETHERSCAN_API_KEY не задано — історія EVM-мереж повертатиметься \
                  порожньою з полем note (BTC/Solana працюють без ключа)"
             );
         }
-        let adapters = build_registry(&config.rpc);
+        let adapters = build_registry(&config.rpc, config.trongrid_api_key.as_deref());
         let prices = PriceService::new(config.rpc.coingecko.clone());
         let simulator = Simulator::new(&config);
         let indexer = EvmIndexer::new(&config);

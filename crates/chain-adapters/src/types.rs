@@ -22,11 +22,12 @@ pub enum ChainId {
     Base,
     Solana,
     Bitcoin,
+    Tron,
 }
 
 impl ChainId {
     /// All supported chains.
-    pub const ALL: [ChainId; 7] = [
+    pub const ALL: [ChainId; 8] = [
         ChainId::Ethereum,
         ChainId::Polygon,
         ChainId::Bsc,
@@ -34,6 +35,7 @@ impl ChainId {
         ChainId::Base,
         ChainId::Solana,
         ChainId::Bitcoin,
+        ChainId::Tron,
     ];
 
     /// `true` for EVM-compatible networks.
@@ -52,7 +54,7 @@ impl ChainId {
             ChainId::Bsc => Some(56),
             ChainId::Arbitrum => Some(42161),
             ChainId::Base => Some(8453),
-            ChainId::Solana | ChainId::Bitcoin => None,
+            ChainId::Solana | ChainId::Bitcoin | ChainId::Tron => None,
         }
     }
 
@@ -64,14 +66,16 @@ impl ChainId {
             ChainId::Bsc => "BNB",
             ChainId::Solana => "SOL",
             ChainId::Bitcoin => "BTC",
+            ChainId::Tron => "TRX",
         }
     }
 
-    /// Decimals of the native coin (wei = 18, lamports = 9, satoshi = 8).
+    /// Decimals of the native coin (wei = 18, lamports = 9, satoshi = 8, sun = 6).
     pub fn native_decimals(&self) -> u8 {
         match self {
             ChainId::Solana => 9,
             ChainId::Bitcoin => 8,
+            ChainId::Tron => 6,
             _ => 18,
         }
     }
@@ -86,6 +90,7 @@ impl ChainId {
             ChainId::Base => "base",
             ChainId::Solana => "solana",
             ChainId::Bitcoin => "bitcoin",
+            ChainId::Tron => "tron",
         }
     }
 }
@@ -108,6 +113,7 @@ impl FromStr for ChainId {
             "base" => Ok(ChainId::Base),
             "solana" | "sol" => Ok(ChainId::Solana),
             "bitcoin" | "btc" => Ok(ChainId::Bitcoin),
+            "tron" | "trx" => Ok(ChainId::Tron),
             other => Err(AdapterError::InvalidInput(format!("unknown chain: {other}"))),
         }
     }
@@ -151,6 +157,12 @@ impl Address {
                         && value.chars().all(|c| BASE58_ALPHABET.contains(c))
                 }
                 ChainId::Bitcoin => is_plausible_bitcoin_address(&value),
+                // TRON mainnet: base58check, завжди 'T…' і 34 символи.
+                ChainId::Tron => {
+                    value.len() == 34
+                        && value.starts_with('T')
+                        && value.chars().all(|c| BASE58_ALPHABET.contains(c))
+                }
                 _ => unreachable!("all non-EVM chains handled above"),
             }
         };
@@ -181,6 +193,10 @@ impl Address {
 
     pub fn bitcoin(value: impl Into<String>) -> Result<Self, AdapterError> {
         Self::new(ChainId::Bitcoin, value)
+    }
+
+    pub fn tron(value: impl Into<String>) -> Result<Self, AdapterError> {
+        Self::new(ChainId::Tron, value)
     }
 
     pub fn chain(&self) -> ChainId {
@@ -261,6 +277,13 @@ pub enum FeeRate {
     SolanaPriority {
         base_fee_lamports: u64,
         priority_fee_micro_lamports: u64,
+    },
+    /// TRON: ціни ресурсів у sun (fee-ринку немає — тири однакові).
+    /// Транзакція платить bandwidth (за байт) і, для смарт-контрактів
+    /// (TRC-20), energy; безкоштовна добова квота може покрити переказ TRX.
+    TronResource {
+        bandwidth_price_sun: u64,
+        energy_price_sun: u64,
     },
 }
 

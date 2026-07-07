@@ -10,6 +10,7 @@ export interface AddressBook {
   evm: string[];
   solana: string[];
   bitcoin: string[];
+  tron: string[];
 }
 
 export interface BalancesRequest {

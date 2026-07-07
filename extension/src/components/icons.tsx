@@ -109,6 +109,15 @@ export function IconLock({ size, ...props }: IconProps) {
   );
 }
 
+export function IconKey({ size, ...props }: IconProps) {
+  return (
+    <svg {...base(size, props)}>
+      <circle cx="8" cy="14" r="4" />
+      <path d="M11 11 20 4m-3 1 2.5 2.5M14.5 7.5 17 10" />
+    </svg>
+  );
+}
+
 export function IconChevronLeft({ size, ...props }: IconProps) {
   return (
     <svg {...base(size, props)}>

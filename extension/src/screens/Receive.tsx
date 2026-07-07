@@ -16,6 +16,7 @@ import {
   IconCopy,
   IconExternal,
 } from '@/src/components/icons';
+import { ChainIcon } from '@/src/components/chain-icons';
 import { Card, Eyebrow, EmptyState, ScreenHeader } from '@/src/components/ui';
 import { CHAINS, CHAIN_IDS, type Chain } from '@/src/lib/chains';
 import { useWalletStore } from '@/src/store/wallet';
@@ -27,7 +28,7 @@ const EVM_CHAIN_LABELS = CHAIN_IDS.filter((id) => CHAINS[id].kind === 'evm')
 /** Адреса акаунта для конкретної мережі (EVM-адреса спільна). */
 function addressFor(
   chain: Chain,
-  addresses: { evm: string; solana: string; bitcoin: string },
+  addresses: { evm: string; solana: string; bitcoin: string; tron: string },
 ): string {
   switch (CHAINS[chain].kind) {
     case 'evm':
@@ -36,6 +37,8 @@ function addressFor(
       return addresses.solana;
     case 'bitcoin':
       return addresses.bitcoin;
+    case 'tron':
+      return addresses.tron;
   }
 }
 
@@ -60,6 +63,7 @@ const MOONPAY_CODE: Record<Chain, string> = {
   base: 'eth_base',
   solana: 'sol',
   bitcoin: 'btc',
+  tron: 'trx',
 };
 
 const RAMP_ASSET: Record<Chain, string> = {
@@ -70,6 +74,7 @@ const RAMP_ASSET: Record<Chain, string> = {
   base: 'BASE_ETH',
   solana: 'SOLANA_SOL',
   bitcoin: 'BTC_BTC',
+  tron: 'TRON_TRX',
 };
 
 const TRANSAK_NETWORK: Record<Chain, string> = {
@@ -80,6 +85,7 @@ const TRANSAK_NETWORK: Record<Chain, string> = {
   base: 'base',
   solana: 'solana',
   bitcoin: 'mainnet',
+  tron: 'tron',
 };
 
 const ONRAMP_PROVIDERS: OnRampProvider[] = [
@@ -134,7 +140,7 @@ function ChainList({
   addresses,
 }: {
   onSelect: (chain: Chain) => void;
-  addresses: { evm: string; solana: string; bitcoin: string };
+  addresses: { evm: string; solana: string; bitcoin: string; tron: string };
 }) {
   const { t } = useTranslation();
   return (
@@ -159,10 +165,7 @@ function ChainList({
                 }`}
               >
                 <span className="flex items-center gap-2.5">
-                  <span
-                    className="inline-block size-1.5 rounded-full opacity-80"
-                    style={{ backgroundColor: CHAINS[id].color }}
-                  />
+                  <ChainIcon chain={id} size={20} className="shrink-0" />
                   <span className="text-sm text-ink">{CHAINS[id].label}</span>
                   <span className="text-xs text-muted">{CHAINS[id].symbol}</span>
                 </span>

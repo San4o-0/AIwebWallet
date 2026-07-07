@@ -27,6 +27,7 @@ import {
   type BgRenameWallet,
   type BgResolveApproval,
   type BgRestoreVaultPassword,
+  type BgRevealSeedPhrase,
   type BgRpcRequest,
   type BgSwitchWallet,
   type BgVaultCreate,
@@ -69,6 +70,7 @@ interface WasmAddresses {
   evm: string;
   solana: string;
   bitcoin: string;
+  tron: string;
 }
 
 /** JSON-форма vault::VaultData із WASM-ядра (розшифрований vault). */
@@ -80,6 +82,8 @@ interface WasmVaultData {
     evm_address: string;
     solana_address: string;
     bitcoin_address: string;
+    /** Порожній рядок у vault'ах, створених до появи TRON. */
+    tron_address: string;
   }[];
 }
 
@@ -156,6 +160,7 @@ export default defineBackground(() => {
           evm: addresses.evm,
           solana: addresses.solana,
           bitcoin: addresses.bitcoin,
+          tron: addresses.tron,
         },
       };
       // Секрети попереднього гаманця (якщо був розблокований) затираються
@@ -184,14 +189,29 @@ export default defineBackground(() => {
       const data = JSON.parse(wasm.unlockVault(record.vault, message.password)) as WasmVaultData;
       // Публічний список акаунтів (включно з деривованими після створення
       // vault) — із запису у сховищі; fallback: акаунти з розшифрованого vault.
-      const accounts: PublicAccount[] =
+      let accounts: PublicAccount[] =
         record.accounts.length > 0
           ? record.accounts
           : data.accounts.map((a) => ({
               index: a.index,
               name: a.name,
-              addresses: { evm: a.evm_address, solana: a.solana_address, bitcoin: a.bitcoin_address },
+              addresses: {
+                evm: a.evm_address,
+                solana: a.solana_address,
+                bitcoin: a.bitcoin_address,
+                tron: a.tron_address ?? '',
+              },
             }));
+      // Міграція: записи, створені до появи TRON, не мають tron-адреси —
+      // доозначаємо з seed-фрази (вона вже в пам'яті) і зберігаємо публічно.
+      if (accounts.some((a) => !a.addresses.tron)) {
+        accounts = accounts.map((a) => {
+          if (a.addresses.tron) return a;
+          const derived = JSON.parse(wasm.deriveAddresses(data.mnemonic, a.index)) as WasmAddresses;
+          return { ...a, addresses: { ...a.addresses, tron: derived.tron } };
+        });
+        await updateVaultAccounts(record.id, accounts);
+      }
       unlockSession(record, data.mnemonic, accounts);
       return { ok: true, value: accounts };
     } catch {
@@ -215,7 +235,12 @@ export default defineBackground(() => {
       const account: PublicAccount = {
         index: message.index,
         name: message.name,
-        addresses: { evm: addresses.evm, solana: addresses.solana, bitcoin: addresses.bitcoin },
+        addresses: {
+          evm: addresses.evm,
+          solana: addresses.solana,
+          bitcoin: addresses.bitcoin,
+          tron: addresses.tron,
+        },
       };
       const accounts = [...session.accounts.filter((a) => a.index !== account.index), account];
       session = { ...session, accounts };
@@ -291,6 +316,7 @@ export default defineBackground(() => {
                   evm: derived.evm,
                   solana: derived.solana,
                   bitcoin: derived.bitcoin,
+                  tron: derived.tron,
                 },
               },
             ];
@@ -298,6 +324,26 @@ export default defineBackground(() => {
       return { ok: true, value: accounts };
     } catch (error) {
       return { ok: false, code: 'internal', error: toWasmError(error).message };
+    }
+  }
+
+  /**
+   * Показ seed-фрази активного гаманця (Settings → Security). Пароль
+   * перевіряється ЗАВЖДИ заново повним Argon2id-розшифруванням vault —
+   * розблокованої сесії недостатньо (захист від чужих рук за відкритим
+   * попапом). Фраза повертається popup лише для відображення і ніде не
+   * зберігається.
+   */
+  async function revealSeedPhrase(message: BgRevealSeedPhrase): Promise<VaultResult<string>> {
+    const record = await getActiveVaultRecord();
+    if (record === null) return { ok: false, error: 'errors.walletNotCreated' };
+    try {
+      const wasm = await loadWalletCoreWasm();
+      const data = JSON.parse(wasm.unlockVault(record.vault, message.password)) as WasmVaultData;
+      touchAutoLock();
+      return { ok: true, value: data.mnemonic };
+    } catch {
+      return { ok: false, error: 'errors.invalidPassword' };
     }
   }
 
@@ -425,6 +471,13 @@ export default defineBackground(() => {
             ok: false,
             error: 'errors.bitcoinSignSoon',
           };
+        case 'tron':
+          // Підпис TRON-транзакцій (protobuf raw_data + sha256 + secp256k1) —
+          // майбутня робота wallet-core; отримання коштів працює вже зараз.
+          return {
+            ok: false,
+            error: 'errors.chainSendSoon',
+          };
       }
     } catch (error) {
       return vaultError(error);
@@ -442,6 +495,11 @@ export default defineBackground(() => {
         return Promise.resolve({
           ok: false,
           error: 'errors.bitcoinTxSoon',
+        });
+      case 'tron':
+        return Promise.resolve({
+          ok: false,
+          error: 'errors.chainSendSoon',
         });
     }
   }
@@ -628,6 +686,8 @@ export default defineBackground(() => {
         return removeWallet(message);
       case MessageType.RestoreVaultPassword:
         return restoreVaultPassword(message);
+      case MessageType.RevealSeedPhrase:
+        return revealSeedPhrase(message);
     }
   }
 

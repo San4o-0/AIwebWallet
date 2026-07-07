@@ -36,6 +36,11 @@ pub struct AccountMeta {
     pub solana_address: String,
     /// Bech32 Bitcoin address.
     pub bitcoin_address: String,
+    /// Base58check TRON address (`T…`). `#[serde(default)]`: vault'и,
+    /// створені до появи TRON, розшифровуються з порожнім рядком —
+    /// background доозначує адресу при першому розблокуванні.
+    #[serde(default)]
+    pub tron_address: String,
 }
 
 /// Plaintext vault contents. Zeroized on drop.
@@ -200,8 +205,33 @@ mod tests {
                 evm_address: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266".into(),
                 solana_address: "11111111111111111111111111111111".into(),
                 bitcoin_address: "bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu".into(),
+                tron_address: "TJRabPrwbZy45sbavfcjinPJC18kjpRTv8".into(),
             }],
         }
+    }
+
+    /// Vault, зашифрований ДО появи TRON (без tron_address у JSON),
+    /// має розшифровуватися з порожньою TRON-адресою (serde default).
+    #[test]
+    fn legacy_vault_without_tron_address_decrypts() {
+        let legacy_json = r#"{
+            "mnemonic": "test test test test test test test test test test test junk",
+            "accounts": [{
+                "name": "Account 1",
+                "index": 0,
+                "evm_address": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+                "solana_address": "11111111111111111111111111111111",
+                "bitcoin_address": "bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu"
+            }]
+        }"#;
+        let data: VaultData = serde_json::from_str(legacy_json).unwrap();
+        assert_eq!(data.accounts[0].tron_address, "");
+
+        // Повний цикл: старий формат шифрується/розшифровується без втрат.
+        let encrypted = encrypt_vault_with_params(&data, "pw", test_kdf()).unwrap();
+        let decrypted = decrypt_vault(&encrypted, "pw").unwrap();
+        assert_eq!(decrypted.accounts[0].tron_address, "");
+        assert_eq!(decrypted.accounts[0].evm_address, data.accounts[0].evm_address);
     }
 
     #[test]

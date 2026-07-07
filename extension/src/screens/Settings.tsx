@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import {
   IconChevronDown,
   IconChevronRight,
+  IconKey,
   IconLock,
   IconQr,
   IconSend,
@@ -23,7 +24,7 @@ import {
 } from '@/src/i18n';
 import { CHAIN_IDS } from '@/src/lib/chains';
 import { shortenAddress } from '@/src/lib/format';
-import type { WalletSummary } from '@/src/lib/wallet-core';
+import { walletCore, type WalletSummary } from '@/src/lib/wallet-core';
 import { useWalletStore, type Screen } from '@/src/store/wallet';
 
 const APP_VERSION = '0.1.0';
@@ -79,6 +80,7 @@ export default function Settings() {
                 ['EVM', account.addresses.evm],
                 ['Solana', account.addresses.solana],
                 ['Bitcoin', account.addresses.bitcoin],
+                ['TRON', account.addresses.tron],
               ] as const
             ).map(([label, address]) => (
               <div
@@ -132,6 +134,7 @@ export default function Settings() {
             <IconShield size={17} className="mt-0.5 shrink-0 text-sage" />
             <p className="text-xs leading-relaxed text-muted">{t('settings.securityNote')}</p>
           </div>
+          <SeedRevealRows />
           <button
             type="button"
             onClick={() => void lock()}
@@ -146,6 +149,115 @@ export default function Settings() {
       <p className="text-center text-xs text-muted/70">
         {t('settings.footer', { version: APP_VERSION, networks: CHAIN_IDS.length })}
       </p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Показ seed-фрази (Security): попередження → пароль → фраза.
+// Пароль перевіряється в background заново (Argon2id), навіть якщо сесію
+// розблоковано. Фраза живе лише в локальному стейті і затирається при
+// приховуванні/розмонтуванні. Кнопки копіювання свідомо немає (клавіатурний
+// буфер читають інші розширення/застосунки).
+// ---------------------------------------------------------------------------
+
+function SeedRevealRows() {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const [password, setPassword] = useState('');
+  const [phrase, setPhrase] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const hide = () => {
+    setPhrase(null);
+    setPassword('');
+    setError(null);
+    setOpen(false);
+  };
+
+  const reveal = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      setPhrase(await walletCore.revealSeedPhrase(password));
+      setPassword('');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t('errors.unlockFailed'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="border-b border-hairline">
+      <button
+        type="button"
+        onClick={() => (open ? hide() : setOpen(true))}
+        className="flex w-full items-center gap-3 px-4 py-3 text-start transition-colors hover:bg-raised/60"
+      >
+        <IconKey size={17} className="shrink-0 text-muted" />
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-medium text-ink">{t('settings.revealSeed')}</span>
+          <span className="mt-0.5 block text-xs text-muted">{t('settings.revealSeedHint')}</span>
+        </span>
+        <IconChevronDown
+          size={16}
+          className={`shrink-0 text-muted transition-transform ${open ? 'rotate-180' : ''}`}
+        />
+      </button>
+
+      {open && (
+        <div className="animate-rise flex flex-col gap-3 px-4 pb-4">
+          <div className="rounded-[14px] border border-terra/40 bg-terra/5 p-3">
+            <p className="text-xs font-medium leading-relaxed text-terra">
+              {t('settings.revealSeedWarning')}
+            </p>
+          </div>
+
+          {phrase === null ? (
+            <>
+              <Field
+                label={t('common.passwordLabel')}
+                type="password"
+                value={password}
+                autoFocus
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setError(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && password !== '' && !busy) void reveal();
+                }}
+                placeholder={t('common.passwordPlaceholder')}
+              />
+              {error !== null && <p className="text-xs text-terra">{error}</p>}
+              <Button disabled={busy || password === ''} onClick={() => void reveal()}>
+                {busy ? t('settings.revealSeedChecking') : t('settings.revealSeedShow')}
+              </Button>
+            </>
+          ) : (
+            <>
+              <ol
+                className="grid grid-cols-2 gap-x-6 gap-y-2.5 rounded-xl border border-hairline bg-surface px-5 py-4"
+                dir="ltr"
+              >
+                {phrase.split(' ').map((word, i) => (
+                  <li key={`${i}-${word}`} className="flex items-baseline gap-2.5">
+                    <span className="w-5 shrink-0 text-right font-mono text-[11px] tabular-nums text-muted/70">
+                      {i + 1}
+                    </span>
+                    <span className="font-mono text-[13px] text-ink">{word}</span>
+                  </li>
+                ))}
+              </ol>
+              <Button variant="secondary" onClick={hide}>
+                {t('settings.revealSeedHide')}
+              </Button>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }

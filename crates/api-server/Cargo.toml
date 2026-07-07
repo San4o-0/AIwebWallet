@@ -28,6 +28,8 @@ base64 = "0.22"
 # OpenAI-клієнт (ТЗ 4.3, F7.2): gpt-4o-mini для пояснень, gpt-4o для чату.
 # default-features = false + rustls: без нативного OpenSSL (як у reqwest вище).
 async-openai = { version = "0.41", default-features = false, features = ["rustls", "chat-completion"] }
+# Завантаження .env при старті (секрети поза shell-профілем і git).
+dotenvy = "0.15"
 # TODO: sqlx (PostgreSQL), fred (Redis) — додаються на етапі інтеграції
 # реальних сервісів, щоб не роздувати збірку скелета.
 

@@ -55,6 +55,7 @@ pub fn create_vault(
             evm_address: addresses.evm,
             solana_address: addresses.solana,
             bitcoin_address: addresses.bitcoin,
+            tron_address: addresses.tron,
         }],
     };
     let encrypted = vault::encrypt_vault(&data, password).map_err(js_err)?;
@@ -74,8 +75,9 @@ pub fn unlock_vault(vault_json: &str, password: &str) -> Result<String, JsValue>
     out
 }
 
-/// Derive addresses (EVM/Solana/Bitcoin) for the given account index.
-/// Returns JSON: `{"index":0,"evm":"0x…","solana":"…","bitcoin":"bc1…"}`.
+/// Derive addresses (EVM/Solana/Bitcoin/TRON) for the given account index.
+/// Returns JSON:
+/// `{"index":0,"evm":"0x…","solana":"…","bitcoin":"bc1…","tron":"T…"}`.
 #[wasm_bindgen(js_name = deriveAddresses)]
 pub fn derive_addresses(mnemonic_phrase: &str, index: u32) -> Result<String, JsValue> {
     let seed = seed_from(mnemonic_phrase)?;

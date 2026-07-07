@@ -40,6 +40,9 @@ pub async fn balances(
     for addr in &req.addresses.bitcoin {
         tasks.push(fetch_chain_balance(Arc::clone(&state), ChainId::Bitcoin, addr.clone()));
     }
+    for addr in &req.addresses.tron {
+        tasks.push(fetch_chain_balance(Arc::clone(&state), ChainId::Tron, addr.clone()));
+    }
 
     let mut chains: Vec<ChainBalance> = join_all(tasks).await;
 

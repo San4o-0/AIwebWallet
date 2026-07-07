@@ -7,6 +7,7 @@ export const CHAINS = {
   base: { label: 'Base', symbol: 'ETH', kind: 'evm', evmChainIdHex: '0x2105', color: '#0052ff' },
   solana: { label: 'Solana', symbol: 'SOL', kind: 'solana', evmChainIdHex: null, color: '#9945ff' },
   bitcoin: { label: 'Bitcoin', symbol: 'BTC', kind: 'bitcoin', evmChainIdHex: null, color: '#f7931a' },
+  tron: { label: 'TRON', symbol: 'TRX', kind: 'tron', evmChainIdHex: null, color: '#eb0029' },
 } as const;
 
 export type Chain = keyof typeof CHAINS;

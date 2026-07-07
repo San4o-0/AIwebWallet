@@ -162,7 +162,9 @@ export default function Send() {
             ? '0x…'
             : CHAINS[chain].kind === 'solana'
               ? t('send.solanaPlaceholder')
-              : 'bc1…'
+              : CHAINS[chain].kind === 'tron'
+                ? 'T…'
+                : 'bc1…'
         }
         className="font-mono"
         dir="ltr"

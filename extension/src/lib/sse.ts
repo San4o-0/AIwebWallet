@@ -41,17 +41,20 @@ export async function* parseSseStream(
   }
 }
 
-/** Дістає текстову дельту з data-пейлоада: або JSON {"delta": "..."}, або сирий текст. */
+/**
+ * Дістає текстову дельту з data-пейлоада. Контракт бекенда
+ * (api-server handlers/chat.rs): JSON {"content": "..."}; сирий текст — fallback.
+ */
 export function extractDelta(data: string): string {
   try {
     const parsed: unknown = JSON.parse(data);
     if (
       typeof parsed === 'object' &&
       parsed !== null &&
-      'delta' in parsed &&
-      typeof (parsed as { delta: unknown }).delta === 'string'
+      'content' in parsed &&
+      typeof (parsed as { content: unknown }).content === 'string'
     ) {
-      return (parsed as { delta: string }).delta;
+      return (parsed as { content: string }).content;
     }
   } catch {
     // не JSON — вважаємо сирим текстом

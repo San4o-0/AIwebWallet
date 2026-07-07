@@ -47,7 +47,16 @@ export default function Chat() {
       const stream = streamChat(
         {
           messages: history,
-          addresses: account !== null ? [account.addresses.evm] : [],
+          // Усі публічні адреси акаунта — щоб AI бачив і Solana/Bitcoin/TRON.
+          addresses:
+            account !== null
+              ? [
+                  account.addresses.evm,
+                  account.addresses.solana,
+                  account.addresses.bitcoin,
+                  account.addresses.tron,
+                ].filter((a) => a !== '')
+              : [],
         },
         controller.signal,
       );

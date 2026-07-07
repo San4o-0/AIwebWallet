@@ -18,6 +18,16 @@ pub struct Config {
     /// Ключ OpenAI API. Env: `OPENAI_API_KEY`.
     /// TODO: використовується провайдером ai::OpenAiProvider (async-openai).
     pub openai_api_key: Option<String>,
+    /// Базовий URL OpenAI-сумісного API. Env: `OPENAI_API_BASE`.
+    /// Дозволяє підключити сумісні провайдери: Groq
+    /// (`https://api.groq.com/openai/v1`), Ollama (`http://localhost:11434/v1`),
+    /// Gemini тощо. Без значення — api.openai.com.
+    pub openai_api_base: Option<String>,
+    /// Модель AI-чату (F7.2). Env: `AI_CHAT_MODEL`, дефолт — gpt-4o.
+    pub ai_chat_model: Option<String>,
+    /// Модель пояснень транзакцій (F4.1). Env: `AI_EXPLAIN_MODEL`,
+    /// дефолт — gpt-4o-mini.
+    pub ai_explain_model: Option<String>,
     /// Ключ Etherscan API v2 (один на всі EVM-мережі, F3.6/F6). Env:
     /// `ETHERSCAN_API_KEY`. Без ключа історія EVM повертається порожньою
     /// з полем `note` (graceful degradation, не падає).
@@ -26,6 +36,9 @@ pub struct Config {
     /// використовує `alchemy_simulateAssetChanges` замість детермінованої
     /// симуляції. Env: `ALCHEMY_API_KEY`.
     pub alchemy_api_key: Option<String>,
+    /// Ключ TronGrid (опційний): без нього публічні rate-limit'и жорсткі.
+    /// Env: `TRONGRID_API_KEY`.
+    pub trongrid_api_key: Option<String>,
     /// CORS allowlist (origin розширення). Env: `ALLOWED_ORIGINS` (через кому).
     /// TODO: у проді — тільки extension origin (ТЗ розділ 6, п.6).
     pub allowed_origins: Vec<String>,
@@ -48,6 +61,8 @@ pub struct RpcConfig {
     pub base: String,
     /// Env: `SOLANA_RPC_URL`.
     pub solana: String,
+    /// Env: `TRON_API_URL` (корінь TronGrid-сумісного API).
+    pub tron: String,
     /// Env: `MEMPOOL_SPACE_URL` (REST-корінь mempool.space).
     pub mempool_space: String,
     /// Env: `COINGECKO_API_URL` (корінь CoinGecko API v3).
@@ -67,6 +82,7 @@ impl RpcConfig {
             arbitrum: var("ARBITRUM_RPC_URL", defaults::ARBITRUM_RPC_URL),
             base: var("BASE_RPC_URL", defaults::BASE_RPC_URL),
             solana: var("SOLANA_RPC_URL", defaults::SOLANA_RPC_URL),
+            tron: var("TRON_API_URL", defaults::TRON_API_URL),
             mempool_space: var("MEMPOOL_SPACE_URL", defaults::MEMPOOL_SPACE_URL),
             coingecko: var("COINGECKO_API_URL", defaults::COINGECKO_API_URL),
             etherscan: var("ETHERSCAN_API_URL", defaults::ETHERSCAN_API_URL),
@@ -83,6 +99,7 @@ impl Default for RpcConfig {
             arbitrum: defaults::ARBITRUM_RPC_URL.into(),
             base: defaults::BASE_RPC_URL.into(),
             solana: defaults::SOLANA_RPC_URL.into(),
+            tron: defaults::TRON_API_URL.into(),
             mempool_space: defaults::MEMPOOL_SPACE_URL.into(),
             coingecko: defaults::COINGECKO_API_URL.into(),
             etherscan: defaults::ETHERSCAN_API_URL.into(),
@@ -98,6 +115,7 @@ pub mod defaults {
     pub const ARBITRUM_RPC_URL: &str = "https://arbitrum-one-rpc.publicnode.com";
     pub const BASE_RPC_URL: &str = "https://base-rpc.publicnode.com";
     pub const SOLANA_RPC_URL: &str = "https://api.mainnet-beta.solana.com";
+    pub const TRON_API_URL: &str = "https://api.trongrid.io";
     pub const MEMPOOL_SPACE_URL: &str = "https://mempool.space/api";
     pub const COINGECKO_API_URL: &str = "https://api.coingecko.com/api/v3";
     pub const ETHERSCAN_API_URL: &str = "https://api.etherscan.io/v2/api";
@@ -124,10 +142,22 @@ impl Config {
             database_url: env::var("DATABASE_URL").ok(),
             redis_url: env::var("REDIS_URL").ok(),
             openai_api_key: env::var("OPENAI_API_KEY").ok(),
+            openai_api_base: env::var("OPENAI_API_BASE")
+                .ok()
+                .filter(|v| !v.trim().is_empty()),
+            ai_chat_model: env::var("AI_CHAT_MODEL")
+                .ok()
+                .filter(|v| !v.trim().is_empty()),
+            ai_explain_model: env::var("AI_EXPLAIN_MODEL")
+                .ok()
+                .filter(|v| !v.trim().is_empty()),
             etherscan_api_key: env::var("ETHERSCAN_API_KEY")
                 .ok()
                 .filter(|k| !k.trim().is_empty()),
             alchemy_api_key: env::var("ALCHEMY_API_KEY")
+                .ok()
+                .filter(|k| !k.trim().is_empty()),
+            trongrid_api_key: env::var("TRONGRID_API_KEY")
                 .ok()
                 .filter(|k| !k.trim().is_empty()),
             allowed_origins,
@@ -143,8 +173,12 @@ impl Default for Config {
             database_url: None,
             redis_url: None,
             openai_api_key: None,
+            openai_api_base: None,
+            ai_chat_model: None,
+            ai_explain_model: None,
             etherscan_api_key: None,
             alchemy_api_key: None,
+            trongrid_api_key: None,
             allowed_origins: Vec::new(),
             rpc: RpcConfig::default(),
         }

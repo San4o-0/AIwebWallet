@@ -192,8 +192,10 @@ fn default_price_ids() -> Vec<String> {
 }
 
 /// Розкладає плоский список адрес по мережах через валідатори
-/// chain-adapters: EVM (0x…) → всі EVM-мережі, далі Bitcoin, далі Solana.
-/// Порядок важливий: коротка base58-адреса BTC не має потрапити в Solana.
+/// chain-adapters: EVM (0x…) → всі EVM-мережі, далі Bitcoin, TRON, Solana.
+/// Порядок важливий: коротка base58-адреса BTC не має потрапити в Solana,
+/// а TRON (`T…`, 34 символи) — підмножина Solana-патерну, тому перевіряється
+/// раніше.
 pub(crate) fn classify_addresses(addresses: &[String]) -> AddressBook {
     let mut book = AddressBook::default();
     for a in addresses {
@@ -201,6 +203,8 @@ pub(crate) fn classify_addresses(addresses: &[String]) -> AddressBook {
             book.evm.push(a.clone());
         } else if Address::new(ChainId::Bitcoin, a.clone()).is_ok() {
             book.bitcoin.push(a.clone());
+        } else if Address::new(ChainId::Tron, a.clone()).is_ok() {
+            book.tron.push(a.clone());
         } else if Address::new(ChainId::Solana, a.clone()).is_ok() {
             book.solana.push(a.clone());
         } else {

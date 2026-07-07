@@ -93,6 +93,12 @@ export interface WalletCore {
   removeWallet(walletId: string): Promise<WalletsState>;
   /** Заблокувати: стерти розшифровані ключі з пам'яті (zeroize у WASM). */
   lock(): Promise<void>;
+  /**
+   * Показати seed-фразу АКТИВНОГО гаманця. Пароль перевіряється в background
+   * заново (повне Argon2id-розшифрування) — розблокованої сесії недостатньо.
+   * Повертає фразу одним рядком; UI зобов'язаний затерти її зі стейту.
+   */
+  revealSeedPhrase(password: string): Promise<string>;
   /** Дериває наступний акаунт з тієї ж seed-фрази (F1.4). */
   deriveAccount(index: number, name: string): Promise<PublicAccount>;
   /** Підписати транзакцію; повертає серіалізовану підписану транзакцію. */
@@ -193,6 +199,12 @@ class WasmWalletCore implements WalletCore {
 
   async lock(): Promise<void> {
     await sendToBackground({ type: MessageType.LockSession });
+  }
+
+  async revealSeedPhrase(password: string): Promise<string> {
+    // Фраза приходить лише для відображення; у storage не потрапляє.
+    const result = await sendToBackground({ type: MessageType.RevealSeedPhrase, password });
+    return unwrap(result);
   }
 
   async listWallets(): Promise<WalletsState> {

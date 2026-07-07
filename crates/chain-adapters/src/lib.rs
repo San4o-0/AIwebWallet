@@ -30,12 +30,14 @@ pub mod error;
 pub mod evm;
 mod jsonrpc;
 pub mod solana;
+pub mod tron;
 pub mod types;
 
 pub use bitcoin::BitcoinAdapter;
 pub use error::AdapterError;
 pub use evm::{EvmAdapter, TokenConfig};
 pub use solana::{SolanaAdapter, SolanaSimulation};
+pub use tron::{TronAdapter, TronTokenConfig};
 pub use types::{
     Address, ChainId, FeeEstimate, FeeRate, TokenBalance, TransactionRecord, TxRequest, TxStatus,
 };
@@ -112,6 +114,7 @@ mod tests {
             Box::new(EvmAdapter::new(ChainId::Ethereum, "http://localhost:8545").unwrap()),
             Box::new(SolanaAdapter::new("http://localhost:8899")),
             Box::new(BitcoinAdapter::new()),
+            Box::new(TronAdapter::default()),
         ];
         for adapter in &adapters {
             assert_object_safe(adapter.as_ref());
@@ -119,5 +122,6 @@ mod tests {
         assert_eq!(adapters[0].chain(), ChainId::Ethereum);
         assert_eq!(adapters[1].chain(), ChainId::Solana);
         assert_eq!(adapters[2].chain(), ChainId::Bitcoin);
+        assert_eq!(adapters[3].chain(), ChainId::Tron);
     }
 }

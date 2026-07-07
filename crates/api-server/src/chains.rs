@@ -8,7 +8,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use chain_adapters::{
-    BitcoinAdapter, ChainAdapter, ChainId, EvmAdapter, SolanaAdapter, TokenConfig,
+    BitcoinAdapter, ChainAdapter, ChainId, EvmAdapter, SolanaAdapter, TokenConfig, TronAdapter,
 };
 
 use crate::config::RpcConfig;
@@ -25,8 +25,9 @@ pub const EVM_CHAINS: [ChainId; 5] = [
 /// Реєстр адаптерів усіх мереж.
 pub type AdapterRegistry = HashMap<ChainId, Arc<dyn ChainAdapter>>;
 
-/// Створює адаптери для всіх 7 мереж за конфігурацією RPC.
-pub fn build_registry(rpc: &RpcConfig) -> AdapterRegistry {
+/// Створює адаптери для всіх 8 мереж за конфігурацією RPC.
+/// `trongrid_api_key` — опційний ключ TronGrid (вищі rate-limit'и).
+pub fn build_registry(rpc: &RpcConfig, trongrid_api_key: Option<&str>) -> AdapterRegistry {
     let mut registry: AdapterRegistry = HashMap::new();
 
     let evm_urls: [(ChainId, &str); 5] = [
@@ -48,6 +49,13 @@ pub fn build_registry(rpc: &RpcConfig) -> AdapterRegistry {
     registry.insert(
         ChainId::Bitcoin,
         Arc::new(BitcoinAdapter::with_base_url(rpc.mempool_space.clone())),
+    );
+    registry.insert(
+        ChainId::Tron,
+        Arc::new(
+            TronAdapter::new(rpc.tron.clone())
+                .with_api_key(trongrid_api_key.map(str::to_string)),
+        ),
     );
     registry
 }
@@ -81,7 +89,8 @@ pub fn known_tokens(chain: ChainId) -> Vec<TokenConfig> {
         ChainId::Base => vec![
             t("0x833589fcd6edb6e08f4c7c32d4f71b54bda02913", "USDC", 6),
         ],
-        ChainId::Solana | ChainId::Bitcoin => Vec::new(),
+        // TRC-20 (TRON) обслуговує TronAdapter власним списком, не EVM-конфігом.
+        ChainId::Solana | ChainId::Bitcoin | ChainId::Tron => Vec::new(),
     }
 }
 
@@ -96,6 +105,7 @@ pub fn native_coingecko_id(chain: ChainId) -> &'static str {
         ChainId::Bsc => "binancecoin",
         ChainId::Solana => "solana",
         ChainId::Bitcoin => "bitcoin",
+        ChainId::Tron => "tron",
     }
 }
 
@@ -117,6 +127,7 @@ pub fn native_name(chain: ChainId) -> &'static str {
         ChainId::Bsc => "BNB",
         ChainId::Solana => "Solana",
         ChainId::Bitcoin => "Bitcoin",
+        ChainId::Tron => "TRON",
     }
 }
 
@@ -152,9 +163,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn registry_covers_all_seven_chains() {
-        let registry = build_registry(&RpcConfig::default());
-        assert_eq!(registry.len(), 7);
+    fn registry_covers_all_chains() {
+        let registry = build_registry(&RpcConfig::default(), None);
+        assert_eq!(registry.len(), 8);
         for chain in ChainId::ALL {
             let adapter = registry.get(&chain).expect("адаптер для кожної мережі");
             assert_eq!(adapter.chain(), chain);

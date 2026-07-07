@@ -46,6 +46,8 @@ pub struct AddressBook {
     pub solana: Vec<String>,
     #[serde(default)]
     pub bitcoin: Vec<String>,
+    #[serde(default)]
+    pub tron: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -319,6 +321,10 @@ pub struct ChatRequest {
     /// Публічні адреси користувача — контекст для function calling (F7.2).
     #[serde(default)]
     pub addresses: Vec<String>,
+    /// Локаль інтерфейсу (BCP-47, напр. "uk") — мова відповіді за
+    /// замовчуванням, якщо користувач не пише іншою.
+    #[serde(default)]
+    pub lang: Option<String>,
 }
 
 // ---------------------------------------------------------------------------

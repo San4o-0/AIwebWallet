@@ -12,6 +12,10 @@ use api_server::state::AppState;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // .env з поточної директорії або батьківських (ключі AI/Etherscan тощо).
+    // Відсутній файл — ок; вже експортовані змінні мають пріоритет над .env.
+    dotenvy::dotenv().ok();
+
     // Логування: RUST_LOG=api_server=debug,tower_http=debug
     // TODO: OpenTelemetry-експортер + Prometheus-метрики (ТЗ 4.2).
     tracing_subscriber::registry()

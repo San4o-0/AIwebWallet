@@ -40,16 +40,39 @@ pub struct OpenAiProvider {
     fallback: RuleBasedProvider,
 }
 
+/// Конфіг OpenAI-клієнта з опційним кастомним базовим URL — для
+/// OpenAI-сумісних провайдерів (Groq, Ollama, Gemini). `None`/порожній
+/// `api_base` → дефолтний api.openai.com.
+pub(crate) fn client_config(api_key: String, api_base: Option<&str>) -> OpenAIConfig {
+    let cfg = OpenAIConfig::new().with_api_key(api_key);
+    match api_base.map(|b| b.trim().trim_end_matches('/')) {
+        Some(base) if !base.is_empty() => cfg.with_api_base(base),
+        _ => cfg,
+    }
+}
+
 impl OpenAiProvider {
     /// `api_key = None` (або порожній рядок) → провайдер вимкнений,
     /// тривіальні випадки все одно пояснюються шаблоном.
     pub fn new(api_key: Option<String>) -> Self {
+        Self::with_options(api_key, None, None)
+    }
+
+    /// Як [`Self::new`], але з кастомним базовим URL (OpenAI-сумісні
+    /// провайдери) та override моделі (`None` → [`EXPLAIN_MODEL`]).
+    pub fn with_options(
+        api_key: Option<String>,
+        api_base: Option<String>,
+        model: Option<String>,
+    ) -> Self {
         let client = api_key
             .filter(|k| !k.trim().is_empty())
-            .map(|k| Client::with_config(OpenAIConfig::new().with_api_key(k)));
+            .map(|k| Client::with_config(client_config(k, api_base.as_deref())));
         Self {
             client,
-            model: EXPLAIN_MODEL.to_string(),
+            model: model
+                .filter(|m| !m.trim().is_empty())
+                .unwrap_or_else(|| EXPLAIN_MODEL.to_string()),
             fallback: RuleBasedProvider,
         }
     }
@@ -195,6 +218,25 @@ mod tests {
             }),
             lang: lang.map(str::to_string),
         }
+    }
+
+    #[test]
+    fn client_config_custom_base_is_trimmed() {
+        use async_openai::config::Config as _;
+        // Кастомний base: трейлінг-слеш прибирається (клієнт сам додає шляхи).
+        let cfg = client_config("k".into(), Some("https://api.groq.com/openai/v1/"));
+        assert_eq!(cfg.api_base(), "https://api.groq.com/openai/v1");
+        // Порожній base → дефолтний OpenAI.
+        let cfg = client_config("k".into(), Some("  "));
+        assert_eq!(cfg.api_base(), OpenAIConfig::default().api_base());
+    }
+
+    #[test]
+    fn with_options_overrides_model_or_falls_back() {
+        let p = OpenAiProvider::with_options(None, None, Some("llama-3.3-70b-versatile".into()));
+        assert_eq!(p.model, "llama-3.3-70b-versatile");
+        let p = OpenAiProvider::with_options(None, None, Some(" ".into()));
+        assert_eq!(p.model, EXPLAIN_MODEL);
     }
 
     #[test]

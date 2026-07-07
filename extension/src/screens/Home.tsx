@@ -8,6 +8,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 
+import { ChainIcon } from '@/src/components/chain-icons';
 import { IconLock, IconQr, IconReceive, IconSend } from '@/src/components/icons';
 import { Card, ErrorNote, Eyebrow, EmptyState, IconButton } from '@/src/components/ui';
 import { fetchPortfolio } from '@/src/lib/api';
@@ -33,6 +34,7 @@ export default function Home() {
           evm: account !== null ? [account.addresses.evm] : [],
           solana: account !== null && account.addresses.solana !== '' ? [account.addresses.solana] : [],
           bitcoin: account !== null && account.addresses.bitcoin !== '' ? [account.addresses.bitcoin] : [],
+          tron: account !== null && account.addresses.tron !== '' ? [account.addresses.tron] : [],
         },
       }),
     enabled: account !== null,
@@ -128,10 +130,7 @@ export default function Home() {
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <span
-                    className="inline-block size-1.5 rounded-full opacity-80"
-                    style={{ backgroundColor: CHAINS[chain].color }}
-                  />
+                  <ChainIcon chain={chain} size={20} className="shrink-0" />
                   <span className="text-sm text-ink">{CHAINS[chain].label}</span>
                 </div>
                 {isLoading ? (

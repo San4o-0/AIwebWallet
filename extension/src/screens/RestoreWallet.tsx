@@ -39,6 +39,7 @@ export default function RestoreWallet() {
   const cancelRestorePassword = useWalletStore((s) => s.cancelRestorePassword);
   const restorePassword = useWalletStore((s) => s.restorePassword);
   const completeOnboarding = useWalletStore((s) => s.completeOnboarding);
+  const startAddWallet = useWalletStore((s) => s.startAddWallet);
   const wallets = useWalletStore((s) => s.wallets);
   const activeWalletId = useWalletStore((s) => s.activeWalletId);
   const activeWallet = findActiveWallet(wallets, activeWalletId);
@@ -169,6 +170,21 @@ export default function RestoreWallet() {
             <p className="text-xs font-medium leading-relaxed text-terra">
               {t('restore.noPhraseWarning')}
             </p>
+          </div>
+          {/* Вихід для тих, хто без фрази: новий незалежний гаманець через
+              звичайний флоу додавання; заблокований запис лишається в списку. */}
+          <div className="rounded-[14px] border border-hairline bg-surface p-3.5">
+            <p className="text-xs leading-relaxed text-muted">{t('restore.createNewHint')}</p>
+            <Button
+              variant="secondary"
+              className="mt-3 w-full"
+              onClick={() => {
+                wipeSecrets();
+                startAddWallet();
+              }}
+            >
+              {t('onboarding.createNew')}
+            </Button>
           </div>
           <div className="mt-auto flex flex-col gap-2 pt-4">
             <Button onClick={() => setStep('phrase')}>{t('restore.havePhrase')}</Button>

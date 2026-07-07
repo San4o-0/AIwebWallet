@@ -17,6 +17,9 @@ export interface PublicAccount {
     evm: string;
     solana: string;
     bitcoin: string;
+    /** Порожній рядок у записах, створених до появи TRON, — background
+     *  доозначує адресу при першому розблокуванні (міграція). */
+    tron: string;
   };
 }
 
@@ -71,6 +74,8 @@ export enum MessageType {
    * розблокування сесії.
    */
   RestoreVaultPassword = 'aiwallet/restore-vault-password',
+  /** Popup → background: показати seed-фразу (пароль перевіряється заново). */
+  RevealSeedPhrase = 'aiwallet/reveal-seed-phrase',
 }
 
 // --- Мульти-гаманець: публічні метадані для UI --------------------------------
@@ -330,6 +335,15 @@ export interface BgRemoveWallet {
   walletId: string;
 }
 
+/**
+ * Показ seed-фрази активного гаманця. Пароль перевіряється ЗАВЖДИ заново
+ * (Argon2id-розшифрування vault) — розблокованої сесії недостатньо.
+ */
+export interface BgRevealSeedPhrase {
+  type: MessageType.RevealSeedPhrase;
+  password: string;
+}
+
 export type BackgroundMessage =
   | BgRpcRequest
   | BgGetSessionState
@@ -345,7 +359,8 @@ export type BackgroundMessage =
   | BgSwitchWallet
   | BgRenameWallet
   | BgRemoveWallet
-  | BgRestoreVaultPassword;
+  | BgRestoreVaultPassword
+  | BgRevealSeedPhrase;
 
 /** Стан сесії у service worker. */
 export interface SessionState {
@@ -387,6 +402,7 @@ export interface BackgroundResponseMap {
   [MessageType.RenameWallet]: VaultResult<WalletsState>;
   [MessageType.RemoveWallet]: VaultResult<WalletsState>;
   [MessageType.RestoreVaultPassword]: RestoreVaultResult;
+  [MessageType.RevealSeedPhrase]: VaultResult<string>;
 }
 
 const BACKGROUND_MESSAGE_TYPES: ReadonlySet<string> = new Set([
@@ -405,6 +421,7 @@ const BACKGROUND_MESSAGE_TYPES: ReadonlySet<string> = new Set([
   MessageType.RenameWallet,
   MessageType.RemoveWallet,
   MessageType.RestoreVaultPassword,
+  MessageType.RevealSeedPhrase,
 ]);
 
 /**
@@ -424,6 +441,7 @@ export const PRIVILEGED_MESSAGE_TYPES: ReadonlySet<string> = new Set([
   MessageType.RenameWallet,
   MessageType.RemoveWallet,
   MessageType.RestoreVaultPassword,
+  MessageType.RevealSeedPhrase,
 ]);
 
 export function isBackgroundMessage(value: unknown): value is BackgroundMessage {
