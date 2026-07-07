@@ -177,7 +177,8 @@ export default defineBackground(() => {
   async function vaultUnlock(message: BgVaultUnlock): Promise<VaultResult<PublicAccount[]>> {
     // Розблоковується АКТИВНИЙ гаманець (перемикання — SwitchWallet).
     const record = await getActiveVaultRecord();
-    if (record === null) return { ok: false, error: 'Гаманець не створено.' };
+    // Помилки для попапа — i18n-ключами: перекладає localizeError на боці UI.
+    if (record === null) return { ok: false, error: 'errors.walletNotCreated' };
     try {
       const wasm = await loadWalletCoreWasm();
       const data = JSON.parse(wasm.unlockVault(record.vault, message.password)) as WasmVaultData;
@@ -195,7 +196,7 @@ export default defineBackground(() => {
       return { ok: true, value: accounts };
     } catch {
       // WASM-ядро повертає одну помилку і на невірний пароль, і на битий vault.
-      return { ok: false, error: 'Невірний пароль.' };
+      return { ok: false, error: 'errors.invalidPassword' };
     }
   }
 
@@ -204,7 +205,7 @@ export default defineBackground(() => {
   ): Promise<VaultResult<PublicAccount>> {
     const sessionWalletId = session.walletId;
     if (sessionMnemonic === null || sessionWalletId === null) {
-      return { ok: false, error: 'Гаманець заблоковано.' };
+      return { ok: false, error: 'errors.walletLocked' };
     }
     try {
       const wasm = await loadWalletCoreWasm();
@@ -244,13 +245,13 @@ export default defineBackground(() => {
   ): Promise<RestoreVaultResult> {
     const record = await getActiveVaultRecord();
     if (record === null) {
-      return { ok: false, code: 'no-wallet', error: 'Гаманець не створено.' };
+      return { ok: false, code: 'no-wallet', error: 'errors.walletNotCreated' };
     }
     if (message.newPassword.length < 8) {
       return {
         ok: false,
         code: 'weak-password',
-        error: 'Пароль має містити щонайменше 8 символів.',
+        error: 'errors.passwordTooShort',
       };
     }
     try {
@@ -262,7 +263,7 @@ export default defineBackground(() => {
           ok: false,
           code: 'invalid-phrase',
           error:
-            'Невірна seed-фраза: слово поза словником BIP-39 або checksum не збігається.',
+            'errors.invalidMnemonic',
         };
       }
       const derived = JSON.parse(wasm.deriveAddresses(phrase, 0)) as WasmAddresses;
@@ -270,10 +271,10 @@ export default defineBackground(() => {
         return {
           ok: false,
           code: 'wallet-mismatch',
-          error: 'Ця фраза належить іншому гаманцю. Перевірте слова.',
+          error: 'errors.phraseOtherWallet',
         };
       }
-      const accountName = record.accounts[0]?.name ?? 'Акаунт 1';
+      const accountName = record.accounts[0]?.name ?? 'Account 1';
       // Новий шифротекст: Argon2id → AES-256-GCM з НОВИМ паролем (повільно — ок).
       const encryptedVault = wasm.createVault(phrase, message.newPassword, accountName);
       // Секрети попередньої сесії (якщо була) затираються ДО заміни.
@@ -376,7 +377,7 @@ export default defineBackground(() => {
     txParamsJson: string,
     accountIndex: number,
   ): Promise<VaultResult<string>> {
-    if (sessionMnemonic === null) return { ok: false, error: 'Гаманець заблоковано.' };
+    if (sessionMnemonic === null) return { ok: false, error: 'errors.walletLocked' };
     try {
       const wasm = await loadWalletCoreWasm();
       touchAutoLock();
@@ -397,7 +398,7 @@ export default defineBackground(() => {
     message: string,
     accountIndex: number,
   ): Promise<VaultResult<string>> {
-    if (sessionMnemonic === null) return { ok: false, error: 'Гаманець заблоковано.' };
+    if (sessionMnemonic === null) return { ok: false, error: 'errors.walletLocked' };
     try {
       const wasm = await loadWalletCoreWasm();
       touchAutoLock();
@@ -422,7 +423,7 @@ export default defineBackground(() => {
         case 'bitcoin':
           return {
             ok: false,
-            error: 'Підпис Bitcoin буде доступний після інтеграції PSBT (BDK).',
+            error: 'errors.bitcoinSignSoon',
           };
       }
     } catch (error) {
@@ -440,7 +441,7 @@ export default defineBackground(() => {
       case 'bitcoin':
         return Promise.resolve({
           ok: false,
-          error: 'Підпис Bitcoin-транзакцій буде доступний після інтеграції PSBT (BDK).',
+          error: 'errors.bitcoinTxSoon',
         });
     }
   }
@@ -493,7 +494,7 @@ export default defineBackground(() => {
     if (session.address === null) return { ok: false, error: RPC_ERRORS.unauthorized };
     const rawTx = request.params[0];
     if (typeof rawTx !== 'object' || rawTx === null || Array.isArray(rawTx)) {
-      return { ok: false, error: { code: -32602, message: 'Некоректні параметри транзакції.' } };
+      return { ok: false, error: { code: -32602, message: 'Invalid transaction parameters.' } };
     }
     const tx = rawTx as Record<string, unknown>;
     const data = txField(tx, 'data') ?? txField(tx, 'input');
@@ -519,7 +520,7 @@ export default defineBackground(() => {
       const { tx_hash } = await broadcastTx({ chain: DAPP_CHAIN, signed_tx: raw_tx });
       return { ok: true, result: tx_hash };
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Внутрішня помилка.';
+      const message = error instanceof Error ? error.message : 'Internal error.';
       return { ok: false, error: { code: -32603, message } };
     }
   }

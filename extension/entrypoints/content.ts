@@ -39,7 +39,7 @@ export default defineContentScript({
         } catch {
           outcome = {
             ok: false,
-            error: { code: -32603, message: 'Гаманець недоступний.' },
+            error: { code: -32603, message: 'Wallet is unavailable.' },
           };
         }
         const response: PageRpcResponse = {

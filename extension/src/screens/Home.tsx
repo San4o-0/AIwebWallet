@@ -6,6 +6,7 @@
  * small-caps підпис «Загальний баланс».
  */
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 
 import { IconLock, IconQr, IconReceive, IconSend } from '@/src/components/icons';
 import { Card, ErrorNote, Eyebrow, EmptyState, IconButton } from '@/src/components/ui';
@@ -16,6 +17,7 @@ import { formatUsd, shortenAddress } from '@/src/lib/format';
 import { findActiveWallet, useWalletStore } from '@/src/store/wallet';
 
 export default function Home() {
+  const { t } = useTranslation();
   const account = useWalletStore((s) => s.account);
   const lock = useWalletStore((s) => s.lock);
   const setScreen = useWalletStore((s) => s.setScreen);
@@ -52,26 +54,26 @@ export default function Home() {
             <Eyebrow className="mb-0.5 truncate">{activeWallet.name}</Eyebrow>
           )}
           <p className="truncate text-sm font-semibold text-ink">
-            {account?.name ?? 'Гаманець'}
+            {account?.name ?? t('home.walletFallback')}
           </p>
           {account !== null && (
-            <p className="mt-0.5 font-mono text-xs text-muted">
+            <p className="mt-0.5 font-mono text-xs text-muted" dir="ltr">
               {shortenAddress(account.addresses.evm)}
             </p>
           )}
         </div>
         <div className="flex shrink-0 gap-2">
-          <IconButton label="Адреси для отримання" onClick={() => setScreen('receive')}>
+          <IconButton label={t('home.receiveAddresses')} onClick={() => setScreen('receive')}>
             <IconQr size={17} />
           </IconButton>
-          <IconButton label="Заблокувати гаманець" onClick={() => void lock()}>
+          <IconButton label={t('home.lockWallet')} onClick={() => void lock()}>
             <IconLock size={17} />
           </IconButton>
         </div>
       </header>
 
       {/* Підпис дизайну: серифна сума + латунна hairline + eyebrow */}
-      <section aria-label="Загальний баланс">
+      <section aria-label={t('home.totalBalance')}>
         {isLoading ? (
           <div className="skeleton h-12 w-48" />
         ) : (
@@ -83,12 +85,12 @@ export default function Home() {
           </p>
         )}
         <div className="mt-4 h-px w-full bg-brass/60" aria-hidden />
-        <Eyebrow className="mt-2">Загальний баланс</Eyebrow>
+        <Eyebrow className="mt-2">{t('home.totalBalance')}</Eyebrow>
       </section>
 
       {isError && (
         <ErrorNote onRetry={() => void refetch()}>
-          Бекенд не відповідає — баланси не оновлено.
+          {t('home.backendDownBalances')}
         </ErrorNote>
       )}
 
@@ -100,7 +102,7 @@ export default function Home() {
           className="flex items-center justify-center gap-2 rounded-xl bg-brass px-4 py-3 text-sm font-semibold text-bg transition-colors hover:bg-brass-bright"
         >
           <IconSend size={17} />
-          Надіслати
+          {t('home.send')}
         </button>
         <button
           type="button"
@@ -108,12 +110,12 @@ export default function Home() {
           className="flex items-center justify-center gap-2 rounded-xl border border-hairline bg-raised px-4 py-3 text-sm font-semibold text-ink transition-colors hover:border-brass/50"
         >
           <IconReceive size={17} />
-          Отримати
+          {t('home.receive')}
         </button>
       </div>
 
       <section>
-        <Eyebrow className="mb-2.5">Мережі</Eyebrow>
+        <Eyebrow className="mb-2.5">{t('common.networks')}</Eyebrow>
         <Card className="p-0">
           {CHAIN_IDS.map((chain, index) => {
             const tokens = byChain.get(chain) ?? [];
@@ -144,7 +146,7 @@ export default function Home() {
       </section>
 
       <section>
-        <Eyebrow className="mb-2.5">Активи</Eyebrow>
+        <Eyebrow className="mb-2.5">{t('home.assets')}</Eyebrow>
         {isLoading && (
           <div className="flex flex-col gap-2">
             <div className="skeleton h-14 w-full" />
@@ -153,10 +155,7 @@ export default function Home() {
           </div>
         )}
         {!isLoading && (portfolio?.tokens?.length ?? 0) === 0 && (
-          <EmptyState
-            title="Активів поки немає"
-            hint="Поповніть гаманець — відкрийте «Отримати», щоб побачити адреси та QR-код."
-          />
+          <EmptyState title={t('home.noAssetsTitle')} hint={t('home.noAssetsHint')} />
         )}
         {!isLoading && (portfolio?.tokens?.length ?? 0) > 0 && (
           <Card className="p-0">
@@ -171,10 +170,10 @@ export default function Home() {
                   <p className="text-sm font-medium text-ink">{token.symbol}</p>
                   <p className="mt-0.5 text-xs text-muted">
                     {CHAINS[token.chain].label}
-                    {token.isNative ? '' : ' · токен'}
+                    {token.isNative ? '' : ` · ${t('home.tokenSuffix')}`}
                   </p>
                 </div>
-                <div className="text-right">
+                <div className="text-end">
                   <p className="text-sm tabular-nums text-ink">{token.amount}</p>
                   <p className="mt-0.5 text-xs tabular-nums text-muted">
                     {formatUsd(token.usdValue)}

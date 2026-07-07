@@ -7,8 +7,12 @@ export default defineConfig({
   modules: ['@wxt-dev/module-react'],
   manifest: ({ browser }) => ({
     name: 'AI Wallet',
+    // Англійська як мова маніфеста за замовчуванням (сторінка стора).
+    // TODO(i18n): локалізувати name/description через chrome.i18n `_locales`
+    // + `default_locale` (__MSG_*__), коли з'являться перекладені описи —
+    // рантайм-i18n попапа цього механізму не потребує.
     description:
-      'Non-custodial криптогаманець з AI-помічником: пояснення транзакцій, аналіз ризиків, чат.',
+      'Non-custodial crypto wallet with an AI assistant: transaction explanations, risk analysis, chat.',
     permissions: ['storage', 'alarms'],
     // Явний ID для Firefox (about:debugging приймає і без нього, але для
     // підпису/оновлень addons.mozilla.org ID обов'язковий).

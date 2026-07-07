@@ -72,14 +72,16 @@ export function isEvmAddress(value: string): boolean {
 export function parseAmountToBaseUnits(amount: string, decimals: number): bigint {
   const trimmed = amount.trim();
   const match = /^(\d+)(?:\.(\d+))?$/.exec(trimmed);
-  if (match === null) throw new Error('Некоректна сума.');
+  // Помилки — i18n-ключами (модуль бандлиться і в background): попап
+  // перекладає їх через localizeError.
+  if (match === null) throw new Error('errors.invalidAmount');
   const whole = match[1] ?? '0';
   const frac = match[2] ?? '';
   if (frac.length > decimals) {
-    throw new Error(`Забагато знаків після коми (максимум ${decimals}).`);
+    throw new Error(`errors.tooManyDecimals|${JSON.stringify({ max: decimals })}`);
   }
   const base = BigInt(whole) * 10n ** BigInt(decimals) + BigInt(frac.padEnd(decimals, '0') || '0');
-  if (base <= 0n) throw new Error('Сума має бути більшою за нуль.');
+  if (base <= 0n) throw new Error('errors.amountNotPositive');
   return base;
 }
 

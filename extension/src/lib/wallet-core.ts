@@ -19,6 +19,7 @@
  * Приватні ключі ніколи не залишають WASM-пам'ять background; цей інтерфейс
  * оперує лише публічними даними та готовими підписами.
  */
+import { i18n, localizeError } from '../i18n';
 import type { Chain } from './chains';
 import {
   MessageType,
@@ -28,7 +29,7 @@ import {
   type WalletsState,
 } from './messaging';
 import { sendToBackground } from './runtime';
-import { hasAnyVault } from './vault-storage';
+import { hasAnyVault, listVaultRecords, nextDefaultWalletName } from './vault-storage';
 import { loadWalletCoreWasm, toWasmError } from '../wasm';
 
 export type { PublicAccount, RestoreErrorCode, WalletsState, WalletSummary } from './messaging';
@@ -110,9 +111,10 @@ function unwrap<T>(result: VaultResult<T> | undefined): T {
   // відповів (наприклад, упав на старті) — даємо зрозумілу помилку замість
   // TypeError у рендері.
   if (result === undefined) {
-    throw new Error('Background-скрипт не відповідає. Перезапустіть розширення.');
+    throw new Error(i18n.t('errors.backgroundUnresponsive'));
   }
-  if (!result.ok) throw new Error(result.error);
+  // Background повертає помилки i18n-ключами — перекладаємо для UI.
+  if (!result.ok) throw new Error(localizeError(result.error));
   return result.value;
 }
 
@@ -133,23 +135,34 @@ class WasmWalletCore implements WalletCore {
   }
 
   async createWallet(mnemonic: readonly string[], password: string): Promise<PublicAccount> {
+    // Дефолтні назви локалізуються у момент створення (persist як текст):
+    // «Гаманець N» вільним номером обчислюється з поточного списку записів.
+    let walletName: string | undefined;
+    try {
+      walletName = nextDefaultWalletName(await listVaultRecords(), (n) =>
+        i18n.t('wallets.defaultName', { number: n }),
+      );
+    } catch {
+      walletName = undefined; // background підставить власний fallback
+    }
     const result = await sendToBackground({
       type: MessageType.VaultCreate,
       mnemonic: mnemonic.join(' '),
       password,
-      accountName: 'Акаунт 1',
+      accountName: i18n.t('wallets.defaultAccountName', { number: 1 }),
+      walletName,
     });
     return unwrap(result);
   }
 
   async importWallet(mnemonic: readonly string[], password: string): Promise<PublicAccount> {
     if (mnemonic.length !== 12 && mnemonic.length !== 24) {
-      throw new Error('Seed-фраза має містити 12 або 24 слова.');
+      throw new Error(i18n.t('errors.phraseWordCount'));
     }
     // Швидка перевірка checksum локально (без Argon2id) для миттєвого фідбеку.
     const wasm = await loadWalletCoreWasm();
     if (!wasm.validateMnemonic(mnemonic.join(' '))) {
-      throw new Error('Невірна seed-фраза: слово поза словником BIP-39 або checksum не збігається.');
+      throw new Error(i18n.t('errors.invalidMnemonic'));
     }
     return this.createWallet(mnemonic, password);
   }
@@ -172,12 +185,9 @@ class WasmWalletCore implements WalletCore {
       newPassword,
     });
     if (result === undefined) {
-      throw new RestoreError(
-        'internal',
-        'Background-скрипт не відповідає. Перезапустіть розширення.',
-      );
+      throw new RestoreError('internal', i18n.t('errors.backgroundUnresponsive'));
     }
-    if (!result.ok) throw new RestoreError(result.code, result.error);
+    if (!result.ok) throw new RestoreError(result.code, localizeError(result.error));
     return result.value;
   }
 

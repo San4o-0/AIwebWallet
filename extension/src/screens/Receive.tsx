@@ -5,6 +5,7 @@
  * відкриваються через browser.tabs.create).
  */
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import QRCode from 'qrcode';
 import { browser } from 'wxt/browser';
 
@@ -100,18 +101,16 @@ const ONRAMP_PROVIDERS: OnRampProvider[] = [
 ];
 
 export default function Receive() {
+  const { t } = useTranslation();
   const account = useWalletStore((s) => s.account);
   const [chain, setChain] = useState<Chain | null>(null);
 
   if (account === null) {
     return (
       <div className="p-5 pb-24">
-        <ScreenHeader eyebrow="Поповнення" title="Отримати" />
+        <ScreenHeader eyebrow={t('receive.eyebrow')} title={t('receive.title')} />
         <div className="mt-6">
-          <EmptyState
-            title="Акаунт недоступний"
-            hint="Розблокуйте гаманець, щоб побачити адреси для отримання."
-          />
+          <EmptyState title={t('receive.noAccountTitle')} hint={t('receive.noAccountHint')} />
         </div>
       </div>
     );
@@ -137,16 +136,15 @@ function ChainList({
   onSelect: (chain: Chain) => void;
   addresses: { evm: string; solana: string; bitcoin: string };
 }) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col gap-6 p-5 pb-24">
-      <ScreenHeader eyebrow="Поповнення" title="Отримати">
-        <p className="mt-2 text-sm leading-relaxed text-muted">
-          Оберіть мережу, щоб побачити адресу та QR-код для поповнення.
-        </p>
+      <ScreenHeader eyebrow={t('receive.eyebrow')} title={t('receive.title')}>
+        <p className="mt-2 text-sm leading-relaxed text-muted">{t('receive.chooseNetwork')}</p>
       </ScreenHeader>
 
       <section>
-        <Eyebrow className="mb-2.5">Мережі</Eyebrow>
+        <Eyebrow className="mb-2.5">{t('common.networks')}</Eyebrow>
         <Card className="p-0">
           {CHAIN_IDS.map((id, index) => {
             const hasAddress = addressFor(id, addresses) !== '';
@@ -156,7 +154,7 @@ function ChainList({
                 type="button"
                 disabled={!hasAddress}
                 onClick={() => onSelect(id)}
-                className={`flex w-full items-center justify-between px-4 py-3 text-left transition-colors hover:bg-raised/60 disabled:cursor-not-allowed disabled:opacity-40 ${
+                className={`flex w-full items-center justify-between px-4 py-3 text-start transition-colors hover:bg-raised/60 disabled:cursor-not-allowed disabled:opacity-40 ${
                   index > 0 ? 'border-t border-hairline' : ''
                 }`}
               >
@@ -168,13 +166,13 @@ function ChainList({
                   <span className="text-sm text-ink">{CHAINS[id].label}</span>
                   <span className="text-xs text-muted">{CHAINS[id].symbol}</span>
                 </span>
-                <IconChevronRight size={16} className="text-muted" />
+                <IconChevronRight size={16} className="text-muted rtl:-scale-x-100" />
               </button>
             );
           })}
         </Card>
         <p className="mt-2.5 text-xs leading-relaxed text-muted">
-          Адреса для EVM-мереж ({EVM_CHAIN_LABELS}) спільна.
+          {t('receive.evmShared', { chains: EVM_CHAIN_LABELS })}
         </p>
       </section>
     </div>
@@ -190,6 +188,7 @@ function ChainDetail({
   address: string;
   onBack: () => void;
 }) {
+  const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
@@ -206,7 +205,7 @@ function ChainDetail({
       errorCorrectionLevel: 'M',
       color: { dark: '#121014', light: '#f2efe6' },
     }).catch((error: unknown) => {
-      console.error('[aiwallet] Не вдалося згенерувати QR-код:', error);
+      console.error('[aiwallet] QR code generation failed:', error);
     });
   }, [address]);
 
@@ -239,26 +238,26 @@ function ChainDetail({
         <button
           type="button"
           onClick={onBack}
-          className="-ml-2 flex items-center gap-0.5 rounded-lg px-2 py-1.5 text-sm text-muted transition-colors hover:bg-raised hover:text-ink"
+          className="-ms-2 flex items-center gap-0.5 rounded-lg px-2 py-1.5 text-sm text-muted transition-colors hover:bg-raised hover:text-ink"
         >
-          <IconChevronLeft size={16} />
-          Мережі
+          <IconChevronLeft size={16} className="rtl:-scale-x-100" />
+          {t('common.networks')}
         </button>
       </header>
 
       <section className="animate-rise">
         <ScreenHeader
-          eyebrow="Адреса для отримання"
+          eyebrow={t('receive.addressEyebrow')}
           title={`${CHAINS[chain].label} · ${CHAINS[chain].symbol}`}
         />
 
         {/* Адреса як «візитівка»: QR на слоновій кістці в hairline-рамці */}
         <Card className="mt-4 flex flex-col items-center gap-4 p-5">
           <div className="rounded-lg border border-brass/40 bg-ink p-3">
-            <canvas ref={canvasRef} className="block size-[168px]" aria-label="QR-код адреси" />
+            <canvas ref={canvasRef} className="block size-[168px]" aria-label={t('receive.qrAria')} />
           </div>
 
-          <p className="break-all text-center font-mono text-[13px] leading-relaxed text-ink">
+          <p className="break-all text-center font-mono text-[13px] leading-relaxed text-ink" dir="ltr">
             {chunkAddress(address).map((part, index) => (
               <span key={index} className={index % 2 === 1 ? 'text-muted' : undefined}>
                 {part}
@@ -276,53 +275,45 @@ function ChainDetail({
             }`}
           >
             {copied ? <IconCheck size={16} /> : <IconCopy size={16} />}
-            {copied ? 'Скопійовано' : 'Скопіювати адресу'}
+            {copied ? t('receive.copied') : t('receive.copyAddress')}
           </button>
           {copyError && (
-            <p className="text-xs text-terra">
-              Буфер обміну недоступний — виділіть і скопіюйте адресу вручну.
-            </p>
+            <p className="text-xs text-terra">{t('receive.clipboardError')}</p>
           )}
         </Card>
 
         {/* Попередження про мережу */}
         <div className="mt-3 rounded-[14px] border border-amber/40 bg-amber/10 p-3.5">
           <p className="text-xs leading-relaxed text-ink">
-            Надсилайте тільки активи мережі {CHAINS[chain].label} на цю адресу.
-            Активи з інших мереж буде втрачено.
+            {t('receive.networkWarning', { chain: CHAINS[chain].label })}
           </p>
           {isEvm && (
             <p className="mt-1.5 text-xs leading-relaxed text-muted">
-              Адреса спільна для всіх EVM-мереж: {EVM_CHAIN_LABELS}.
+              {t('receive.evmSharedDetail', { chains: EVM_CHAIN_LABELS })}
             </p>
           )}
         </div>
       </section>
 
       <section>
-        <Eyebrow className="mb-2.5">Способи поповнення</Eyebrow>
+        <Eyebrow className="mb-2.5">{t('receive.topUpMethods')}</Eyebrow>
         <Card className="p-0">
           <div className="px-4 py-3.5">
-            <p className="text-sm font-medium text-ink">З іншого гаманця</p>
-            <p className="mt-1 text-xs leading-relaxed text-muted">
-              Надішліть кошти на адресу вище або відскануйте QR-код у гаманці-відправнику.
-            </p>
+            <p className="text-sm font-medium text-ink">{t('receive.fromWallet')}</p>
+            <p className="mt-1 text-xs leading-relaxed text-muted">{t('receive.fromWalletHint')}</p>
           </div>
           <div className="border-t border-hairline px-4 py-3.5">
-            <p className="text-sm font-medium text-ink">З біржі</p>
+            <p className="text-sm font-medium text-ink">{t('receive.fromExchange')}</p>
             <p className="mt-1 text-xs leading-relaxed text-muted">
-              Виведіть кошти з біржі на цю адресу. У формі виводу оберіть саме мережу{' '}
-              {CHAINS[chain].label} — інакше кошти не дійдуть.
+              {t('receive.fromExchangeHint', { chain: CHAINS[chain].label })}
             </p>
           </div>
           <div className="border-t border-hairline px-4 py-3.5">
             <div className="flex items-baseline justify-between gap-2">
-              <p className="text-sm font-medium text-ink">Купити картою</p>
-              <span className="eyebrow">Зовнішній сервіс</span>
+              <p className="text-sm font-medium text-ink">{t('receive.buyWithCard')}</p>
+              <span className="eyebrow">{t('receive.externalService')}</span>
             </div>
-            <p className="mt-1 text-xs leading-relaxed text-muted">
-              Провайдер відкриється в новій вкладці; ваша адреса буде підставлена автоматично.
-            </p>
+            <p className="mt-1 text-xs leading-relaxed text-muted">{t('receive.providerHint')}</p>
             <div className="mt-3 flex flex-col gap-2">
               {ONRAMP_PROVIDERS.map((provider) => (
                 <button

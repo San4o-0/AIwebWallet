@@ -9,9 +9,11 @@
  * мереж у ядрі).
  */
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { IconCheck, IconChevronLeft } from '@/src/components/icons';
 import { Button, Field, ScreenHeader, Select } from '@/src/components/ui';
+import { localizeUnknownError } from '@/src/i18n';
 import { broadcastTx, fetchTxParams } from '@/src/lib/api';
 import { CHAINS, CHAIN_IDS, type Chain } from '@/src/lib/chains';
 import {
@@ -29,6 +31,7 @@ import { loadWalletCoreWasm } from '@/src/wasm';
 const NATIVE_ASSET = '__native__';
 
 export default function Send() {
+  const { t } = useTranslation();
   const account = useWalletStore((s) => s.account);
   const setScreen = useWalletStore((s) => s.setScreen);
   const [chain, setChain] = useState<Chain>('ethereum');
@@ -54,15 +57,12 @@ export default function Send() {
     setTxHash(null);
 
     if (CHAINS[chain].kind !== 'evm') {
-      setError(
-        `Надсилання для ${CHAINS[chain].label} буде доступне пізніше — ` +
-          'потрібна збірка транзакцій цієї мережі у ядрі.',
-      );
+      setError(t('errors.chainSendSoon', { chain: CHAINS[chain].label }));
       return;
     }
     const to = recipient.trim();
     if (!isEvmAddress(to)) {
-      setError('Вкажіть коректну EVM-адресу отримувача (0x + 40 hex-символів).');
+      setError(t('errors.invalidEvmRecipient'));
       return;
     }
 
@@ -109,7 +109,7 @@ export default function Send() {
       setRecipient('');
       setAmount('');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Не вдалося надіслати.');
+      setError(localizeUnknownError(e, 'errors.sendFailed'));
     } finally {
       setBusy(false);
     }
@@ -126,15 +126,15 @@ export default function Send() {
       <button
         type="button"
         onClick={() => setScreen('home')}
-        className="-ml-2 flex w-fit items-center gap-0.5 rounded-lg px-2 py-1.5 text-sm text-muted transition-colors hover:bg-raised hover:text-ink"
+        className="-ms-2 flex w-fit items-center gap-0.5 rounded-lg px-2 py-1.5 text-sm text-muted transition-colors hover:bg-raised hover:text-ink"
       >
-        <IconChevronLeft size={16} />
-        Головна
+        <IconChevronLeft size={16} className="rtl:-scale-x-100" />
+        {t('nav.home')}
       </button>
 
-      <ScreenHeader eyebrow="Переказ" title="Надіслати" />
+      <ScreenHeader eyebrow={t('send.eyebrow')} title={t('send.title')} />
 
-      <Select label="Мережа" value={chain} onChange={(e) => selectChain(e.target.value as Chain)}>
+      <Select label={t('send.network')} value={chain} onChange={(e) => selectChain(e.target.value as Chain)}>
         {CHAIN_IDS.map((id) => (
           <option key={id} value={id}>
             {CHAINS[id].label} ({CHAINS[id].symbol})
@@ -143,37 +143,39 @@ export default function Send() {
       </Select>
 
       {tokens.length > 0 && (
-        <Select label="Актив" value={asset} onChange={(e) => setAsset(e.target.value)}>
-          <option value={NATIVE_ASSET}>{CHAINS[chain].symbol} (нативна монета)</option>
-          {tokens.map((t) => (
-            <option key={t.symbol} value={t.symbol}>
-              {t.symbol} (ERC-20)
+        <Select label={t('send.asset')} value={asset} onChange={(e) => setAsset(e.target.value)}>
+          <option value={NATIVE_ASSET}>{t('send.nativeCoin', { symbol: CHAINS[chain].symbol })}</option>
+          {tokens.map((token) => (
+            <option key={token.symbol} value={token.symbol}>
+              {t('send.erc20Option', { symbol: token.symbol })}
             </option>
           ))}
         </Select>
       )}
 
       <Field
-        label="Адреса отримувача"
+        label={t('send.recipient')}
         value={recipient}
         onChange={(e) => setRecipient(e.target.value)}
         placeholder={
           CHAINS[chain].kind === 'evm'
             ? '0x…'
             : CHAINS[chain].kind === 'solana'
-              ? 'Base58-адреса'
+              ? t('send.solanaPlaceholder')
               : 'bc1…'
         }
         className="font-mono"
+        dir="ltr"
         spellCheck={false}
       />
 
       <Field
-        label={`Сума (${symbol})`}
+        label={t('send.amount', { symbol })}
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
         placeholder="0.0"
         inputMode="decimal"
+        dir="ltr"
       />
 
       {error !== null && <p className="text-xs leading-relaxed text-terra">{error}</p>}
@@ -181,18 +183,18 @@ export default function Send() {
         <div className="animate-rise rounded-[14px] border border-sage/40 bg-sage/10 p-4">
           <p className="flex items-center gap-2 text-sm font-medium text-sage">
             <IconCheck size={16} />
-            Транзакцію надіслано в мережу
+            {t('send.sent')}
           </p>
-          <p className="mt-2 break-all font-mono text-xs leading-relaxed text-muted">{txHash}</p>
+          <p className="mt-2 break-all font-mono text-xs leading-relaxed text-muted" dir="ltr">
+            {txHash}
+          </p>
         </div>
       )}
 
       <div className="sticky bottom-14 -mx-5 mt-auto border-t border-hairline bg-bg px-5 pb-3 pt-3">
-        <p className="mb-2.5 text-xs leading-relaxed text-muted">
-          Комісія: рівень «standard» з EIP-1559-оцінки ноди.
-        </p>
+        <p className="mb-2.5 text-xs leading-relaxed text-muted">{t('send.feeNote')}</p>
         <Button type="submit" className="w-full" disabled={busy || account === null}>
-          {busy ? 'Підписання…' : 'Переглянути та надіслати'}
+          {busy ? t('send.signing') : t('send.submit')}
         </Button>
       </div>
     </form>

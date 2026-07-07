@@ -3,6 +3,7 @@
  * Використовуються як fallback у src/lib/api.ts.
  */
 import type { Chain } from './chains';
+import { sharedT as t } from './i18n-bridge';
 import type { Eip1193Method, Json, PendingSignRequest } from './messaging';
 import type {
   ChatRequest,
@@ -63,7 +64,7 @@ export function mockHistory(): HistoryResponse {
       hash: '0x8f3a…c21b',
       timestamp: now - 35 * 60_000,
       category: 'transfer',
-      description: 'Надіслано 120 USDC на адресу 0x7bC4…9aF1',
+      description: t('mock.history.tx1'),
       amountUsd: -120.0,
       direction: 'out',
       status: 'confirmed',
@@ -74,7 +75,7 @@ export function mockHistory(): HistoryResponse {
       hash: '5KtP…w9Qx',
       timestamp: now - 3 * 3_600_000,
       category: 'swap',
-      description: 'Обмін 1.2 SOL → 178 JUP через Jupiter',
+      description: t('mock.history.tx2'),
       amountUsd: -178.7,
       direction: 'self',
       status: 'confirmed',
@@ -85,7 +86,7 @@ export function mockHistory(): HistoryResponse {
       hash: '0x11de…08aa',
       timestamp: now - 26 * 3_600_000,
       category: 'approve',
-      description: 'Дозвіл Uniswap витрачати ваші USDC (обмежений до 500 USDC)',
+      description: t('mock.history.tx3'),
       amountUsd: null,
       direction: 'self',
       status: 'confirmed',
@@ -96,7 +97,7 @@ export function mockHistory(): HistoryResponse {
       hash: 'a91c…77e0',
       timestamp: now - 2 * 86_400_000,
       category: 'transfer',
-      description: 'Отримано 0.005 BTC від bc1q…f3t4',
+      description: t('mock.history.tx4'),
       amountUsd: 336.75,
       direction: 'in',
       status: 'confirmed',
@@ -107,7 +108,7 @@ export function mockHistory(): HistoryResponse {
       hash: '0x40b1…d3ce',
       timestamp: now - 4 * 86_400_000,
       category: 'dapp',
-      description: 'Взаємодія з контрактом Aerodrome: додано ліквідність',
+      description: t('mock.history.tx5'),
       amountUsd: -52.3,
       direction: 'out',
       status: 'confirmed',
@@ -118,7 +119,7 @@ export function mockHistory(): HistoryResponse {
       hash: '0x77aa…1f02',
       timestamp: now - 6 * 86_400_000,
       category: 'mint',
-      description: 'Mint NFT «Base Camp Badge» (безкоштовно, газ 0.02 POL)',
+      description: t('mock.history.tx6'),
       amountUsd: -0.01,
       direction: 'out',
       status: 'failed',
@@ -148,16 +149,13 @@ export function mockRiskForRequest(request: PendingSignRequest): RiskResult {
   if (request.method === 'eth_requestAccounts' || request.method === 'eth_accounts') {
     return {
       level: 'low',
-      reasons: ['Запит лише на підключення: dApp побачить вашу публічну адресу.'],
+      reasons: [t('mock.risk.connect')],
     };
   }
   if (request.method === 'personal_sign') {
     return {
       level: 'medium',
-      reasons: [
-        'Підпис довільного повідомлення: перевірте, що текст зрозумілий.',
-        'Домен dApp не знайдено в списках довірених.',
-      ],
+      reasons: [t('mock.risk.personalSign1'), t('mock.risk.personalSign2')],
     };
   }
   // eth_sendTransaction
@@ -170,24 +168,21 @@ export function mockRiskForRequest(request: PendingSignRequest): RiskResult {
     return {
       level: 'high',
       reasons: [
-        'Unlimited approve: dApp зможе витратити ВСІ ваші токени цього типу.',
-        'Контракт створено менш ніж 7 днів тому і не верифіковано.',
-        'Домен dApp схожий на відомий фішинговий шаблон.',
+        t('mock.risk.approveUnlimited1'),
+        t('mock.risk.approveUnlimited2'),
+        t('mock.risk.approveUnlimited3'),
       ],
     };
   }
   if (typeof data === 'string' && data.length > 2) {
     return {
       level: 'medium',
-      reasons: [
-        'Виклик контракту, який не вдалося повністю декодувати.',
-        'Симуляція показує зменшення балансу на невідому суму.',
-      ],
+      reasons: [t('mock.risk.unknownCall1'), t('mock.risk.unknownCall2')],
     };
   }
   return {
     level: 'low',
-    reasons: ['Простий переказ нативної монети на адресу без ознак ризику.'],
+    reasons: [t('mock.risk.simpleTransfer')],
   };
 }
 
@@ -196,34 +191,27 @@ export function mockExplainForRequest(request: PendingSignRequest): string {
   switch (request.method) {
     case 'eth_requestAccounts':
     case 'eth_accounts':
-      return `Сайт ${request.origin} просить підключитися до вашого гаманця. Він побачить адресу та баланс, але не зможе нічого витратити без окремого підпису.`;
+      return t('mock.explain.connect', { origin: request.origin });
     case 'personal_sign':
-      return `Сайт ${request.origin} просить підписати повідомлення. Підпис не витрачає кошти, але може використовуватись для входу або авторизації дій від вашого імені.`;
+      return t('mock.explain.personalSign', { origin: request.origin });
     case 'eth_sendTransaction': {
       const risk = mockRiskForRequest(request);
       if (risk.level === 'high') {
-        return `Ви даєте ${request.origin} дозвіл витрачати ВСІ ваші USDC без обмежень. Якщо контракт зловмисний — кошти буде втрачено.`;
+        return t('mock.explain.approveHigh', { origin: request.origin });
       }
       if (risk.level === 'medium') {
-        return `Ви викликаєте функцію контракту через ${request.origin}. За симуляцією ваш баланс зменшиться; точну суму декодувати не вдалося.`;
+        return t('mock.explain.contractMedium', { origin: request.origin });
       }
-      return `Ви надсилаєте 0.01 ETH (≈ $32.50) на адресу 0x7bC4…9aF1. Комісія ≈ $1.20.`;
+      return t('mock.explain.transferLow');
     }
     case 'eth_chainId':
-      return 'Службовий запит ідентифікатора мережі.';
+      return t('mock.explain.chainId');
   }
 }
 
-const MOCK_CHAT_ANSWER =
-  'За останні 30 днів ви витратили приблизно $14.62 на комісії: ' +
-  '$11.20 в Ethereum, $2.10 у Bitcoin, $0.90 у Polygon і $0.42 у Solana. ' +
-  'Найдорожчою була транзакція approve для Uniswap ($4.80). ' +
-  'Порада: в Ethereum комісії вночі за UTC зазвичай на 30–50% нижчі. ' +
-  '\n\n_(Це мок-відповідь: бекенд /v1/chat недоступний.)_';
-
 /** Мок стрімінгової відповіді чату — імітує SSE зі /v1/chat. */
 export async function* mockChatStream(_request: ChatRequest): AsyncGenerator<string, void, void> {
-  const words = MOCK_CHAT_ANSWER.split(' ');
+  const words = t('mock.chatAnswer').split(' ');
   for (const word of words) {
     await new Promise((resolve) => setTimeout(resolve, 35));
     yield `${word} `;

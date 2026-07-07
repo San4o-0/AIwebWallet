@@ -1,4 +1,5 @@
 import { useEffect, type ComponentType } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { useWalletStore, type Screen } from '@/src/store/wallet';
 import {
@@ -22,12 +23,12 @@ import Settings from '@/src/screens/Settings';
 import Unlock from '@/src/screens/Unlock';
 
 /** Вкладки нижньої навігації (доступні після розблокування). */
-const TABS: { screen: Screen; label: string; icon: ComponentType<IconProps> }[] = [
-  { screen: 'home', label: 'Головна', icon: IconHome },
-  { screen: 'activity', label: 'Активність', icon: IconActivity },
-  { screen: 'receive', label: 'Отримати', icon: IconQr },
-  { screen: 'chat', label: 'Чат', icon: IconChat },
-  { screen: 'settings', label: 'Ще', icon: IconMore },
+const TABS: { screen: Screen; labelKey: string; icon: ComponentType<IconProps> }[] = [
+  { screen: 'home', labelKey: 'nav.home', icon: IconHome },
+  { screen: 'activity', labelKey: 'nav.activity', icon: IconActivity },
+  { screen: 'receive', labelKey: 'nav.receive', icon: IconQr },
+  { screen: 'chat', labelKey: 'nav.chat', icon: IconChat },
+  { screen: 'settings', labelKey: 'nav.more', icon: IconMore },
 ];
 
 /** Окреме вікно підтвердження підпису відкривається з ?view=approve. */
@@ -35,6 +36,7 @@ const isApproveView =
   new URLSearchParams(window.location.search).get('view') === 'approve';
 
 export default function App() {
+  const { t } = useTranslation();
   const { hasWallet, unlocked, screen, setScreen, initialize, addingWallet, restoringPassword } =
     useWalletStore();
 
@@ -92,7 +94,7 @@ export default function App() {
 
       {/* Закріплена нижня навігація */}
       <nav
-        aria-label="Основна навігація"
+        aria-label={t('nav.label')}
         className="fixed inset-x-0 bottom-0 z-20 grid h-14 grid-cols-5 border-t border-hairline bg-bg/95 backdrop-blur-sm"
       >
         {TABS.map((tab) => {
@@ -115,7 +117,7 @@ export default function App() {
                 }`}
               />
               <Icon size={19} />
-              {tab.label}
+              {t(tab.labelKey)}
             </button>
           );
         })}

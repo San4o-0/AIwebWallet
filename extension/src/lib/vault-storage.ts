@@ -96,7 +96,7 @@ async function runMigration(): Promise<void> {
   if (!vaults.some((record) => record.vault === legacyVault)) {
     const record: VaultRecord = {
       id: crypto.randomUUID(),
-      name: 'Гаманець 1',
+      name: 'Wallet 1',
       createdAt: Date.now(),
       vault: legacyVault,
       accounts: legacyAccounts,
@@ -153,7 +153,7 @@ export async function getActiveVaultId(): Promise<string | null> {
 export async function setActiveVaultId(id: string): Promise<void> {
   const vaults = await listVaultRecords();
   if (!vaults.some((record) => record.id === id)) {
-    throw new Error('Гаманець не знайдено.');
+    throw new Error('errors.walletNotFound');
   }
   await writeActiveId(id);
 }
@@ -169,11 +169,18 @@ export async function getActiveVaultRecord(): Promise<VaultRecord | null> {
   return activeId === null ? null : getVaultRecord(activeId);
 }
 
-/** Наступне вільне ім'я за замовчуванням: «Гаманець N». */
-export function nextDefaultWalletName(vaults: readonly VaultRecord[]): string {
+/**
+ * Наступне вільне ім'я за замовчуванням («Гаманець N» мовою UI).
+ * Шаблон передає викликач: popup — локалізований (wallets.defaultName),
+ * background-fallback — англійський (модуль не імпортує i18n).
+ */
+export function nextDefaultWalletName(
+  vaults: readonly VaultRecord[],
+  template: (n: number) => string = (n) => `Wallet ${n}`,
+): string {
   const taken = new Set(vaults.map((record) => record.name.trim()));
   for (let n = vaults.length + 1; ; n += 1) {
-    const candidate = `Гаманець ${n}`;
+    const candidate = template(n);
     if (!taken.has(candidate)) return candidate;
   }
 }
@@ -239,7 +246,7 @@ export function mnemonicOwnsRecord(
 export async function replaceVaultCiphertext(id: string, vault: string): Promise<VaultRecord> {
   const vaults = await listVaultRecords();
   const current = vaults.find((record) => record.id === id);
-  if (current === undefined) throw new Error('Гаманець не знайдено.');
+  if (current === undefined) throw new Error('errors.walletNotFound');
   const updated: VaultRecord = { ...current, vault };
   await writeVaults(vaults.map((record) => (record.id === id ? updated : record)));
   return updated;
@@ -253,9 +260,9 @@ export async function updateVaultAccounts(id: string, accounts: PublicAccount[])
 
 export async function renameVaultRecord(id: string, name: string): Promise<void> {
   const trimmed = name.trim();
-  if (trimmed.length === 0) throw new Error('Назва не може бути порожньою.');
+  if (trimmed.length === 0) throw new Error('errors.walletNameEmpty');
   const vaults = await listVaultRecords();
-  if (!vaults.some((record) => record.id === id)) throw new Error('Гаманець не знайдено.');
+  if (!vaults.some((record) => record.id === id)) throw new Error('errors.walletNotFound');
   await writeVaults(
     vaults.map((record) => (record.id === id ? { ...record, name: trimmed } : record)),
   );
@@ -270,7 +277,7 @@ export async function renameVaultRecord(id: string, name: string): Promise<void>
 export async function removeVaultRecord(id: string): Promise<string | null> {
   const vaults = await listVaultRecords();
   const remaining = vaults.filter((record) => record.id !== id);
-  if (remaining.length === vaults.length) throw new Error('Гаманець не знайдено.');
+  if (remaining.length === vaults.length) throw new Error('errors.walletNotFound');
   await writeVaults(remaining);
   const activeId = await readActiveIdRaw();
   if (activeId === id || activeId === null) {

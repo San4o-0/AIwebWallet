@@ -8,6 +8,7 @@
  * документ — нумерований список слів у mono на картці з hairline-рамкою.
  */
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { BrandMark } from '@/src/components/icons';
 import {
@@ -18,6 +19,7 @@ import {
   SeedPhraseTextarea,
   StepHeader,
 } from '@/src/components/ui';
+import { localizeUnknownError } from '@/src/i18n';
 import { walletCore } from '@/src/lib/wallet-core';
 import { useWalletStore } from '@/src/store/wallet';
 
@@ -41,28 +43,28 @@ export default function Onboarding() {
 }
 
 function Choice({ onSelect }: { onSelect: (mode: Mode) => void }) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-8 text-center">
       <div className="animate-rise flex flex-col items-center">
         <BrandMark size={52} />
         <h1 className="mt-5 font-display text-[28px] font-semibold leading-none text-ink">
-          AI Wallet
+          {t('common.appName')}
         </h1>
         <div className="mt-4 h-px w-24 bg-brass/60" aria-hidden />
-        <Eyebrow className="mt-2">Приватний цифровий сейф</Eyebrow>
+        <Eyebrow className="mt-2">{t('onboarding.tagline')}</Eyebrow>
         <p className="mt-4 max-w-[280px] text-sm leading-relaxed text-muted">
-          Non-custodial гаманець, який пояснює транзакції простою мовою і
-          попереджає про ризики.
+          {t('onboarding.intro')}
         </p>
       </div>
       <div className="flex w-full flex-col gap-2.5">
-        <Button onClick={() => onSelect('create')}>Створити новий гаманець</Button>
+        <Button onClick={() => onSelect('create')}>{t('onboarding.createNew')}</Button>
         <Button variant="secondary" onClick={() => onSelect('import')}>
-          Імпортувати наявний
+          {t('onboarding.importExisting')}
         </Button>
       </div>
       <p className="max-w-[280px] text-xs leading-relaxed text-muted/80">
-        Ключі зберігаються лише на вашому пристрої, зашифровані паролем.
+        {t('onboarding.keysNote')}
       </p>
     </div>
   );
@@ -70,27 +72,25 @@ function Choice({ onSelect }: { onSelect: (mode: Mode) => void }) {
 
 /** Компактний вибір для режиму «додати гаманець» — без вітальної обкладинки. */
 function AddWalletChoice({ onSelect }: { onSelect: (mode: Mode) => void }) {
+  const { t } = useTranslation();
   const cancelAddWallet = useWalletStore((s) => s.cancelAddWallet);
 
   return (
     <div className="flex min-h-full flex-1 flex-col gap-5">
       <header>
-        <Eyebrow className="mb-1">Гаманці · Додавання</Eyebrow>
-        <ScreenTitle>Додати гаманець</ScreenTitle>
+        <Eyebrow className="mb-1">{t('onboarding.add.eyebrow')}</Eyebrow>
+        <ScreenTitle>{t('onboarding.add.title')}</ScreenTitle>
       </header>
-      <p className="text-sm leading-relaxed text-muted">
-        Новий гаманець незалежний: власна seed-фраза і власний пароль. Наявні
-        гаманці залишаються без змін.
-      </p>
+      <p className="text-sm leading-relaxed text-muted">{t('onboarding.add.description')}</p>
       <div className="flex flex-col gap-2.5">
-        <Button onClick={() => onSelect('create')}>Створити новий гаманець</Button>
+        <Button onClick={() => onSelect('create')}>{t('onboarding.createNew')}</Button>
         <Button variant="secondary" onClick={() => onSelect('import')}>
-          Імпортувати seed-фразу
+          {t('onboarding.add.importSeed')}
         </Button>
       </div>
       <div className="mt-auto pt-4">
         <Button variant="ghost" className="w-full" onClick={cancelAddWallet}>
-          Скасувати
+          {t('common.cancel')}
         </Button>
       </div>
     </div>
@@ -98,6 +98,7 @@ function AddWalletChoice({ onSelect }: { onSelect: (mode: Mode) => void }) {
 }
 
 function CreateFlow({ onBack }: { onBack: () => void }) {
+  const { t } = useTranslation();
   const completeOnboarding = useWalletStore((s) => s.completeOnboarding);
   const addingWallet = useWalletStore((s) => s.addingWallet);
   const [step, setStep] = useState<'password' | 'backup'>('password');
@@ -110,11 +111,11 @@ function CreateFlow({ onBack }: { onBack: () => void }) {
 
   const toBackup = async () => {
     if (password.length < 8) {
-      setError('Пароль має містити щонайменше 8 символів.');
+      setError(t('errors.passwordTooShort'));
       return;
     }
     if (password !== confirm) {
-      setError('Паролі не збігаються.');
+      setError(t('errors.passwordsMismatch'));
       return;
     }
     setError(null);
@@ -128,7 +129,7 @@ function CreateFlow({ onBack }: { onBack: () => void }) {
       const account = await walletCore.createWallet(mnemonic, password);
       await completeOnboarding(account);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Не вдалося створити гаманець.');
+      setError(localizeUnknownError(e, 'errors.createWalletFailed'));
       setBusy(false);
     }
   };
@@ -139,32 +140,32 @@ function CreateFlow({ onBack }: { onBack: () => void }) {
         <StepHeader
           step={1}
           total={2}
-          section="Захист"
-          title={addingWallet ? 'Пароль нового гаманця' : 'Пароль сховища'}
+          section={t('onboarding.create.section')}
+          title={addingWallet ? t('wallets.newWalletPassword') : t('onboarding.create.title')}
         />
         <p className="text-sm leading-relaxed text-muted">
           {addingWallet
-            ? 'Пароль стосується лише цього нового гаманця — паролі інших гаманців незалежні.'
-            : 'Пароль шифрує сховище на цьому пристрої (Argon2id + AES-256-GCM у ядрі) і потрібен для кожного розблокування.'}
+            ? t('onboarding.create.passwordHintAdd')
+            : t('onboarding.create.passwordHint')}
         </p>
         <Field
-          label="Пароль"
+          label={t('common.passwordLabel')}
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Мінімум 8 символів"
+          placeholder={t('common.passwordPlaceholder')}
         />
         <Field
-          label="Повторіть пароль"
+          label={t('common.passwordRepeatLabel')}
           type="password"
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
         />
         {error !== null && <p className="text-xs text-terra">{error}</p>}
         <div className="mt-auto flex flex-col gap-2 pt-4">
-          <Button onClick={() => void toBackup()}>Далі</Button>
+          <Button onClick={() => void toBackup()}>{t('common.next')}</Button>
           <Button variant="ghost" onClick={onBack}>
-            Назад
+            {t('common.back')}
           </Button>
         </div>
       </div>
@@ -173,19 +174,23 @@ function CreateFlow({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="flex min-h-full flex-1 flex-col gap-5">
-      <StepHeader step={2} total={2} section="Резервна копія" title="Резервна фраза" />
-      <p className="text-sm leading-relaxed text-muted">
-        Запишіть 12 слів у надійному місці офлайн. Це єдиний спосіб відновити
-        гаманець.
-      </p>
+      <StepHeader
+        step={2}
+        total={2}
+        section={t('onboarding.create.backupSection')}
+        title={t('onboarding.create.backupTitle')}
+      />
+      <p className="text-sm leading-relaxed text-muted">{t('onboarding.create.backupHint')}</p>
 
       {/* Seed-фраза як документ: hairline-рамка, нумерований mono-список */}
       <div className="animate-rise rounded-[14px] border border-hairline bg-surface">
         <div className="flex items-baseline justify-between border-b border-hairline px-4 py-2.5">
-          <Eyebrow>Документ відновлення</Eyebrow>
-          <span className="eyebrow text-[10px]">12 слів</span>
+          <Eyebrow>{t('onboarding.create.recoveryDoc')}</Eyebrow>
+          <span className="eyebrow text-[10px]">
+            {t('onboarding.create.wordCount', { count: mnemonic.length })}
+          </span>
         </div>
-        <ol className="grid grid-cols-2 gap-x-6 gap-y-2.5 px-5 py-4">
+        <ol className="grid grid-cols-2 gap-x-6 gap-y-2.5 px-5 py-4" dir="ltr">
           {mnemonic.map((word, i) => (
             <li key={`${i}-${word}`} className="flex items-baseline gap-2.5">
               <span className="w-5 shrink-0 text-right font-mono text-[11px] tabular-nums text-muted/70">
@@ -197,7 +202,7 @@ function CreateFlow({ onBack }: { onBack: () => void }) {
         </ol>
         <div className="border-t border-hairline px-4 py-2.5">
           <p className="text-[11px] leading-relaxed text-muted">
-            Нікому не показуйте цю фразу. Служба підтримки її ніколи не питає.
+            {t('onboarding.create.neverShare')}
           </p>
         </div>
       </div>
@@ -209,15 +214,15 @@ function CreateFlow({ onBack }: { onBack: () => void }) {
           onChange={(e) => setSaved(e.target.checked)}
           className="mt-0.5 size-4 accent-brass"
         />
-        Я записав(ла) фразу і розумію, що її втрата означає втрату коштів.
+        {t('onboarding.create.savedConfirm')}
       </label>
       {error !== null && <p className="text-xs text-terra">{error}</p>}
       <div className="mt-auto flex flex-col gap-2 pt-2">
         <Button disabled={!saved || busy} onClick={() => void finish()}>
-          {busy ? 'Створення…' : 'Завершити'}
+          {busy ? t('onboarding.create.creating') : t('onboarding.create.finish')}
         </Button>
         <Button variant="ghost" onClick={() => setStep('password')}>
-          Назад
+          {t('common.back')}
         </Button>
       </div>
     </div>
@@ -225,6 +230,7 @@ function CreateFlow({ onBack }: { onBack: () => void }) {
 }
 
 function ImportFlow({ onBack }: { onBack: () => void }) {
+  const { t } = useTranslation();
   const completeOnboarding = useWalletStore((s) => s.completeOnboarding);
   const addingWallet = useWalletStore((s) => s.addingWallet);
   const [source, setSource] = useState<'mnemonic' | 'privateKey'>('mnemonic');
@@ -236,38 +242,43 @@ function ImportFlow({ onBack }: { onBack: () => void }) {
   const doImport = async () => {
     setError(null);
     if (password.length < 8) {
-      setError('Пароль має містити щонайменше 8 символів.');
+      setError(t('errors.passwordTooShort'));
       return;
     }
     setBusy(true);
     try {
       if (source === 'privateKey') {
         // TODO: імпорт приватного ключа per-chain (F1.2) — після інтеграції WASM.
-        throw new Error('Імпорт приватного ключа буде доступний після інтеграції ядра.');
+        throw new Error('errors.privateKeyImportSoon');
       }
       const words = phrase.trim().toLowerCase().split(/\s+/);
       const account = await walletCore.importWallet(words, password);
       await completeOnboarding(account);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Не вдалося імпортувати.');
+      setError(localizeUnknownError(e, 'errors.importFailed'));
       setBusy(false);
     }
   };
 
   return (
     <div className="flex min-h-full flex-1 flex-col gap-5">
-      <StepHeader step={1} total={1} section="Відновлення" title="Імпорт гаманця" />
+      <StepHeader
+        step={1}
+        total={1}
+        section={t('onboarding.import.section')}
+        title={t('onboarding.import.title')}
+      />
 
       {/* Перемикач джерела */}
       <div
         className="grid grid-cols-2 gap-1 rounded-xl border border-hairline bg-surface p-1"
         role="tablist"
-        aria-label="Джерело імпорту"
+        aria-label={t('onboarding.import.sourceAria')}
       >
         {(
           [
-            { id: 'mnemonic', label: 'Seed-фраза' },
-            { id: 'privateKey', label: 'Приватний ключ' },
+            { id: 'mnemonic', label: t('onboarding.import.seedTab') },
+            { id: 'privateKey', label: t('onboarding.import.keyTab') },
           ] as const
         ).map((option) => (
           <button
@@ -288,25 +299,27 @@ function ImportFlow({ onBack }: { onBack: () => void }) {
       </div>
 
       <SeedPhraseTextarea
-        label={source === 'mnemonic' ? 'Seed-фраза (12 або 24 слова)' : 'Приватний ключ'}
+        label={
+          source === 'mnemonic' ? t('onboarding.import.seedLabel') : t('onboarding.import.keyLabel')
+        }
         value={phrase}
         onChange={(e) => setPhrase(e.target.value)}
         placeholder={source === 'mnemonic' ? undefined : '0x…'}
       />
       <Field
-        label={addingWallet ? 'Пароль нового гаманця' : 'Новий пароль'}
+        label={addingWallet ? t('wallets.newWalletPassword') : t('restore.newPassword')}
         type="password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        placeholder="Мінімум 8 символів"
+        placeholder={t('common.passwordPlaceholder')}
       />
       {error !== null && <p className="text-xs text-terra">{error}</p>}
       <div className="mt-auto flex flex-col gap-2 pt-4">
         <Button disabled={busy || phrase.trim().length === 0} onClick={() => void doImport()}>
-          {busy ? 'Імпорт…' : 'Імпортувати'}
+          {busy ? t('onboarding.import.importing') : t('onboarding.import.submit')}
         </Button>
         <Button variant="ghost" onClick={onBack}>
-          Назад
+          {t('common.back')}
         </Button>
       </div>
     </div>

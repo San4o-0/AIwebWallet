@@ -35,11 +35,11 @@ async function initialize(): Promise<WalletCoreWasm> {
     await initWasm({ module_or_path: url });
   } catch (streamingError) {
     console.warn(
-      '[aiwallet] instantiateStreaming не вдалась, fallback на ArrayBuffer:',
+      '[aiwallet] instantiateStreaming failed, falling back to ArrayBuffer:',
       streamingError,
     );
     const response = await fetch(url);
-    if (!response.ok) throw new Error(`Не вдалося завантажити WASM-ядро: HTTP ${response.status}`);
+    if (!response.ok) throw new Error(`Failed to load the WASM core: HTTP ${response.status}`);
     await initWasm({ module_or_path: await response.arrayBuffer() });
   }
   return wasm;

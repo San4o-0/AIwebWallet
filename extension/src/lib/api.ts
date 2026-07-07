@@ -27,6 +27,7 @@ import type {
 } from './api-types';
 import type { TokenBalance } from './api-types';
 import type { Chain } from './chains';
+import { sharedLocale } from './i18n-bridge';
 import type { PendingSignRequest } from './messaging';
 import {
   mockChatStream,
@@ -81,26 +82,27 @@ async function withMockFallback<T>(real: () => Promise<T>, mock: () => T): Promi
   try {
     return await real();
   } catch (error) {
-    console.warn('[aiwallet] Бекенд недоступний, використовую мок-дані:', error);
+    console.warn('[aiwallet] Backend unavailable, using mock data:', error);
     return mock();
   }
 }
 
 /**
- * Критичні операції (підпис/broadcast) без мок-fallback: перетворює мережеві
- * помилки на зрозумілий текст для користувача.
+ * Критичні операції (підпис/broadcast) без мок-fallback. Помилки кидаються
+ * i18n-КЛЮЧАМИ (`errors.api.*|{параметри}`): модуль бандлиться і в
+ * background, тож перекладає їх попап через localizeError.
  */
-async function withBackendRequired<T>(real: () => Promise<T>, action: string): Promise<T> {
+async function withBackendRequired<T>(
+  real: () => Promise<T>,
+  action: 'txParams' | 'broadcast',
+): Promise<T> {
   try {
     return await real();
   } catch (error) {
     if (error instanceof ApiError) {
-      throw new Error(`Не вдалося ${action}: ${error.message}`);
+      throw new Error(`errors.api.${action}Failed|${JSON.stringify({ detail: error.message })}`);
     }
-    throw new Error(
-      `Не вдалося ${action}: бекенд недоступний (${API_BASE_URL}). ` +
-        'Запустіть api-server і повторіть спробу.',
-    );
+    throw new Error(`errors.api.${action}Unavailable|${JSON.stringify({ url: API_BASE_URL })}`);
   }
 }
 
@@ -199,7 +201,7 @@ function normalizePortfolio(raw: unknown): Portfolio {
       updatedAt: new Date(updatedAtSec > 0 ? updatedAtSec * 1000 : Date.now()).toISOString(),
     };
   }
-  throw new Error('Невідомий формат відповіді /v1/balances');
+  throw new Error('Unknown /v1/balances response shape');
 }
 
 /** Приводить /v1/history до HistoryResponse (бекенд шле next_cursor). */
@@ -271,7 +273,7 @@ export function fetchTxParams(
   if (isToken) params.set('token', '1');
   return withBackendRequired(
     () => request<TxParams>(`/tx/params?${params.toString()}`),
-    'отримати параметри транзакції',
+    'txParams',
   );
 }
 
@@ -283,7 +285,7 @@ export function fetchTxParams(
 export function broadcastTx(req: BroadcastRequest): Promise<BroadcastResponse> {
   return withBackendRequired(
     () => post<BroadcastResponse>('/tx/broadcast', req),
-    'транслювати транзакцію',
+    'broadcast',
   );
 }
 
@@ -326,19 +328,22 @@ export async function* streamChat(
   signal?: AbortSignal,
 ): AsyncGenerator<string, void, void> {
   let body: ReadableStream<Uint8Array>;
+  // Активна локаль UI → поле lang (бекенд поки ігнорує його — TODO на боці
+  // crates/api-server: враховувати lang у промпті чату).
+  const payload: ChatRequest = { lang: sharedLocale(), ...req };
   try {
     const response = await fetch(`${API_BASE_URL}/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
-      body: JSON.stringify(req),
+      body: JSON.stringify(payload),
       signal: signal ?? null,
     });
     if (!response.ok || response.body === null) {
-      throw new ApiError(response.status, 'Чат недоступний');
+      throw new ApiError(response.status, 'Chat endpoint unavailable');
     }
     body = response.body;
   } catch (error) {
-    console.warn('[aiwallet] /v1/chat недоступний, мок-стрім:', error);
+    console.warn('[aiwallet] /v1/chat unavailable, using mock stream:', error);
     yield* mockChatStream(req);
     return;
   }
@@ -400,7 +405,8 @@ export function explainPendingRequest(
         decoded: null,
         simulation: null,
         risk,
-        lang: 'uk',
+        // Активна локаль UI — бекенд приймає довільний рядок lang.
+        lang: sharedLocale(),
       });
       return explanation;
     },

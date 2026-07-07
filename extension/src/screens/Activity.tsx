@@ -1,6 +1,7 @@
 /** Історія транзакцій з людськими описами (F3.6, F4.4). */
 import { useQuery } from '@tanstack/react-query';
 import type { ComponentType } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import {
   IconActivity,
@@ -18,12 +19,13 @@ import { CHAINS } from '@/src/lib/chains';
 import { formatRelativeTime, formatUsd } from '@/src/lib/format';
 import { useWalletStore } from '@/src/store/wallet';
 
-const CATEGORY_LABEL: Record<TxCategory, string> = {
-  transfer: 'Переказ',
-  swap: 'Своп',
-  approve: 'Дозвіл',
-  mint: 'Mint',
-  dapp: 'dApp',
+/** i18n-ключі підписів категорій транзакцій. */
+const CATEGORY_LABEL_KEY: Record<TxCategory, string> = {
+  transfer: 'category.transfer',
+  swap: 'category.swap',
+  approve: 'category.approve',
+  mint: 'category.mint',
+  dapp: 'category.dapp',
 };
 
 const CATEGORY_ICON: Record<TxCategory, ComponentType<IconProps>> = {
@@ -35,6 +37,7 @@ const CATEGORY_ICON: Record<TxCategory, ComponentType<IconProps>> = {
 };
 
 export default function Activity() {
+  const { t } = useTranslation();
   const account = useWalletStore((s) => s.account);
 
   const { data, isLoading, isError, refetch } = useQuery({
@@ -47,7 +50,7 @@ export default function Activity() {
 
   return (
     <div className="flex flex-col gap-5 p-5 pb-24">
-      <ScreenHeader eyebrow="Історія" title="Активність" />
+      <ScreenHeader eyebrow={t('activity.eyebrow')} title={t('activity.title')} />
 
       {isLoading && (
         <div className="flex flex-col gap-2">
@@ -58,16 +61,14 @@ export default function Activity() {
       )}
 
       {isError && (
-        <ErrorNote onRetry={() => void refetch()}>
-          Бекенд не відповідає — історію не завантажено.
-        </ErrorNote>
+        <ErrorNote onRetry={() => void refetch()}>{t('activity.backendDown')}</ErrorNote>
       )}
 
       {!isLoading && !isError && items.length === 0 && (
         <EmptyState
           icon={<IconActivity size={22} />}
-          title="Транзакцій поки немає"
-          hint="Щойно надішлете чи отримаєте кошти — записи з поясненнями з'являться тут."
+          title={t('activity.emptyTitle')}
+          hint={t('activity.emptyHint')}
         />
       )}
 
@@ -88,8 +89,10 @@ export default function Activity() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
                     <span className="eyebrow">
-                      {CATEGORY_LABEL[tx.category] ?? tx.category} ·{' '}
-                      {CHAINS[tx.chain]?.label ?? tx.chain}
+                      {CATEGORY_LABEL_KEY[tx.category] !== undefined
+                        ? t(CATEGORY_LABEL_KEY[tx.category])
+                        : tx.category}{' '}
+                      · {CHAINS[tx.chain]?.label ?? tx.chain}
                     </span>
                     {tx.amountUsd !== null && (
                       <span
@@ -106,12 +109,18 @@ export default function Activity() {
                   <p className="mt-1 text-[13px] leading-snug text-ink">{tx.description}</p>
                   <p className="mt-1.5 text-xs text-muted/80">
                     {formatRelativeTime(tx.timestamp)} ·{' '}
-                    <span className="font-mono text-[11px]">{tx.hash}</span>
+                    <span className="font-mono text-[11px]" dir="ltr">
+                      {tx.hash}
+                    </span>
                     {tx.status === 'failed' && (
-                      <span className="ml-1.5 font-medium text-terra">невдала</span>
+                      <span className="ms-1.5 font-medium text-terra">
+                        {t('activity.statusFailed')}
+                      </span>
                     )}
                     {tx.status === 'pending' && (
-                      <span className="ml-1.5 font-medium text-amber">в обробці</span>
+                      <span className="ms-1.5 font-medium text-amber">
+                        {t('activity.statusPending')}
+                      </span>
                     )}
                   </p>
                 </div>

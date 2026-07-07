@@ -4,6 +4,7 @@
  */
 import { create } from 'zustand';
 
+import { i18n, localizeUnknownError } from '@/src/i18n';
 import { MessageType, type SessionState, type WalletsState } from '@/src/lib/messaging';
 import { sendToBackground } from '@/src/lib/runtime';
 import {
@@ -118,7 +119,7 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
     try {
       hasWallet = await walletCore.hasWallet();
     } catch (error) {
-      console.error('[aiwallet] Не вдалося прочитати сховище гаманця:', error);
+      console.error('[aiwallet] Failed to read wallet storage:', error);
     }
     if (!hasWallet) {
       set({
@@ -141,7 +142,7 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
     try {
       session = await sendToBackground({ type: MessageType.GetSessionState });
     } catch (error) {
-      console.error('[aiwallet] Background не відповідає на GetSessionState:', error);
+      console.error('[aiwallet] Background did not answer GetSessionState:', error);
     }
     const sessionAccount = session?.accounts?.[0];
     if (session?.unlocked === true && sessionAccount !== undefined) {
@@ -162,11 +163,11 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
       // background; сюди повертаються лише публічні акаунти.
       const accounts = await walletCore.unlock(password);
       const account = accounts[0];
-      if (account === undefined) return 'Сховище порожнє.';
+      if (account === undefined) return i18n.t('errors.vaultEmpty');
       set({ unlocked: true, account, screen: 'home' });
       return null;
     } catch (error) {
-      return error instanceof Error ? error.message : 'Не вдалося розблокувати.';
+      return localizeUnknownError(error, 'errors.unlockFailed');
     }
   },
 
@@ -199,7 +200,7 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
       });
     } catch (error) {
       // Не валимо UI: список залишиться попереднім, лог для діагностики.
-      console.error('[aiwallet] Не вдалося отримати список гаманців:', error);
+      console.error('[aiwallet] Failed to list wallets:', error);
     }
   },
 
@@ -219,7 +220,7 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
       });
       return null;
     } catch (error) {
-      return error instanceof Error ? error.message : 'Не вдалося перемкнути гаманець.';
+      return localizeUnknownError(error, 'errors.switchWalletFailed');
     }
   },
 
@@ -229,7 +230,7 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
       set({ wallets: state.wallets, activeWalletId: state.activeId });
       return null;
     } catch (error) {
-      return error instanceof Error ? error.message : 'Не вдалося перейменувати.';
+      return localizeUnknownError(error, 'errors.renameWalletFailed');
     }
   },
 
@@ -259,7 +260,7 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
       });
       return null;
     } catch (error) {
-      return error instanceof Error ? error.message : 'Не вдалося видалити гаманець.';
+      return localizeUnknownError(error, 'errors.removeWalletFailed');
     }
   },
 
@@ -278,7 +279,7 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
       const accounts = await walletCore.restorePassword(mnemonic, newPassword);
       const account = accounts[0];
       if (account === undefined) {
-        return { code: 'internal', message: 'Сховище порожнє.' };
+        return { code: 'internal', message: i18n.t('errors.vaultEmpty') };
       }
       set({
         unlocked: true,
@@ -293,7 +294,7 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
       }
       return {
         code: 'internal',
-        message: error instanceof Error ? error.message : 'Не вдалося відновити гаманець.',
+        message: localizeUnknownError(error, 'errors.restoreFailed'),
       };
     }
   },

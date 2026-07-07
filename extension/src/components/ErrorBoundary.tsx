@@ -6,6 +6,8 @@
  */
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 
+import { i18n } from '@/src/i18n';
+
 interface ErrorBoundaryProps {
   children: ReactNode;
 }
@@ -28,7 +30,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   override componentDidCatch(error: unknown, info: ErrorInfo): void {
-    console.error('[aiwallet] React-краш у попапі:', error, info.componentStack);
+    console.error('[aiwallet] React crash in popup:', error, info.componentStack);
     this.setState({ componentStack: info.componentStack ?? null });
   }
 
@@ -39,11 +41,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     const stack = [error.stack, componentStack].filter(Boolean).join('\n--- component stack ---');
     return (
       <div className="flex min-h-[600px] flex-1 flex-col gap-3 p-4">
-        <h1 className="text-lg font-bold text-red-400">Сталася помилка</h1>
-        <p className="text-sm text-zinc-300">
-          Інтерфейс гаманця аварійно завершився. Ваші ключі в безпеці — зашифроване сховище не
-          зачеплено.
-        </p>
+        {/* Класовий компонент: i18n.t напряму (хуки недоступні). */}
+        <h1 className="text-lg font-bold text-red-400">{i18n.t('errorBoundary.title')}</h1>
+        <p className="text-sm text-zinc-300">{i18n.t('errorBoundary.body')}</p>
         <p className="break-words rounded-lg bg-red-500/10 p-2.5 font-mono text-xs text-red-300">
           {error.message}
         </p>
@@ -57,7 +57,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
           onClick={() => window.location.reload()}
           className="mt-auto rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400"
         >
-          Перезавантажити
+          {i18n.t('errorBoundary.reload')}
         </button>
       </div>
     );

@@ -1,8 +1,9 @@
 /**
  * Екран «Ще»: гаманці (multi-vault: перемикання, перейменування, додавання,
- * видалення), акаунт, безпека, довідка.
+ * видалення), акаунт, дії, мова інтерфейсу, безпека.
  */
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import {
   IconChevronDown,
@@ -12,10 +13,20 @@ import {
   IconSend,
   IconShield,
 } from '@/src/components/icons';
-import { Button, Card, Eyebrow, Field, ScreenHeader } from '@/src/components/ui';
+import { Button, Card, Eyebrow, Field, ScreenHeader, Select } from '@/src/components/ui';
+import {
+  LOCALE_NATIVE_NAMES,
+  SUPPORTED_LOCALES,
+  getActiveLocale,
+  setLocale,
+  type Locale,
+} from '@/src/i18n';
+import { CHAIN_IDS } from '@/src/lib/chains';
 import { shortenAddress } from '@/src/lib/format';
 import type { WalletSummary } from '@/src/lib/wallet-core';
 import { useWalletStore, type Screen } from '@/src/store/wallet';
+
+const APP_VERSION = '0.1.0';
 
 interface Row {
   icon: React.ComponentType<{ size?: number; className?: string }>;
@@ -27,6 +38,7 @@ interface Row {
 }
 
 export default function Settings() {
+  const { t } = useTranslation();
   const account = useWalletStore((s) => s.account);
   const lock = useWalletStore((s) => s.lock);
   const setScreen = useWalletStore((s) => s.setScreen);
@@ -34,31 +46,33 @@ export default function Settings() {
   const actionRows: Row[] = [
     {
       icon: IconSend,
-      label: 'Надіслати кошти',
-      hint: 'Переказ у мережах EVM',
+      label: t('settings.sendAction'),
+      hint: t('settings.sendActionHint'),
       screen: 'send',
     },
     {
       icon: IconQr,
-      label: 'Адреси та QR-коди',
-      hint: 'Отримання і поповнення',
+      label: t('settings.addressesAction'),
+      hint: t('settings.addressesActionHint'),
       screen: 'receive',
     },
   ];
 
   return (
     <div className="flex flex-col gap-6 p-5 pb-24">
-      <ScreenHeader eyebrow="Налаштування" title="Ще" />
+      <ScreenHeader eyebrow={t('settings.eyebrow')} title={t('settings.title')} />
 
       <WalletsSection />
 
       {account !== null && (
         <section>
-          <Eyebrow className="mb-2.5">Акаунт</Eyebrow>
+          <Eyebrow className="mb-2.5">{t('settings.account')}</Eyebrow>
           <Card className="p-0">
             <div className="border-b border-hairline px-4 py-3">
               <p className="text-sm font-semibold text-ink">{account.name}</p>
-              <p className="mt-0.5 text-xs text-muted">Створений із seed-фрази · індекс {account.index}</p>
+              <p className="mt-0.5 text-xs text-muted">
+                {t('settings.accountMeta', { index: account.index })}
+              </p>
             </div>
             {(
               [
@@ -72,7 +86,7 @@ export default function Settings() {
                 className="flex items-center justify-between border-b border-hairline px-4 py-2.5 last:border-b-0"
               >
                 <span className="text-xs text-muted">{label}</span>
-                <span className="font-mono text-xs text-ink">
+                <span className="font-mono text-xs text-ink" dir="ltr">
                   {address !== '' ? shortenAddress(address, 6) : '—'}
                 </span>
               </div>
@@ -82,7 +96,7 @@ export default function Settings() {
       )}
 
       <section>
-        <Eyebrow className="mb-2.5">Дії</Eyebrow>
+        <Eyebrow className="mb-2.5">{t('settings.actions')}</Eyebrow>
         <Card className="p-0">
           {actionRows.map((row, index) => (
             <button
@@ -92,7 +106,7 @@ export default function Settings() {
                 if (row.screen !== undefined) setScreen(row.screen);
                 row.action?.();
               }}
-              className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-raised/60 ${
+              className={`flex w-full items-center gap-3 px-4 py-3 text-start transition-colors hover:bg-raised/60 ${
                 index > 0 ? 'border-t border-hairline' : ''
               }`}
             >
@@ -103,37 +117,74 @@ export default function Settings() {
                   <span className="mt-0.5 block text-xs text-muted">{row.hint}</span>
                 )}
               </span>
-              <IconChevronRight size={16} className="shrink-0 text-muted" />
+              <IconChevronRight size={16} className="shrink-0 text-muted rtl:-scale-x-100" />
             </button>
           ))}
         </Card>
       </section>
 
+      <LanguageSection />
+
       <section>
-        <Eyebrow className="mb-2.5">Безпека</Eyebrow>
+        <Eyebrow className="mb-2.5">{t('settings.security')}</Eyebrow>
         <Card className="p-0">
           <div className="flex items-start gap-3 border-b border-hairline px-4 py-3">
             <IconShield size={17} className="mt-0.5 shrink-0 text-sage" />
-            <p className="text-xs leading-relaxed text-muted">
-              Сховище зашифровано локально (Argon2id + AES-256-GCM). Seed-фраза не
-              покидає пристрій; AI-чат не має доступу до підпису транзакцій.
-            </p>
+            <p className="text-xs leading-relaxed text-muted">{t('settings.securityNote')}</p>
           </div>
           <button
             type="button"
             onClick={() => void lock()}
-            className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-raised/60"
+            className="flex w-full items-center gap-3 px-4 py-3 text-start transition-colors hover:bg-raised/60"
           >
             <IconLock size={17} className="shrink-0 text-terra" />
-            <span className="text-sm font-medium text-terra">Заблокувати гаманець</span>
+            <span className="text-sm font-medium text-terra">{t('settings.lock')}</span>
           </button>
         </Card>
       </section>
 
       <p className="text-center text-xs text-muted/70">
-        AI Wallet 0.1.0 · 7 мереж · non-custodial
+        {t('settings.footer', { version: APP_VERSION, networks: CHAIN_IDS.length })}
       </p>
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Секція «Мова» — селектор з усіма локалями реєстру
+// ---------------------------------------------------------------------------
+
+function LanguageSection() {
+  const { t } = useTranslation();
+  // Джерело правди — i18n.language; локальний стейт лише для миттєвого
+  // відображення вибору, поки changeLanguage підвантажує JSON локалі.
+  const [current, setCurrent] = useState<Locale>(getActiveLocale());
+
+  const onChange = (locale: Locale) => {
+    setCurrent(locale);
+    // Зберігає вибір у storage.local (пріоритет над мовою браузера) і
+    // перемикає i18next; локалі без JSON рендеряться з en-fallback.
+    void setLocale(locale);
+  };
+
+  return (
+    <section>
+      <Eyebrow className="mb-2.5">{t('settings.language')}</Eyebrow>
+      <Card>
+        <Select
+          label={t('settings.languageLabel')}
+          value={current}
+          onChange={(e) => onChange(e.target.value as Locale)}
+        >
+          {SUPPORTED_LOCALES.map((locale) => (
+            <option key={locale} value={locale}>
+              {LOCALE_NATIVE_NAMES[locale]}
+            </option>
+          ))}
+        </Select>
+        <p className="mt-2.5 text-xs leading-relaxed text-muted">{t('settings.languageHint')}</p>
+      </Card>
+    </section>
   );
 }
 
@@ -142,6 +193,7 @@ export default function Settings() {
 // ---------------------------------------------------------------------------
 
 function WalletsSection() {
+  const { t } = useTranslation();
   const wallets = useWalletStore((s) => s.wallets);
   const activeWalletId = useWalletStore((s) => s.activeWalletId);
   const startAddWallet = useWalletStore((s) => s.startAddWallet);
@@ -151,7 +203,7 @@ function WalletsSection() {
 
   return (
     <section>
-      <Eyebrow className="mb-2.5">Гаманці</Eyebrow>
+      <Eyebrow className="mb-2.5">{t('settings.wallets')}</Eyebrow>
       <Card className="p-0">
         {wallets.map((wallet, index) => (
           <WalletRow
@@ -171,14 +223,14 @@ function WalletsSection() {
         <button
           type="button"
           onClick={startAddWallet}
-          className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-raised/60 ${
+          className={`flex w-full items-center gap-3 px-4 py-3 text-start transition-colors hover:bg-raised/60 ${
             wallets.length > 0 ? 'border-t border-hairline' : ''
           }`}
         >
           <span className="flex size-[17px] shrink-0 items-center justify-center text-brass" aria-hidden>
             +
           </span>
-          <span className="text-sm font-medium text-brass">Додати гаманець</span>
+          <span className="text-sm font-medium text-brass">{t('settings.addWallet')}</span>
         </button>
       </Card>
       {error !== null && <p className="mt-2 text-xs text-terra">{error}</p>}
@@ -203,6 +255,7 @@ function WalletRow({
   onToggle: () => void;
   onError: (message: string | null) => void;
 }) {
+  const { t } = useTranslation();
   const switchWallet = useWalletStore((s) => s.switchWallet);
   const renameWallet = useWalletStore((s) => s.renameWallet);
   const [busy, setBusy] = useState(false);
@@ -236,18 +289,18 @@ function WalletRow({
         type="button"
         onClick={onToggle}
         aria-expanded={expanded}
-        className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-raised/60"
+        className="flex w-full items-center gap-3 px-4 py-3 text-start transition-colors hover:bg-raised/60"
       >
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-2">
             <span className="truncate text-sm font-medium text-ink">{wallet.name}</span>
             {active && (
               <span className="eyebrow shrink-0 rounded-full border border-brass/40 px-1.5 py-px text-[9px] text-brass">
-                Активний
+                {t('settings.walletActive')}
               </span>
             )}
           </span>
-          <span className="mt-0.5 block font-mono text-xs text-muted">
+          <span className="mt-0.5 block font-mono text-xs text-muted" dir="ltr">
             {wallet.primaryEvmAddress !== null ? shortenAddress(wallet.primaryEvmAddress, 6) : '—'}
           </span>
         </span>
@@ -269,21 +322,21 @@ function WalletRow({
             >
               <div className="flex-1">
                 <Field
-                  label="Назва гаманця"
+                  label={t('settings.walletName')}
                   value={name}
                   autoFocus
                   onChange={(e) => setName(e.target.value)}
                 />
               </div>
               <Button type="submit" variant="secondary" className="shrink-0" disabled={busy}>
-                Зберегти
+                {t('common.save')}
               </Button>
             </form>
           ) : (
             <div className="flex flex-wrap gap-2">
               {!active && (
                 <Button variant="secondary" disabled={busy} onClick={() => void doSwitch()}>
-                  Перемкнути
+                  {t('settings.switch')}
                 </Button>
               )}
               <Button
@@ -294,7 +347,7 @@ function WalletRow({
                   setRenaming(true);
                 }}
               >
-                Перейменувати
+                {t('settings.rename')}
               </Button>
               {!confirmingRemove && (
                 <Button
@@ -303,7 +356,7 @@ function WalletRow({
                   disabled={busy}
                   onClick={() => setConfirmingRemove(true)}
                 >
-                  Видалити
+                  {t('settings.remove')}
                 </Button>
               )}
             </div>
@@ -338,6 +391,7 @@ function RemoveConfirm({
   onCancel: () => void;
   onError: (message: string | null) => void;
 }) {
+  const { t } = useTranslation();
   const removeWallet = useWalletStore((s) => s.removeWallet);
   const [confirmed, setConfirmed] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -352,9 +406,8 @@ function RemoveConfirm({
   return (
     <div className="animate-rise rounded-xl border border-terra/40 bg-terra/5 p-3">
       <p className="text-xs font-medium leading-relaxed text-terra">
-        Без seed-фрази цей гаманець не відновити. Шифротекст буде видалено з
-        цього пристрою назавжди.
-        {isOnly ? ' Це останній гаманець — далі знадобиться онбординг.' : ''}
+        {t('settings.removeWarning')}
+        {isOnly ? ` ${t('settings.removeWarningLast')}` : ''}
       </p>
       <label className="mt-2.5 flex items-start gap-2.5 text-xs leading-snug text-ink">
         <input
@@ -363,14 +416,14 @@ function RemoveConfirm({
           onChange={(e) => setConfirmed(e.target.checked)}
           className="mt-0.5 size-4 shrink-0 accent-brass"
         />
-        Я зберіг seed-фразу цього гаманця
+        {t('settings.savedSeedConfirm')}
       </label>
       <div className="mt-3 flex gap-2">
         <Button variant="danger" disabled={!confirmed || busy} onClick={() => void doRemove()}>
-          {busy ? 'Видалення…' : `Видалити «${wallet.name}»`}
+          {busy ? t('settings.removing') : t('settings.removeNamed', { name: wallet.name })}
         </Button>
         <Button variant="ghost" disabled={busy} onClick={onCancel}>
-          Скасувати
+          {t('common.cancel')}
         </Button>
       </div>
     </div>

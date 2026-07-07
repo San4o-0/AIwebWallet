@@ -117,7 +117,8 @@ export interface ExplainRequest {
   decoded: DecodedTx | null;
   simulation: SimulationResult | null;
   risk: RiskResult | null;
-  lang: 'uk' | 'en';
+  /** Локаль UI (BCP-47 з реєстру i18n: 'uk', 'en', 'zh-CN', …). */
+  lang: string;
 }
 
 export interface ExplainResponse {
@@ -173,6 +174,12 @@ export interface ChatMessage {
 export interface ChatRequest {
   messages: ChatMessage[];
   addresses: string[];
+  /**
+   * Локаль UI для відповіді AI. Заповнюється api-клієнтом (streamChat).
+   * TODO(бекенд): crates/api-server поки ігнорує поле — врахувати lang
+   * у промпті чату.
+   */
+  lang?: string;
 }
 
 /** Формат SSE-події зі стріму /v1/chat: data: {"delta":"..."} … data: [DONE]. */

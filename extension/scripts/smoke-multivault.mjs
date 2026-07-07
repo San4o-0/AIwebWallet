@@ -51,7 +51,7 @@ console.log('крок 1: старий одно-vault гаманець підго
 const storage = await freshModule();
 const migrated = await storage.listVaultRecords();
 assert.equal(migrated.length, 1);
-assert.equal(migrated[0].name, 'Гаманець 1');
+assert.equal(migrated[0].name, 'Wallet 1');
 assert.deepEqual(migrated[0].accounts, [account1], 'акаунти мігрованого збігаються');
 assert.equal(await storage.getActiveVaultId(), migrated[0].id);
 assert.ok(!stubStorage().has('aiwallet:vault'), 'старі ключі видалено');
@@ -72,7 +72,7 @@ const second = await storage.addVaultRecord({
   vault: wasm.createVault(mnemonic2, PASSWORD_2, 'Акаунт 1'),
   accounts: [account2],
 });
-assert.equal(second.name, 'Гаманець 2', 'автоіменування «Гаманець N»');
+assert.equal(second.name, 'Wallet 2', 'автоіменування «Wallet N» (en-fallback)');
 assert.equal(await storage.getActiveVaultId(), second.id, 'новий гаманець став активним');
 assert.equal((await storage.listVaultRecords()).length, 2, 'перший гаманець НЕ перезаписано');
 console.log('крок 4: другий гаманець додано (перший неушкоджений)');
@@ -162,7 +162,7 @@ const NEW_PASSWORD = 'password-restored-3';
   // Заміна лише для наявного id — незнайомий id кидає помилку.
   await assert.rejects(
     storage.replaceVaultCiphertext('no-such-id', newVault),
-    /не знайдено/i,
+    /errors\.walletNotFound/,
     'replaceVaultCiphertext для невідомого id кидає помилку',
   );
 

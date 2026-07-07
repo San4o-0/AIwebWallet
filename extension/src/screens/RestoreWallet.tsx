@@ -17,8 +17,10 @@
  * попапа затирається одразу після завершення (наскільки дозволяє JS).
  */
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Button, Field, SeedPhraseTextarea, StepHeader } from '@/src/components/ui';
+import { localizeUnknownError } from '@/src/i18n';
 import { shortenAddress } from '@/src/lib/format';
 import { walletCore } from '@/src/lib/wallet-core';
 import { findActiveWallet, useWalletStore } from '@/src/store/wallet';
@@ -33,6 +35,7 @@ function toWords(phrase: string): string[] {
 }
 
 export default function RestoreWallet() {
+  const { t } = useTranslation();
   const cancelRestorePassword = useWalletStore((s) => s.cancelRestorePassword);
   const restorePassword = useWalletStore((s) => s.restorePassword);
   const completeOnboarding = useWalletStore((s) => s.completeOnboarding);
@@ -69,7 +72,7 @@ export default function RestoreWallet() {
     setMismatch(false);
     const words = toWords(phrase);
     if (words.length !== 12 && words.length !== 24) {
-      setError('Seed-фраза має містити 12 або 24 слова.');
+      setError(t('errors.phraseWordCount'));
       return;
     }
     setBusy(true);
@@ -77,9 +80,7 @@ export default function RestoreWallet() {
       const wasm = await loadWalletCoreWasm();
       const joined = words.join(' ');
       if (!wasm.validateMnemonic(joined)) {
-        setError(
-          'Невірна seed-фраза: слово поза словником BIP-39 або checksum не збігається.',
-        );
+        setError(t('errors.invalidMnemonic'));
         return;
       }
       // Належність фрази САМЕ цьому гаманцю: деривована EVM-адреса акаунта 0
@@ -89,13 +90,13 @@ export default function RestoreWallet() {
       const knownEvm = activeWallet?.primaryEvmAddress ?? null;
       if (knownEvm !== null && derived.evm.toLowerCase() !== knownEvm.toLowerCase()) {
         setMismatch(true);
-        setError('Ця фраза належить іншому гаманцю. Перевірте слова.');
+        setError(t('errors.phraseOtherWallet'));
         return;
       }
       setAsNewWallet(false);
       setStep('password');
     } catch (e) {
-      setError(toWasmError(e).message);
+      setError(localizeUnknownError(toWasmError(e), 'errors.restoreFailed'));
     } finally {
       setBusy(false);
     }
@@ -104,11 +105,11 @@ export default function RestoreWallet() {
   // --- Крок 3: новий пароль (правила онбордингу) → завершення ---------------
   const finish = async () => {
     if (password.length < 8) {
-      setError('Пароль має містити щонайменше 8 символів.');
+      setError(t('errors.passwordTooShort'));
       return;
     }
     if (password !== confirm) {
-      setError('Паролі не збігаються.');
+      setError(t('errors.passwordsMismatch'));
       return;
     }
     setError(null);
@@ -137,7 +138,7 @@ export default function RestoreWallet() {
       }
       setError(failure.message);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Не вдалося відновити гаманець.');
+      setError(localizeUnknownError(e, 'errors.restoreFailed'));
     } finally {
       setBusy(false);
     }
@@ -150,19 +151,15 @@ export default function RestoreWallet() {
           <StepHeader
             step={1}
             total={3}
-            section="Відновлення доступу"
-            title="Забули пароль?"
+            section={t('restore.section')}
+            title={t('restore.explainTitle')}
           />
-          <p className="text-sm leading-relaxed text-muted">
-            Пароль не зберігається і не відновлюється. Але гаманець можна
-            відновити seed-фразою: введіть фразу цього гаманця і задайте новий
-            пароль.
-          </p>
+          <p className="text-sm leading-relaxed text-muted">{t('restore.explainText')}</p>
           {activeWallet !== null && (
             <div className="rounded-xl border border-hairline bg-surface px-4 py-3">
               <p className="text-sm font-semibold text-ink">{activeWallet.name}</p>
               {activeWallet.primaryEvmAddress !== null && (
-                <p className="mt-0.5 font-mono text-xs text-muted">
+                <p className="mt-0.5 font-mono text-xs text-muted" dir="ltr">
                   {shortenAddress(activeWallet.primaryEvmAddress)}
                 </p>
               )}
@@ -170,14 +167,13 @@ export default function RestoreWallet() {
           )}
           <div className="rounded-[14px] border border-terra/40 bg-terra/5 p-3.5">
             <p className="text-xs font-medium leading-relaxed text-terra">
-              Якщо seed-фрази немає — доступ до коштів цього гаманця втрачено:
-              без фрази розшифрувати сховище неможливо.
+              {t('restore.noPhraseWarning')}
             </p>
           </div>
           <div className="mt-auto flex flex-col gap-2 pt-4">
-            <Button onClick={() => setStep('phrase')}>У мене є фраза</Button>
+            <Button onClick={() => setStep('phrase')}>{t('restore.havePhrase')}</Button>
             <Button variant="ghost" onClick={cancel}>
-              Назад
+              {t('common.back')}
             </Button>
           </div>
         </div>
@@ -185,14 +181,19 @@ export default function RestoreWallet() {
 
       {step === 'phrase' && (
         <div className="flex min-h-full flex-1 flex-col gap-5">
-          <StepHeader step={2} total={3} section="Відновлення доступу" title="Seed-фраза" />
+          <StepHeader
+            step={2}
+            total={3}
+            section={t('restore.section')}
+            title={t('restore.phraseTitle')}
+          />
           <p className="text-sm leading-relaxed text-muted">
-            Введіть фразу гаманця
-            {activeWallet !== null ? ` «${activeWallet.name}»` : ''} — 12 або 24
-            слова через пробіл. Фраза не покидає пристрій.
+            {activeWallet !== null
+              ? t('restore.phraseHintNamed', { name: activeWallet.name })
+              : t('restore.phraseHint')}
           </p>
           <SeedPhraseTextarea
-            label="Seed-фраза (12 або 24 слова)"
+            label={t('onboarding.import.seedLabel')}
             value={phrase}
             autoFocus
             onChange={(e) => {
@@ -205,10 +206,9 @@ export default function RestoreWallet() {
           {mismatch && (
             <div className="animate-rise rounded-[14px] border border-terra/40 bg-terra/5 p-3.5">
               <p className="text-xs leading-relaxed text-ink">
-                Адреси цієї фрази не збігаються з гаманцем
-                {activeWallet !== null ? ` «${activeWallet.name}»` : ''}. Якщо це
-                інша ваша фраза — можна додати її як окремий новий гаманець
-                (наявні записи не зміняться).
+                {activeWallet !== null
+                  ? t('restore.mismatchNamed', { name: activeWallet.name })
+                  : t('restore.mismatch')}
               </p>
               <Button
                 variant="secondary"
@@ -220,7 +220,7 @@ export default function RestoreWallet() {
                   setStep('password');
                 }}
               >
-                Відновити як новий гаманець
+                {t('restore.restoreAsNew')}
               </Button>
             </div>
           )}
@@ -229,10 +229,10 @@ export default function RestoreWallet() {
               disabled={busy || toWords(phrase).length === 0}
               onClick={() => void verifyPhrase()}
             >
-              {busy ? 'Перевірка…' : 'Далі'}
+              {busy ? t('restore.verifying') : t('common.next')}
             </Button>
             <Button variant="ghost" disabled={busy} onClick={() => setStep('explain')}>
-              Назад
+              {t('common.back')}
             </Button>
           </div>
         </div>
@@ -243,24 +243,22 @@ export default function RestoreWallet() {
           <StepHeader
             step={3}
             total={3}
-            section="Відновлення доступу"
-            title={asNewWallet ? 'Пароль нового гаманця' : 'Новий пароль'}
+            section={t('restore.section')}
+            title={asNewWallet ? t('wallets.newWalletPassword') : t('restore.newPassword')}
           />
           <p className="text-sm leading-relaxed text-muted">
-            {asNewWallet
-              ? 'Фраза буде додана як окремий гаманець із власним паролем. Наявні гаманці залишаться без змін.'
-              : 'Новий пароль зашифрує сховище цього гаманця замість забутого (Argon2id + AES-256-GCM). Назва й адреси залишаться тими самими.'}
+            {asNewWallet ? t('restore.asNewHint') : t('restore.newPasswordHint')}
           </p>
           <Field
-            label="Новий пароль"
+            label={t('restore.newPassword')}
             type="password"
             autoFocus
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Мінімум 8 символів"
+            placeholder={t('common.passwordPlaceholder')}
           />
           <Field
-            label="Повторіть пароль"
+            label={t('common.passwordRepeatLabel')}
             type="password"
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
@@ -269,10 +267,10 @@ export default function RestoreWallet() {
           <div className="mt-auto flex flex-col gap-2 pt-4">
             <Button disabled={busy} onClick={() => void finish()}>
               {busy
-                ? 'Відновлення…'
+                ? t('restore.restoring')
                 : asNewWallet
-                  ? 'Додати гаманець'
-                  : 'Задати пароль і розблокувати'}
+                  ? t('restore.finishAsNew')
+                  : t('restore.finishReplace')}
             </Button>
             <Button
               variant="ghost"
@@ -284,7 +282,7 @@ export default function RestoreWallet() {
                 setStep('phrase');
               }}
             >
-              Назад
+              {t('common.back')}
             </Button>
           </div>
         </div>

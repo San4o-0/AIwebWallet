@@ -121,13 +121,16 @@ export interface RpcError {
   message: string;
 }
 
-/** Стандартні коди помилок EIP-1193. */
+/**
+ * Стандартні коди помилок EIP-1193. Повідомлення — англійською: це
+ * dApp-facing API (їх читають розробники сайтів, не користувач гаманця).
+ */
 export const RPC_ERRORS = {
-  userRejected: { code: 4001, message: 'Користувач відхилив запит.' },
-  unauthorized: { code: 4100, message: 'Не авторизовано.' },
-  unsupportedMethod: { code: 4200, message: 'Метод не підтримується.' },
-  disconnected: { code: 4900, message: "Провайдер від'єднано." },
-  internal: { code: -32603, message: 'Внутрішня помилка.' },
+  userRejected: { code: 4001, message: 'User rejected the request.' },
+  unauthorized: { code: 4100, message: 'Unauthorized.' },
+  unsupportedMethod: { code: 4200, message: 'Method not supported.' },
+  disconnected: { code: 4900, message: 'Provider is disconnected.' },
+  internal: { code: -32603, message: 'Internal error.' },
 } as const satisfies Record<string, RpcError>;
 
 /** Результат RPC-запиту: discriminated union успіх/помилка. */

@@ -4,6 +4,7 @@
  * інший гаманець (його паролем) без входу в поточний.
  */
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { BrandMark, IconCheck, IconChevronDown } from '@/src/components/icons';
 import { Button, Eyebrow, Field } from '@/src/components/ui';
@@ -11,6 +12,7 @@ import { shortenAddress } from '@/src/lib/format';
 import { findActiveWallet, useWalletStore } from '@/src/store/wallet';
 
 export default function Unlock() {
+  const { t } = useTranslation();
   const unlock = useWalletStore((s) => s.unlock);
   const wallets = useWalletStore((s) => s.wallets);
   const activeWalletId = useWalletStore((s) => s.activeWalletId);
@@ -53,10 +55,10 @@ export default function Unlock() {
       <div className="animate-rise flex flex-col items-center">
         <BrandMark size={48} />
         <h1 className="mt-5 font-display text-[26px] font-semibold leading-none text-ink">
-          З поверненням
+          {t('unlock.title')}
         </h1>
         <div className="mt-4 h-px w-24 bg-brass/60" aria-hidden />
-        <Eyebrow className="mt-2">AI Wallet</Eyebrow>
+        <Eyebrow className="mt-2">{t('common.appName')}</Eyebrow>
       </div>
 
       {/* Активний гаманець + перемикач на інші (пароль — у КОЖНОГО свій) */}
@@ -66,15 +68,15 @@ export default function Unlock() {
             type="button"
             onClick={() => setPickerOpen((open) => !open)}
             aria-expanded={pickerOpen}
-            aria-label="Обрати гаманець для розблокування"
-            className="flex w-full items-center justify-between gap-3 rounded-xl border border-hairline bg-surface px-4 py-3 text-left transition-colors hover:border-brass/50"
+            aria-label={t('unlock.pickerAria')}
+            className="flex w-full items-center justify-between gap-3 rounded-xl border border-hairline bg-surface px-4 py-3 text-start transition-colors hover:border-brass/50"
           >
             <span className="min-w-0">
               <span className="block truncate text-sm font-semibold text-ink">
                 {activeWallet.name}
               </span>
               {activeWallet.primaryEvmAddress !== null && (
-                <span className="mt-0.5 block font-mono text-xs text-muted">
+                <span className="mt-0.5 block font-mono text-xs text-muted" dir="ltr">
                   {shortenAddress(activeWallet.primaryEvmAddress)}
                 </span>
               )}
@@ -96,14 +98,14 @@ export default function Unlock() {
                   key={wallet.id}
                   type="button"
                   onClick={() => void pick(wallet.id)}
-                  className={`flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left transition-colors hover:bg-raised/60 ${
+                  className={`flex w-full items-center justify-between gap-3 px-4 py-2.5 text-start transition-colors hover:bg-raised/60 ${
                     index > 0 ? 'border-t border-hairline' : ''
                   }`}
                 >
                   <span className="min-w-0">
                     <span className="block truncate text-sm text-ink">{wallet.name}</span>
                     {wallet.primaryEvmAddress !== null && (
-                      <span className="mt-0.5 block font-mono text-[11px] text-muted">
+                      <span className="mt-0.5 block font-mono text-[11px] text-muted" dir="ltr">
                         {shortenAddress(wallet.primaryEvmAddress)}
                       </span>
                     )}
@@ -120,19 +122,23 @@ export default function Unlock() {
 
       <div className="w-full">
         <Field
-          label={activeWallet !== null ? `Пароль — ${activeWallet.name}` : 'Пароль'}
+          label={
+            activeWallet !== null
+              ? t('unlock.passwordFor', { name: activeWallet.name })
+              : t('common.passwordLabel')
+          }
           type="password"
           autoFocus
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Введіть пароль"
+          placeholder={t('unlock.passwordPlaceholder')}
         />
-        {error !== null && <p className="mt-2 text-left text-xs text-terra">{error}</p>}
+        {error !== null && <p className="mt-2 text-start text-xs text-terra">{error}</p>}
       </div>
 
       <div className="flex w-full flex-col items-center gap-3">
         <Button type="submit" className="w-full" disabled={busy || password.length === 0}>
-          {busy ? 'Розблокування…' : 'Розблокувати'}
+          {busy ? t('unlock.unlocking') : t('unlock.submit')}
         </Button>
         {/* Тихий вихід для тих, хто забув пароль: відновлення seed-фразою */}
         <button
@@ -140,14 +146,11 @@ export default function Unlock() {
           onClick={startRestorePassword}
           className="text-xs text-muted underline-offset-2 transition-colors hover:text-ink hover:underline"
         >
-          Забули пароль?
+          {t('unlock.forgot')}
         </button>
       </div>
 
-      <p className="max-w-[280px] text-xs leading-relaxed text-muted/80">
-        Пароль розшифровує сховище локально й нікуди не надсилається. У кожного
-        гаманця — власний пароль.
-      </p>
+      <p className="max-w-[280px] text-xs leading-relaxed text-muted/80">{t('unlock.note')}</p>
     </form>
   );
 }

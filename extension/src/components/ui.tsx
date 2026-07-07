@@ -10,6 +10,7 @@ import type {
   SelectHTMLAttributes,
   TextareaHTMLAttributes,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { IconChevronDown } from './icons';
 
@@ -52,7 +53,7 @@ export interface FieldProps extends InputHTMLAttributes<HTMLInputElement> {
 
 export function Field({ label, className = '', id, ...rest }: FieldProps) {
   return (
-    <label className="block text-left">
+    <label className="block text-start">
       {label !== undefined && <FieldLabel>{label}</FieldLabel>}
       <input id={id} {...rest} className={`${inputClasses} ${className}`} />
     </label>
@@ -65,7 +66,7 @@ export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElemen
 
 export function Textarea({ label, className = '', ...rest }: TextareaProps) {
   return (
-    <label className="block text-left">
+    <label className="block text-start">
       {label !== undefined && <FieldLabel>{label}</FieldLabel>}
       <textarea {...rest} className={`${inputClasses} resize-none ${className}`} />
     </label>
@@ -77,10 +78,11 @@ export function Textarea({ label, className = '', ...rest }: TextareaProps) {
  * без spellcheck/автозаповнення — фраза не має потрапляти у словники браузера.
  */
 export function SeedPhraseTextarea({ className = '', ...rest }: TextareaProps) {
+  const { t } = useTranslation();
   return (
     <Textarea
       rows={3}
-      placeholder="слово слово слово …"
+      placeholder={t('common.seedPlaceholder')}
       spellCheck={false}
       autoComplete="off"
       autoCapitalize="off"
@@ -97,15 +99,15 @@ export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
 
 export function Select({ label, className = '', children, ...rest }: SelectProps) {
   return (
-    <label className="block text-left">
+    <label className="block text-start">
       {label !== undefined && <FieldLabel>{label}</FieldLabel>}
       <span className="relative block">
-        <select {...rest} className={`${inputClasses} appearance-none pr-9 ${className}`}>
+        <select {...rest} className={`${inputClasses} appearance-none pe-9 ${className}`}>
           {children}
         </select>
         <IconChevronDown
           size={16}
-          className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted"
+          className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-muted"
         />
       </span>
     </label>
@@ -186,10 +188,11 @@ export function StepHeader({
   section: string;
   title: string;
 }) {
+  const { t } = useTranslation();
   return (
     <header>
       <Eyebrow className="mb-1">
-        Крок {step} з {total} · {section}
+        {t('common.stepHeader', { step, total, section })}
       </Eyebrow>
       <ScreenTitle>{title}</ScreenTitle>
       <div className="mt-3 flex gap-1.5" aria-hidden>
@@ -207,11 +210,12 @@ export function StepHeader({
 }
 
 export function Spinner() {
+  const { t } = useTranslation();
   return (
     <div
       className="size-5 animate-spin rounded-full border-2 border-hairline border-t-brass"
       role="status"
-      aria-label="Завантаження"
+      aria-label={t('common.loading')}
     />
   );
 }
@@ -242,6 +246,7 @@ export function ErrorNote({
   children: ReactNode;
   onRetry?: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="rounded-[14px] border border-terra/40 bg-terra/10 p-3.5">
       <p className="text-xs leading-relaxed text-ink">{children}</p>
@@ -251,7 +256,7 @@ export function ErrorNote({
           onClick={onRetry}
           className="mt-2 text-xs font-semibold text-terra transition-colors hover:text-ink"
         >
-          Спробувати ще раз
+          {t('common.retry')}
         </button>
       )}
     </div>

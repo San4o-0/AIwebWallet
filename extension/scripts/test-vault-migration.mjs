@@ -5,7 +5,8 @@
  *      aiwallet:vaults + aiwallet:activeVaultId, дані збігаються;
  *   2. міграція ідемпотентна (повторні виклики і «рестарт контексту»
  *      нічого не ламають і не дублюють);
- *   3. CRUD: додавання з іменуванням «Гаманець N», перейменування,
+ *   3. CRUD: додавання з іменуванням «Wallet N» (en-fallback поза попапом;
+ *      попап передає локалізовану назву через walletName), перейменування,
  *      видалення з перепризначенням активного.
  *
  * Запуск: `node scripts/test-vault-migration.mjs` (з каталогу extension/).
@@ -46,7 +47,7 @@ const { freshModule } = await bundleVaultStorage();
   const vaults = await storage.listVaultRecords();
   assert.equal(vaults.length, 1, 'старий vault став єдиним записом');
   const [record] = vaults;
-  assert.equal(record.name, 'Гаманець 1');
+  assert.equal(record.name, 'Wallet 1');
   assert.equal(record.vault, LEGACY_VAULT, 'шифротекст перенесено без змін');
   assert.deepEqual(record.accounts, LEGACY_ACCOUNTS, 'публічні акаунти перенесено');
   assert.match(record.id, /^[0-9a-f-]{36}$/, 'id — UUID');
@@ -104,18 +105,18 @@ const { freshModule } = await bundleVaultStorage();
   const storage = await freshModule();
 
   const first = await storage.addVaultRecord({ vault: 'cipher-1', accounts: LEGACY_ACCOUNTS });
-  assert.equal(first.name, 'Гаманець 1', "ім'я за замовчуванням");
+  assert.equal(first.name, 'Wallet 1', "ім'я за замовчуванням (en-fallback)");
   assert.equal(await storage.getActiveVaultId(), first.id, 'новий гаманець стає активним');
 
   const second = await storage.addVaultRecord({ vault: 'cipher-2', accounts: [] });
-  assert.equal(second.name, 'Гаманець 2');
+  assert.equal(second.name, 'Wallet 2');
   assert.equal(await storage.getActiveVaultId(), second.id);
 
   await storage.renameVaultRecord(first.id, '  Основний  ');
   assert.equal((await storage.getVaultRecord(first.id)).name, 'Основний', 'trim при перейменуванні');
-  await assert.rejects(() => storage.renameVaultRecord(first.id, '   '), /порожн/i);
-  await assert.rejects(() => storage.renameVaultRecord('no-such-id', 'X'), /не знайдено/i);
-  await assert.rejects(() => storage.setActiveVaultId('no-such-id'), /не знайдено/i);
+  await assert.rejects(() => storage.renameVaultRecord(first.id, '   '), /errors\.walletNameEmpty/);
+  await assert.rejects(() => storage.renameVaultRecord('no-such-id', 'X'), /errors\.walletNotFound/);
+  await assert.rejects(() => storage.setActiveVaultId('no-such-id'), /errors\.walletNotFound/);
 
   // Видалення активного → активним стає перший з решти.
   const nextActive = await storage.removeVaultRecord(second.id);
@@ -126,7 +127,7 @@ const { freshModule } = await bundleVaultStorage();
   assert.equal(await storage.removeVaultRecord(first.id), null);
   assert.equal(await storage.hasAnyVault(), false);
   assert.equal(await storage.getActiveVaultId(), null);
-  console.log('OK  CRUD: іменування «Гаманець N», rename, remove з перепризначенням');
+  console.log('OK  CRUD: іменування «Wallet N», rename, remove з перепризначенням');
 }
 
 // --- 5. Самовиліковування битого activeVaultId ----------------------------

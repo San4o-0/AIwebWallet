@@ -4,6 +4,7 @@
  * Чат не має інструментів для підпису/надсилання (F7.4).
  */
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { IconSend, IconSparkle } from '@/src/components/icons';
 import { Eyebrow, ScreenTitle } from '@/src/components/ui';
@@ -11,13 +12,11 @@ import { streamChat } from '@/src/lib/api';
 import type { ChatMessage } from '@/src/lib/api-types';
 import { useWalletStore } from '@/src/store/wallet';
 
-const SUGGESTIONS = [
-  'Скільки я витратив на комісії за місяць?',
-  'Які в мене активні approve?',
-  'Що таке газ?',
-];
+/** i18n-ключі підказок для порожнього чату. */
+const SUGGESTION_KEYS = ['chat.suggestion1', 'chat.suggestion2', 'chat.suggestion3'];
 
 export default function Chat() {
+  const { t } = useTranslation();
   const account = useWalletStore((s) => s.account);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -57,12 +56,12 @@ export default function Chat() {
         setMessages([...history, { role: 'assistant', content: answer }]);
       }
     } catch (error) {
-      console.warn('[aiwallet] Стрім чату перервано:', error);
+      console.warn('[aiwallet] Chat stream interrupted:', error);
       setMessages([
         ...history,
         {
           role: 'assistant',
-          content: answer || 'Відповідь не отримано: зв’язок перервався. Надішліть питання ще раз.',
+          content: answer || t('chat.streamInterrupted'),
         },
       ]);
     } finally {
@@ -74,27 +73,25 @@ export default function Chat() {
   return (
     <div className="flex h-full flex-col pb-14">
       <div className="border-b border-hairline p-5 pb-4">
-        <Eyebrow className="mb-1">Помічник</Eyebrow>
-        <ScreenTitle>AI-чат</ScreenTitle>
-        <p className="mt-1.5 text-xs leading-relaxed text-muted">
-          Відповідає на питання про вашу активність. Не може підписувати транзакції.
-        </p>
+        <Eyebrow className="mb-1">{t('chat.eyebrow')}</Eyebrow>
+        <ScreenTitle>{t('chat.title')}</ScreenTitle>
+        <p className="mt-1.5 text-xs leading-relaxed text-muted">{t('chat.disclaimer')}</p>
       </div>
 
       <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-5">
         {messages.length === 0 && (
           <div className="my-auto flex flex-col items-center gap-3">
             <IconSparkle size={22} className="text-brass" />
-            <Eyebrow>Спробуйте запитати</Eyebrow>
+            <Eyebrow>{t('chat.tryAsking')}</Eyebrow>
             <div className="flex w-full flex-col gap-2">
-              {SUGGESTIONS.map((s) => (
+              {SUGGESTION_KEYS.map((key) => (
                 <button
-                  key={s}
+                  key={key}
                   type="button"
-                  onClick={() => void send(s)}
-                  className="rounded-xl border border-hairline bg-surface px-3.5 py-2.5 text-left text-sm text-ink transition-colors hover:border-brass/50"
+                  onClick={() => void send(t(key))}
+                  className="rounded-xl border border-hairline bg-surface px-3.5 py-2.5 text-start text-sm text-ink transition-colors hover:border-brass/50"
                 >
-                  {s}
+                  {t(key)}
                 </button>
               ))}
             </div>
@@ -106,12 +103,12 @@ export default function Chat() {
             key={index}
             className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
               message.role === 'user'
-                ? 'self-end rounded-br-md border border-brass/25 bg-brass/10 text-ink'
-                : 'self-start rounded-bl-md border border-hairline bg-surface text-ink'
+                ? 'self-end rounded-ee-md border border-brass/25 bg-brass/10 text-ink'
+                : 'self-start rounded-es-md border border-hairline bg-surface text-ink'
             }`}
           >
             {message.content.length === 0 && streaming ? (
-              <span className="animate-pulse text-muted">думаю…</span>
+              <span className="animate-pulse text-muted">{t('chat.thinking')}</span>
             ) : (
               message.content
             )}
@@ -130,13 +127,13 @@ export default function Chat() {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Запитайте про свої фінанси…"
+          placeholder={t('chat.placeholder')}
           className="flex-1 rounded-xl border border-hairline bg-surface px-3.5 py-2.5 text-sm text-ink outline-none transition-colors placeholder:text-muted/50 focus:border-brass"
         />
         <button
           type="submit"
           disabled={streaming || input.trim().length === 0}
-          aria-label="Надіслати повідомлення"
+          aria-label={t('chat.sendAria')}
           className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brass text-bg transition-colors hover:bg-brass-bright disabled:cursor-not-allowed disabled:bg-raised disabled:text-muted/60"
         >
           <IconSend size={17} />

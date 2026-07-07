@@ -75,7 +75,7 @@ export class AiWalletProvider {
       return Promise.reject(
         new ProviderRpcError({
           ...RPC_ERRORS.unsupportedMethod,
-          message: `Метод ${method} поки не підтримується (мок).`,
+          message: `Method ${method} is not supported yet (mock).`,
         }),
       );
     }
@@ -109,7 +109,7 @@ export class AiWalletProvider {
       try {
         listener(payload);
       } catch (error) {
-        console.error('[aiwallet] Помилка в обробнику події провайдера:', error);
+        console.error('[aiwallet] Provider event handler error:', error);
       }
     });
   }

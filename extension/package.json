@@ -11,6 +11,7 @@
     "build:wasm": "node scripts/build-wasm.mjs",
     "zip": "wxt zip",
     "typecheck": "tsc --noEmit",
+    "check:locales": "node scripts/check-locales.mjs",
     "test:vault": "node scripts/test-vault-migration.mjs",
     "smoke:multivault": "node scripts/smoke-multivault.mjs",
     "postinstall": "wxt prepare"
@@ -22,9 +23,11 @@
     "@fontsource/jetbrains-mono": "^5.2.8",
     "@fontsource/lora": "^5.2.8",
     "@tanstack/react-query": "^5.90.0",
+    "i18next": "^26.3.4",
     "qrcode": "^1.5.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-i18next": "^17.0.8",
     "zustand": "^5.0.8"
   },
   "devDependencies": {
