@@ -13,12 +13,15 @@ import { fetchPortfolio } from '@/src/lib/api';
 import type { TokenBalance } from '@/src/lib/api-types';
 import { CHAINS, CHAIN_IDS, type Chain } from '@/src/lib/chains';
 import { formatUsd, shortenAddress } from '@/src/lib/format';
-import { useWalletStore } from '@/src/store/wallet';
+import { findActiveWallet, useWalletStore } from '@/src/store/wallet';
 
 export default function Home() {
   const account = useWalletStore((s) => s.account);
   const lock = useWalletStore((s) => s.lock);
   const setScreen = useWalletStore((s) => s.setScreen);
+  const wallets = useWalletStore((s) => s.wallets);
+  const activeWalletId = useWalletStore((s) => s.activeWalletId);
+  const activeWallet = findActiveWallet(wallets, activeWalletId);
 
   const { data: portfolio, isLoading, isError, refetch } = useQuery({
     queryKey: ['portfolio', account?.addresses.evm],
@@ -44,6 +47,10 @@ export default function Home() {
     <div className="flex flex-col gap-6 p-5 pb-24">
       <header className="flex items-start justify-between gap-3">
         <div className="min-w-0">
+          {/* Назва гаманця (multi-vault) — перемикання у «Ще» → «Гаманці» */}
+          {activeWallet !== null && (
+            <Eyebrow className="mb-0.5 truncate">{activeWallet.name}</Eyebrow>
+          )}
           <p className="truncate text-sm font-semibold text-ink">
             {account?.name ?? 'Гаманець'}
           </p>

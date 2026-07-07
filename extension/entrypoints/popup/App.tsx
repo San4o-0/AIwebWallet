@@ -34,7 +34,7 @@ const isApproveView =
   new URLSearchParams(window.location.search).get('view') === 'approve';
 
 export default function App() {
-  const { hasWallet, unlocked, screen, setScreen, initialize } = useWalletStore();
+  const { hasWallet, unlocked, screen, setScreen, initialize, addingWallet } = useWalletStore();
 
   useEffect(() => {
     void initialize();
@@ -55,6 +55,9 @@ export default function App() {
   }
 
   if (!hasWallet) return <Onboarding />;
+  // Режим «додати гаманець»: той самий онбординг без вітальних кроків,
+  // на весь екран (без нижньої навігації).
+  if (addingWallet && screen === 'onboarding') return <Onboarding />;
   if (!unlocked) return <Unlock />;
 
   const renderScreen = () => {

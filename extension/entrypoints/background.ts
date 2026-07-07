@@ -23,8 +23,11 @@ import {
   RPC_ERRORS,
   isBackgroundMessage,
   type BackgroundMessage,
+  type BgRemoveWallet,
+  type BgRenameWallet,
   type BgResolveApproval,
   type BgRpcRequest,
+  type BgSwitchWallet,
   type BgVaultCreate,
   type BgVaultDeriveAccount,
   type BgVaultSignMessage,
@@ -36,12 +39,18 @@ import {
   type RpcOutcome,
   type SessionState,
   type VaultResult,
+  type WalletsState,
 } from '@/src/lib/messaging';
 import {
-  readEncryptedVault,
-  readPublicAccounts,
-  writeEncryptedVault,
-  writePublicAccounts,
+  addVaultRecord,
+  getActiveVaultId,
+  getActiveVaultRecord,
+  listVaultRecords,
+  removeVaultRecord,
+  renameVaultRecord,
+  setActiveVaultId,
+  updateVaultAccounts,
+  type VaultRecord,
 } from '@/src/lib/vault-storage';
 import { loadWalletCoreWasm, toWasmError } from '@/src/wasm';
 
@@ -78,12 +87,20 @@ export default defineBackground(() => {
   // після пробудження користувач вводить пароль знову. Секрети НІКОЛИ не
   // пишуться у chrome.storage.
   // -------------------------------------------------------------------------
-  let session: SessionState = { unlocked: false, address: null, autoLockAt: null, accounts: [] };
+  const LOCKED_SESSION: SessionState = {
+    unlocked: false,
+    address: null,
+    autoLockAt: null,
+    accounts: [],
+    walletId: null,
+    walletName: null,
+  };
+  let session: SessionState = LOCKED_SESSION;
   let sessionMnemonic: string | null = null;
   let autoLockTimer: ReturnType<typeof setTimeout> | undefined;
 
   function lockSession(): void {
-    session = { unlocked: false, address: null, autoLockAt: null, accounts: [] };
+    session = LOCKED_SESSION;
     // JS не дає гарантованого zeroize рядків; всередині WASM-ядра секрети
     // затираються (Zeroizing), тут — прибираємо посилання.
     sessionMnemonic = null;
@@ -94,17 +111,19 @@ export default defineBackground(() => {
   function touchAutoLock(): void {
     if (!session.unlocked) return;
     if (autoLockTimer !== undefined) clearTimeout(autoLockTimer);
-    session.autoLockAt = Date.now() + AUTO_LOCK_MS;
+    session = { ...session, autoLockAt: Date.now() + AUTO_LOCK_MS };
     autoLockTimer = setTimeout(lockSession, AUTO_LOCK_MS);
   }
 
-  function unlockSession(mnemonic: string, accounts: PublicAccount[]): void {
+  function unlockSession(wallet: VaultRecord, mnemonic: string, accounts: PublicAccount[]): void {
     sessionMnemonic = mnemonic;
     session = {
       unlocked: true,
       address: accounts[0]?.addresses.evm ?? null,
       autoLockAt: Date.now() + AUTO_LOCK_MS,
       accounts,
+      walletId: wallet.id,
+      walletName: wallet.name,
     };
     touchAutoLock();
   }
@@ -135,9 +154,16 @@ export default defineBackground(() => {
           bitcoin: addresses.bitcoin,
         },
       };
-      await writeEncryptedVault(encryptedVault);
-      await writePublicAccounts([account]);
-      unlockSession(message.mnemonic, [account]);
+      // Секрети попереднього гаманця (якщо був розблокований) затираються
+      // ДО перемикання сесії на новий.
+      lockSession();
+      // ЗАВЖДИ додається новий запис — наявні гаманці не перезаписуються.
+      const record = await addVaultRecord({
+        vault: encryptedVault,
+        accounts: [account],
+        name: message.walletName,
+      });
+      unlockSession(record, message.mnemonic, [account]);
       return { ok: true, value: account };
     } catch (error) {
       return vaultError(error);
@@ -145,23 +171,23 @@ export default defineBackground(() => {
   }
 
   async function vaultUnlock(message: BgVaultUnlock): Promise<VaultResult<PublicAccount[]>> {
-    const encryptedVault = await readEncryptedVault();
-    if (encryptedVault === null) return { ok: false, error: 'Гаманець не створено.' };
+    // Розблоковується АКТИВНИЙ гаманець (перемикання — SwitchWallet).
+    const record = await getActiveVaultRecord();
+    if (record === null) return { ok: false, error: 'Гаманець не створено.' };
     try {
       const wasm = await loadWalletCoreWasm();
-      const data = JSON.parse(wasm.unlockVault(encryptedVault, message.password)) as WasmVaultData;
+      const data = JSON.parse(wasm.unlockVault(record.vault, message.password)) as WasmVaultData;
       // Публічний список акаунтів (включно з деривованими після створення
-      // vault) — з storage; fallback: акаунти з розшифрованого vault.
-      const stored = await readPublicAccounts();
+      // vault) — із запису у сховищі; fallback: акаунти з розшифрованого vault.
       const accounts: PublicAccount[] =
-        stored.length > 0
-          ? stored
+        record.accounts.length > 0
+          ? record.accounts
           : data.accounts.map((a) => ({
               index: a.index,
               name: a.name,
               addresses: { evm: a.evm_address, solana: a.solana_address, bitcoin: a.bitcoin_address },
             }));
-      unlockSession(data.mnemonic, accounts);
+      unlockSession(record, data.mnemonic, accounts);
       return { ok: true, value: accounts };
     } catch {
       // WASM-ядро повертає одну помилку і на невірний пароль, і на битий vault.
@@ -172,7 +198,10 @@ export default defineBackground(() => {
   async function vaultDeriveAccount(
     message: BgVaultDeriveAccount,
   ): Promise<VaultResult<PublicAccount>> {
-    if (sessionMnemonic === null) return { ok: false, error: 'Гаманець заблоковано.' };
+    const sessionWalletId = session.walletId;
+    if (sessionMnemonic === null || sessionWalletId === null) {
+      return { ok: false, error: 'Гаманець заблоковано.' };
+    }
     try {
       const wasm = await loadWalletCoreWasm();
       const addresses = JSON.parse(
@@ -185,9 +214,76 @@ export default defineBackground(() => {
       };
       const accounts = [...session.accounts.filter((a) => a.index !== account.index), account];
       session = { ...session, accounts };
-      await writePublicAccounts(accounts);
+      await updateVaultAccounts(sessionWalletId, accounts);
       touchAutoLock();
       return { ok: true, value: account };
+    } catch (error) {
+      return vaultError(error);
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Мульти-гаманець: список / перемикання / перейменування / видалення.
+  // Інваріант безпеки: SwitchWallet і RemoveWallet затирають розшифровані
+  // секрети поточної сесії (lockSession) — розблокування іншого гаманця
+  // вимагає пароль САМЕ того гаманця.
+  // -------------------------------------------------------------------------
+
+  async function walletsState(): Promise<WalletsState> {
+    const [vaults, activeId] = await Promise.all([listVaultRecords(), getActiveVaultId()]);
+    return {
+      wallets: vaults.map((record) => ({
+        id: record.id,
+        name: record.name,
+        createdAt: record.createdAt,
+        primaryEvmAddress: record.accounts[0]?.addresses.evm ?? null,
+      })),
+      activeId,
+    };
+  }
+
+  async function listWallets(): Promise<VaultResult<WalletsState>> {
+    try {
+      return { ok: true, value: await walletsState() };
+    } catch (error) {
+      return vaultError(error);
+    }
+  }
+
+  async function switchWallet(message: BgSwitchWallet): Promise<VaultResult<WalletsState>> {
+    try {
+      await setActiveVaultId(message.walletId);
+      // Секрети попереднього гаманця затираються — потрібен Unlock паролем
+      // нового активного гаманця.
+      lockSession();
+      return { ok: true, value: await walletsState() };
+    } catch (error) {
+      return vaultError(error);
+    }
+  }
+
+  async function renameWallet(message: BgRenameWallet): Promise<VaultResult<WalletsState>> {
+    try {
+      await renameVaultRecord(message.walletId, message.name);
+      if (session.walletId === message.walletId) {
+        session = { ...session, walletName: message.name.trim() };
+      }
+      return { ok: true, value: await walletsState() };
+    } catch (error) {
+      return vaultError(error);
+    }
+  }
+
+  async function removeWallet(message: BgRemoveWallet): Promise<VaultResult<WalletsState>> {
+    try {
+      const wasActive = (await getActiveVaultId()) === message.walletId;
+      await removeVaultRecord(message.walletId);
+      // Якщо видалено активний (або саме розблокований) гаманець — сесія
+      // блокується і секрети затираються. Наступним активним сховище вже
+      // зробило перший із решти; якщо гаманців не лишилось — стан «немає
+      // гаманця» (онбординг).
+      if (wasActive || session.walletId === message.walletId) lockSession();
+      return { ok: true, value: await walletsState() };
     } catch (error) {
       return vaultError(error);
     }
@@ -443,6 +539,14 @@ export default defineBackground(() => {
         return vaultSignTransaction(message);
       case MessageType.VaultSignMessage:
         return vaultSignMessage(message);
+      case MessageType.ListWallets:
+        return listWallets();
+      case MessageType.SwitchWallet:
+        return switchWallet(message);
+      case MessageType.RenameWallet:
+        return renameWallet(message);
+      case MessageType.RemoveWallet:
+        return removeWallet(message);
     }
   }
 

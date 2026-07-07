@@ -11,6 +11,8 @@
     "build:wasm": "node scripts/build-wasm.mjs",
     "zip": "wxt zip",
     "typecheck": "tsc --noEmit",
+    "test:vault": "node scripts/test-vault-migration.mjs",
+    "smoke:multivault": "node scripts/smoke-multivault.mjs",
     "postinstall": "wxt prepare"
   },
   "dependencies": {

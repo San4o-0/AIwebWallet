@@ -55,6 +55,31 @@ export enum MessageType {
   GetPendingRequests = 'aiwallet/get-pending-requests',
   /** Popup: рішення користувача щодо запиту на підпис (F5.3). */
   ResolveApproval = 'aiwallet/resolve-approval',
+  /** Popup → background: список гаманців (публічні метадані) + активний id. */
+  ListWallets = 'aiwallet/list-wallets',
+  /** Popup → background: зробити активним інший гаманець (сесія блокується). */
+  SwitchWallet = 'aiwallet/switch-wallet',
+  /** Popup → background: перейменувати гаманець. */
+  RenameWallet = 'aiwallet/rename-wallet',
+  /** Popup → background: видалити гаманець (шифротекст зникає назавжди). */
+  RemoveWallet = 'aiwallet/remove-wallet',
+}
+
+// --- Мульти-гаманець: публічні метадані для UI --------------------------------
+
+/** Публічний підсумок гаманця для списків UI (жодних секретів). */
+export interface WalletSummary {
+  id: string;
+  name: string;
+  createdAt: number;
+  /** EVM-адреса першого акаунта — для скороченого підпису в списку. */
+  primaryEvmAddress: string | null;
+}
+
+/** Список гаманців + активний id (відповідь List/Switch/Rename/Remove). */
+export interface WalletsState {
+  wallets: WalletSummary[];
+  activeId: string | null;
 }
 
 /** Підтримувані методи EIP-1193 (MVP-мінімум, ТЗ F3.5). */
@@ -196,6 +221,12 @@ export interface BgVaultCreate {
   mnemonic: string;
   password: string;
   accountName: string;
+  /**
+   * Назва гаманця; порожньо → «Гаманець N». Створення ЗАВЖДИ додає новий
+   * запис у `aiwallet:vaults` (наявні гаманці не перезаписуються) і робить
+   * його активним.
+   */
+  walletName?: string;
 }
 
 export interface BgVaultUnlock {
@@ -239,6 +270,28 @@ export interface BgResolveApproval {
   approved: boolean;
 }
 
+// --- Мульти-гаманець (popup → background) ----------------------------------
+
+export interface BgListWallets {
+  type: MessageType.ListWallets;
+}
+
+export interface BgSwitchWallet {
+  type: MessageType.SwitchWallet;
+  walletId: string;
+}
+
+export interface BgRenameWallet {
+  type: MessageType.RenameWallet;
+  walletId: string;
+  name: string;
+}
+
+export interface BgRemoveWallet {
+  type: MessageType.RemoveWallet;
+  walletId: string;
+}
+
 export type BackgroundMessage =
   | BgRpcRequest
   | BgGetSessionState
@@ -249,7 +302,11 @@ export type BackgroundMessage =
   | BgVaultUnlock
   | BgVaultDeriveAccount
   | BgVaultSignTransaction
-  | BgVaultSignMessage;
+  | BgVaultSignMessage
+  | BgListWallets
+  | BgSwitchWallet
+  | BgRenameWallet
+  | BgRemoveWallet;
 
 /** Стан сесії у service worker. */
 export interface SessionState {
@@ -259,6 +316,10 @@ export interface SessionState {
   autoLockAt: number | null;
   /** Публічні акаунти розблокованої сесії (порожньо, коли заблоковано). */
   accounts: PublicAccount[];
+  /** Id гаманця розблокованої сесії; null — заблоковано. */
+  walletId: string | null;
+  /** Назва гаманця розблокованої сесії; null — заблоковано. */
+  walletName: string | null;
 }
 
 /** Запит на підпис у черзі background (показується на екрані Approve). */
@@ -282,6 +343,10 @@ export interface BackgroundResponseMap {
   [MessageType.VaultDeriveAccount]: VaultResult<PublicAccount>;
   [MessageType.VaultSignTransaction]: VaultResult<string>;
   [MessageType.VaultSignMessage]: VaultResult<string>;
+  [MessageType.ListWallets]: VaultResult<WalletsState>;
+  [MessageType.SwitchWallet]: VaultResult<WalletsState>;
+  [MessageType.RenameWallet]: VaultResult<WalletsState>;
+  [MessageType.RemoveWallet]: VaultResult<WalletsState>;
 }
 
 const BACKGROUND_MESSAGE_TYPES: ReadonlySet<string> = new Set([
@@ -295,6 +360,10 @@ const BACKGROUND_MESSAGE_TYPES: ReadonlySet<string> = new Set([
   MessageType.VaultDeriveAccount,
   MessageType.VaultSignTransaction,
   MessageType.VaultSignMessage,
+  MessageType.ListWallets,
+  MessageType.SwitchWallet,
+  MessageType.RenameWallet,
+  MessageType.RemoveWallet,
 ]);
 
 /**
@@ -309,6 +378,10 @@ export const PRIVILEGED_MESSAGE_TYPES: ReadonlySet<string> = new Set([
   MessageType.VaultDeriveAccount,
   MessageType.VaultSignTransaction,
   MessageType.VaultSignMessage,
+  MessageType.ListWallets,
+  MessageType.SwitchWallet,
+  MessageType.RenameWallet,
+  MessageType.RemoveWallet,
 ]);
 
 export function isBackgroundMessage(value: unknown): value is BackgroundMessage {

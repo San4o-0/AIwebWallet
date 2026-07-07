@@ -20,12 +20,17 @@
  * оперує лише публічними даними та готовими підписами.
  */
 import type { Chain } from './chains';
-import { MessageType, type PublicAccount, type VaultResult } from './messaging';
+import {
+  MessageType,
+  type PublicAccount,
+  type VaultResult,
+  type WalletsState,
+} from './messaging';
 import { sendToBackground } from './runtime';
-import { readEncryptedVault } from './vault-storage';
+import { hasAnyVault } from './vault-storage';
 import { loadWalletCoreWasm, toWasmError } from '../wasm';
 
-export type { PublicAccount } from './messaging';
+export type { PublicAccount, WalletsState, WalletSummary } from './messaging';
 
 /** Непідписана транзакція у JSON-представленні конкретної мережі. */
 export interface UnsignedTransaction {
@@ -35,16 +40,33 @@ export interface UnsignedTransaction {
 }
 
 export interface WalletCore {
-  /** Чи існує зашифроване сховище гаманця на цьому пристрої. */
+  /** Чи існує хоч один зашифрований гаманець на цьому пристрої. */
   hasWallet(): Promise<boolean>;
   /** Згенерувати нову BIP-39 фразу (12 або 24 слова). Фраза не персиститься. */
   generateMnemonic(wordCount: 12 | 24): Promise<string[]>;
-  /** Створити гаманець із фрази та пароля; повертає акаунт index=0. */
+  /**
+   * Створити гаманець із фрази та пароля; повертає акаунт index=0.
+   * ЗАВЖДИ додає новий незалежний гаманець (не перезаписує наявні) і робить
+   * його активним; ім'я за замовчуванням — «Гаманець N».
+   */
   createWallet(mnemonic: readonly string[], password: string): Promise<PublicAccount>;
   /** Імпортувати наявну фразу (те саме, що create, але з валідацією checksum). */
   importWallet(mnemonic: readonly string[], password: string): Promise<PublicAccount>;
-  /** Розблокувати сховище паролем; повертає список акаунтів або кидає помилку. */
+  /** Розблокувати АКТИВНИЙ гаманець паролем; повертає акаунти або кидає помилку. */
   unlock(password: string): Promise<PublicAccount[]>;
+  /** Список гаманців (публічні метадані) + id активного. */
+  listWallets(): Promise<WalletsState>;
+  /**
+   * Зробити активним інший гаманець. Сесія блокується (секрети попереднього
+   * затираються) — далі потрібен Unlock паролем нового гаманця.
+   */
+  switchWallet(walletId: string): Promise<WalletsState>;
+  renameWallet(walletId: string, name: string): Promise<WalletsState>;
+  /**
+   * Видалити гаманець назавжди (без seed-фрази його не відновити). Якщо
+   * видаляється активний — активним стає перший із решти, сесія блокується.
+   */
+  removeWallet(walletId: string): Promise<WalletsState>;
   /** Заблокувати: стерти розшифровані ключі з пам'яті (zeroize у WASM). */
   lock(): Promise<void>;
   /** Дериває наступний акаунт з тієї ж seed-фрази (F1.4). */
@@ -73,7 +95,8 @@ function unwrap<T>(result: VaultResult<T> | undefined): T {
 
 class WasmWalletCore implements WalletCore {
   async hasWallet(): Promise<boolean> {
-    return (await readEncryptedVault()) !== null;
+    // Читає нову схему `aiwallet:vaults` (з лінивою міграцією старої).
+    return hasAnyVault();
   }
 
   async generateMnemonic(wordCount: 12 | 24): Promise<string[]> {
@@ -117,6 +140,22 @@ class WasmWalletCore implements WalletCore {
 
   async lock(): Promise<void> {
     await sendToBackground({ type: MessageType.LockSession });
+  }
+
+  async listWallets(): Promise<WalletsState> {
+    return unwrap(await sendToBackground({ type: MessageType.ListWallets }));
+  }
+
+  async switchWallet(walletId: string): Promise<WalletsState> {
+    return unwrap(await sendToBackground({ type: MessageType.SwitchWallet, walletId }));
+  }
+
+  async renameWallet(walletId: string, name: string): Promise<WalletsState> {
+    return unwrap(await sendToBackground({ type: MessageType.RenameWallet, walletId, name }));
+  }
+
+  async removeWallet(walletId: string): Promise<WalletsState> {
+    return unwrap(await sendToBackground({ type: MessageType.RemoveWallet, walletId }));
   }
 
   async deriveAccount(index: number, name: string): Promise<PublicAccount> {

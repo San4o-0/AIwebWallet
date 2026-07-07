@@ -17,11 +17,16 @@ import { useWalletStore } from '@/src/store/wallet';
 type Mode = 'choice' | 'create' | 'import';
 
 export default function Onboarding() {
+  // Режим «додати гаманець» (із Settings): без вітальних кроків — одразу
+  // вибір «створити/імпортувати»; наявні гаманці не чіпаються, у нового —
+  // СВІЙ пароль.
+  const addingWallet = useWalletStore((s) => s.addingWallet);
   const [mode, setMode] = useState<Mode>('choice');
 
   return (
     <div className="flex h-full flex-col overflow-y-auto p-5">
-      {mode === 'choice' && <Choice onSelect={setMode} />}
+      {mode === 'choice' &&
+        (addingWallet ? <AddWalletChoice onSelect={setMode} /> : <Choice onSelect={setMode} />)}
       {mode === 'create' && <CreateFlow onBack={() => setMode('choice')} />}
       {mode === 'import' && <ImportFlow onBack={() => setMode('choice')} />}
     </div>
@@ -88,8 +93,38 @@ function Choice({ onSelect }: { onSelect: (mode: Mode) => void }) {
   );
 }
 
+/** Компактний вибір для режиму «додати гаманець» — без вітальної обкладинки. */
+function AddWalletChoice({ onSelect }: { onSelect: (mode: Mode) => void }) {
+  const cancelAddWallet = useWalletStore((s) => s.cancelAddWallet);
+
+  return (
+    <div className="flex min-h-full flex-1 flex-col gap-5">
+      <header>
+        <Eyebrow className="mb-1">Гаманці · Додавання</Eyebrow>
+        <ScreenTitle>Додати гаманець</ScreenTitle>
+      </header>
+      <p className="text-sm leading-relaxed text-muted">
+        Новий гаманець незалежний: власна seed-фраза і власний пароль. Наявні
+        гаманці залишаються без змін.
+      </p>
+      <div className="flex flex-col gap-2.5">
+        <Button onClick={() => onSelect('create')}>Створити новий гаманець</Button>
+        <Button variant="secondary" onClick={() => onSelect('import')}>
+          Імпортувати seed-фразу
+        </Button>
+      </div>
+      <div className="mt-auto pt-4">
+        <Button variant="ghost" className="w-full" onClick={cancelAddWallet}>
+          Скасувати
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function CreateFlow({ onBack }: { onBack: () => void }) {
   const completeOnboarding = useWalletStore((s) => s.completeOnboarding);
+  const addingWallet = useWalletStore((s) => s.addingWallet);
   const [step, setStep] = useState<'password' | 'backup'>('password');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -126,10 +161,16 @@ function CreateFlow({ onBack }: { onBack: () => void }) {
   if (step === 'password') {
     return (
       <div className="flex min-h-full flex-1 flex-col gap-5">
-        <StepHeader step={1} total={2} section="Захист" title="Пароль сховища" />
+        <StepHeader
+          step={1}
+          total={2}
+          section="Захист"
+          title={addingWallet ? 'Пароль нового гаманця' : 'Пароль сховища'}
+        />
         <p className="text-sm leading-relaxed text-muted">
-          Пароль шифрує сховище на цьому пристрої (Argon2id + AES-256-GCM у ядрі)
-          і потрібен для кожного розблокування.
+          {addingWallet
+            ? 'Пароль стосується лише цього нового гаманця — паролі інших гаманців незалежні.'
+            : 'Пароль шифрує сховище на цьому пристрої (Argon2id + AES-256-GCM у ядрі) і потрібен для кожного розблокування.'}
         </p>
         <Field
           label="Пароль"
@@ -210,6 +251,7 @@ function CreateFlow({ onBack }: { onBack: () => void }) {
 
 function ImportFlow({ onBack }: { onBack: () => void }) {
   const completeOnboarding = useWalletStore((s) => s.completeOnboarding);
+  const addingWallet = useWalletStore((s) => s.addingWallet);
   const [source, setSource] = useState<'mnemonic' | 'privateKey'>('mnemonic');
   const [phrase, setPhrase] = useState('');
   const [password, setPassword] = useState('');
@@ -280,7 +322,7 @@ function ImportFlow({ onBack }: { onBack: () => void }) {
         spellCheck={false}
       />
       <Field
-        label="Новий пароль"
+        label={addingWallet ? 'Пароль нового гаманця' : 'Новий пароль'}
         type="password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
