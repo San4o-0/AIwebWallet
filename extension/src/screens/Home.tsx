@@ -5,11 +5,18 @@
  * Підпис дизайну: велика серифна сума → латунна hairline 1px →
  * small-caps підпис «Загальний баланс».
  */
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 
 import { ChainIcon } from '@/src/components/chain-icons';
-import { IconLock, IconQr, IconReceive, IconSend } from '@/src/components/icons';
+import {
+  IconChevronDown,
+  IconLock,
+  IconQr,
+  IconReceive,
+  IconSend,
+} from '@/src/components/icons';
 import { Card, ErrorNote, Eyebrow, EmptyState, IconButton } from '@/src/components/ui';
 import { fetchPortfolio } from '@/src/lib/api';
 import type { TokenBalance } from '@/src/lib/api-types';
@@ -22,9 +29,6 @@ export default function Home() {
   const account = useWalletStore((s) => s.account);
   const lock = useWalletStore((s) => s.lock);
   const setScreen = useWalletStore((s) => s.setScreen);
-  const wallets = useWalletStore((s) => s.wallets);
-  const activeWalletId = useWalletStore((s) => s.activeWalletId);
-  const activeWallet = findActiveWallet(wallets, activeWalletId);
 
   const { data: portfolio, isLoading, isError, refetch } = useQuery({
     queryKey: ['portfolio', account?.addresses.evm],
@@ -50,20 +54,7 @@ export default function Home() {
   return (
     <div className="flex flex-col gap-6 p-5 pb-24">
       <header className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          {/* Назва гаманця (multi-vault) — перемикання у «Ще» → «Гаманці» */}
-          {activeWallet !== null && (
-            <Eyebrow className="mb-0.5 truncate">{activeWallet.name}</Eyebrow>
-          )}
-          <p className="truncate text-sm font-semibold text-ink">
-            {account?.name ?? t('home.walletFallback')}
-          </p>
-          {account !== null && (
-            <p className="mt-0.5 font-mono text-xs text-muted" dir="ltr">
-              {shortenAddress(account.addresses.evm)}
-            </p>
-          )}
-        </div>
+        <WalletSwitcher />
         <div className="flex shrink-0 gap-2">
           <IconButton label={t('home.receiveAddresses')} onClick={() => setScreen('receive')}>
             <IconQr size={17} />
@@ -183,6 +174,127 @@ export default function Home() {
           </Card>
         )}
       </section>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Перемикач гаманців у шапці: тап по назві → випадайка з усіма гаманцями
+// (multi-vault) і «Додати гаманець». Перемикання блокує сесію → екран Unlock
+// паролем нового гаманця (логіка в store.switchWallet).
+// ---------------------------------------------------------------------------
+
+function WalletSwitcher() {
+  const { t } = useTranslation();
+  const account = useWalletStore((s) => s.account);
+  const wallets = useWalletStore((s) => s.wallets);
+  const activeWalletId = useWalletStore((s) => s.activeWalletId);
+  const switchWallet = useWalletStore((s) => s.switchWallet);
+  const startAddWallet = useWalletStore((s) => s.startAddWallet);
+  const activeWallet = findActiveWallet(wallets, activeWalletId);
+
+  const [open, setOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  return (
+    <div className="relative min-w-0">
+      <button
+        type="button"
+        onClick={() => {
+          setError(null);
+          setOpen((o) => !o);
+        }}
+        aria-expanded={open}
+        aria-haspopup="listbox"
+        className="group flex min-w-0 items-center gap-1.5 text-start"
+      >
+        <span className="min-w-0">
+          {activeWallet !== null && (
+            <Eyebrow className="mb-0.5 truncate">{activeWallet.name}</Eyebrow>
+          )}
+          <span className="block truncate text-sm font-semibold text-ink">
+            {account?.name ?? t('home.walletFallback')}
+          </span>
+          {account !== null && (
+            <span className="mt-0.5 block font-mono text-xs text-muted" dir="ltr">
+              {shortenAddress(account.addresses.evm)}
+            </span>
+          )}
+        </span>
+        <IconChevronDown
+          size={15}
+          className={`shrink-0 text-muted transition-transform group-hover:text-ink ${
+            open ? 'rotate-180' : ''
+          }`}
+        />
+      </button>
+
+      {open && (
+        <>
+          {/* Прозорий бекдроп: клік поза списком закриває його */}
+          <div className="fixed inset-0 z-20" onClick={() => setOpen(false)} aria-hidden />
+          <div
+            role="listbox"
+            className="animate-rise absolute start-0 top-full z-30 mt-2 w-64 overflow-hidden rounded-xl border border-hairline bg-raised shadow-xl"
+          >
+            {wallets.map((wallet, index) => {
+              const active = wallet.id === activeWalletId;
+              return (
+                <button
+                  key={wallet.id}
+                  type="button"
+                  role="option"
+                  aria-selected={active}
+                  onClick={() => {
+                    if (active) {
+                      setOpen(false);
+                      return;
+                    }
+                    // Успішне перемикання веде на Unlock (компонент зникне);
+                    // при помилці лишаємось і показуємо текст під списком.
+                    void switchWallet(wallet.id).then((err) => {
+                      if (err !== null) setError(err);
+                    });
+                  }}
+                  className={`flex w-full items-center justify-between gap-2 px-3.5 py-2.5 text-start transition-colors hover:bg-surface ${
+                    index > 0 ? 'border-t border-hairline' : ''
+                  }`}
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-medium text-ink">
+                      {wallet.name}
+                    </span>
+                    {wallet.primaryEvmAddress !== null && (
+                      <span className="block truncate font-mono text-[11px] text-muted" dir="ltr">
+                        {shortenAddress(wallet.primaryEvmAddress)}
+                      </span>
+                    )}
+                  </span>
+                  {active && (
+                    <span className="shrink-0 text-[11px] font-medium text-brass">
+                      {t('settings.walletActive')}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                startAddWallet();
+              }}
+              className="flex w-full items-center gap-2 border-t border-hairline px-3.5 py-2.5 text-start text-sm font-medium text-brass transition-colors hover:bg-surface"
+            >
+              <span aria-hidden>+</span>
+              {t('settings.addWallet')}
+            </button>
+            {error !== null && (
+              <p className="border-t border-hairline px-3.5 py-2 text-xs text-terra">{error}</p>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }

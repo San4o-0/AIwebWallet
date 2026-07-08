@@ -110,7 +110,7 @@ export default function Chat() {
         {messages.map((message, index) => (
           <div
             key={index}
-            className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
+            className={`max-w-[85%] whitespace-pre-wrap [overflow-wrap:anywhere] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
               message.role === 'user'
                 ? 'self-end rounded-ee-md border border-brass/25 bg-brass/10 text-ink'
                 : 'self-start rounded-es-md border border-hairline bg-surface text-ink'
