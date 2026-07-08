@@ -261,6 +261,7 @@
     "switchWalletFailed": "Impossibile cambiare portafoglio.",
     "renameWalletFailed": "Impossibile rinominare.",
     "removeWalletFailed": "Impossibile eliminare il portafoglio.",
+    "walletLimit": "Massimo {{max}} portafogli. Rimuovine uno per aggiungerne un altro.",
     "walletNotFound": "Portafoglio non trovato.",
     "walletNotCreated": "Nessun portafoglio è stato creato.",
     "walletNameEmpty": "Il nome non può essere vuoto.",

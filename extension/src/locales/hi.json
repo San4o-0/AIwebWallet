@@ -261,6 +261,7 @@
     "switchWalletFailed": "वॉलेट स्विच नहीं हो सका।",
     "renameWalletFailed": "नाम नहीं बदला जा सका।",
     "removeWalletFailed": "वॉलेट नहीं हटाया जा सका।",
+    "walletLimit": "अधिकतम {{max}} वॉलेट हो सकते हैं। नया जोड़ने के लिए एक हटाएँ।",
     "walletNotFound": "वॉलेट नहीं मिला।",
     "walletNotCreated": "कोई वॉलेट नहीं बनाया गया है।",
     "walletNameEmpty": "नाम खाली नहीं हो सकता।",

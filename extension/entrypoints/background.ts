@@ -45,6 +45,7 @@ import {
   type WalletsState,
 } from '@/src/lib/messaging';
 import {
+  MAX_WALLETS,
   addVaultRecord,
   getActiveVaultId,
   getActiveVaultRecord,
@@ -147,6 +148,11 @@ export default defineBackground(() => {
 
   async function vaultCreate(message: BgVaultCreate): Promise<VaultResult<PublicAccount>> {
     try {
+      // Ліміт гаманців перевіряємо ДО важкого Argon2id-шифрування.
+      const existing = await listVaultRecords();
+      if (existing.length >= MAX_WALLETS) {
+        return { ok: false, error: `errors.walletLimit|{"max":${MAX_WALLETS}}` };
+      }
       const wasm = await loadWalletCoreWasm();
       const accountName = message.accountName;
       // createVault: валідація BIP-39 → деривація адрес акаунта 0 →

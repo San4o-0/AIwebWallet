@@ -201,17 +201,17 @@ export function BrandMark({ size = 44, ...props }: IconProps) {
     >
       <path
         d="M22 4 40 22 22 40 4 22 22 4Z"
-        stroke="var(--color-brass)"
+        stroke="var(--color-accent)"
         strokeWidth="1.5"
         strokeLinejoin="round"
       />
       <path
         d="M22 13 31 22 22 31 13 22 22 13Z"
-        stroke="var(--color-brass)"
+        stroke="var(--color-accent)"
         strokeWidth="1.5"
         strokeLinejoin="round"
       />
-      <circle cx="22" cy="22" r="1.8" fill="var(--color-brass)" />
+      <circle cx="22" cy="22" r="1.8" fill="var(--color-accent)" />
     </svg>
   );
 }

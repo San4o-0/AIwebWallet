@@ -185,9 +185,14 @@ export function nextDefaultWalletName(
   }
 }
 
+/** Максимум незалежних гаманців (vault'ів) у сховищі. */
+export const MAX_WALLETS = 5;
+
 /**
  * Додає НОВИЙ гаманець (ніколи не перезаписує наявні) і робить його активним.
  * `name` порожнє/відсутнє → «Гаманець N».
+ * Кидає `errors.walletLimit` при досягненні MAX_WALLETS (авторитетна
+ * перевірка — у background до створення vault; тут — захисний бар'єр).
  */
 export async function addVaultRecord(params: {
   vault: string;
@@ -195,6 +200,9 @@ export async function addVaultRecord(params: {
   name?: string;
 }): Promise<VaultRecord> {
   const vaults = await listVaultRecords();
+  if (vaults.length >= MAX_WALLETS) {
+    throw new Error(`errors.walletLimit|{"max":${MAX_WALLETS}}`);
+  }
   const trimmed = params.name?.trim() ?? '';
   const record: VaultRecord = {
     id: crypto.randomUUID(),

@@ -107,12 +107,12 @@ export default function App() {
               onClick={() => setScreen(tab.screen)}
               aria-current={active ? 'page' : undefined}
               className={`relative flex flex-col items-center justify-center gap-1 text-[11px] font-medium tracking-wide transition-colors ${
-                active ? 'text-brass' : 'text-muted hover:text-ink'
+                active ? 'text-accent' : 'text-muted hover:text-ink'
               }`}
             >
               {/* Латунна риска над активною вкладкою */}
               <span
-                className={`absolute -top-px left-1/2 h-0.5 w-6 -translate-x-1/2 rounded-full bg-brass transition-opacity ${
+                className={`absolute -top-px left-1/2 h-0.5 w-6 -translate-x-1/2 rounded-full bg-accent transition-opacity ${
                   active ? 'opacity-100' : 'opacity-0'
                 }`}
               />

@@ -6,12 +6,15 @@ import type { Chain } from './chains';
 import { sharedT as t } from './i18n-bridge';
 import type { Eip1193Method, Json, PendingSignRequest } from './messaging';
 import type {
+  AnalyticsPeriod,
   ChatRequest,
-  FeeAnalytics,
+  FeePoint,
+  FeesResponse,
   HistoryEntry,
   HistoryResponse,
   Portfolio,
   RiskResult,
+  SummaryResponse,
   TokenBalance,
 } from './api-types';
 
@@ -128,15 +131,66 @@ export function mockHistory(): HistoryResponse {
   return { items, nextCursor: null };
 }
 
-export function mockFeeAnalytics(): FeeAnalytics {
+/** Кількість днів у періоді аналітики. */
+const PERIOD_DAYS: Record<AnalyticsPeriod, number> = { '7d': 7, '30d': 30, '90d': 90, '1y': 365 };
+
+/**
+ * Детермінований псевдовипадковий таймлайн комісій (без Math.random —
+ * стабільний між рендерами; сума масштабується під тотал).
+ */
+function mockTimeline(period: AnalyticsPeriod, totalUsd: number): FeePoint[] {
+  const days = Math.min(PERIOD_DAYS[period], 90); // бекенд агрегує по днях
+  const dayMs = 86_400_000;
+  const start = Math.floor(Date.now() / dayMs) * dayMs - (days - 1) * dayMs;
+  const raw = Array.from({ length: days }, (_, i) => {
+    const wave = Math.sin(i * 1.7) + Math.sin(i * 0.43 + 2);
+    return Math.max(0, wave + 1.2) * (i % 5 === 3 ? 2.4 : 1);
+  });
+  const sum = raw.reduce((a, b) => a + b, 0);
+  return raw.map((value, i) => ({
+    date: Math.floor((start + i * dayMs) / 1000),
+    fees_usd: sum > 0 ? (value / sum) * totalUsd : 0,
+  }));
+}
+
+export function mockFeeAnalytics(period: AnalyticsPeriod = '30d'): FeesResponse {
+  const scale = PERIOD_DAYS[period] / 30;
+  const totalUsd = 14.62 * scale;
   return {
-    period: '30d',
-    totalUsd: 14.62,
-    byChain: [
-      { chain: 'ethereum', usd: 11.2 },
-      { chain: 'solana', usd: 0.42 },
-      { chain: 'bitcoin', usd: 2.1 },
-      { chain: 'polygon', usd: 0.9 },
+    address: '0x0000000000000000000000000000000000000000',
+    period,
+    total_fees_usd: totalUsd,
+    by_chain: [
+      { chain: 'ethereum', fees_usd: 11.2 * scale, tx_count: Math.round(9 * scale) },
+      { chain: 'bitcoin', fees_usd: 2.1 * scale, tx_count: Math.round(2 * scale) },
+      { chain: 'polygon', fees_usd: 0.9 * scale, tx_count: Math.round(6 * scale) },
+      { chain: 'solana', fees_usd: 0.42 * scale, tx_count: Math.round(11 * scale) },
+    ],
+    timeline: mockTimeline(period, totalUsd),
+  };
+}
+
+export function mockAnalyticsSummary(period: AnalyticsPeriod = '30d'): SummaryResponse {
+  const scale = PERIOD_DAYS[period] / 30;
+  return {
+    address: '0x0000000000000000000000000000000000000000',
+    period,
+    total_in_usd: 1240.5 * scale,
+    total_out_usd: 863.2 * scale,
+    total_fees_usd: 14.62 * scale,
+    tx_count: Math.round(28 * scale),
+    by_category: [
+      { category: 'transfer', tx_count: Math.round(13 * scale), volume_usd: 980.4 * scale },
+      { category: 'swap', tx_count: Math.round(7 * scale), volume_usd: 611.9 * scale },
+      { category: 'dapp', tx_count: Math.round(5 * scale), volume_usd: 342.1 * scale },
+      { category: 'approve', tx_count: Math.round(2 * scale), volume_usd: 0 },
+      { category: 'mint', tx_count: Math.round(1 * scale), volume_usd: 52.3 * scale },
+    ],
+    by_chain: [
+      { chain: 'ethereum', fees_usd: 11.2 * scale, tx_count: Math.round(9 * scale) },
+      { chain: 'bitcoin', fees_usd: 2.1 * scale, tx_count: Math.round(2 * scale) },
+      { chain: 'polygon', fees_usd: 0.9 * scale, tx_count: Math.round(6 * scale) },
+      { chain: 'solana', fees_usd: 0.42 * scale, tx_count: Math.round(11 * scale) },
     ],
   };
 }

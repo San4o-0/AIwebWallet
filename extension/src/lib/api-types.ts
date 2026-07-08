@@ -192,18 +192,49 @@ export interface ChatStreamEvent {
 
 export type AnalyticsPeriod = '7d' | '30d' | '90d' | '1y';
 
-export interface FeeAnalytics {
-  period: AnalyticsPeriod;
-  totalUsd: number;
-  byChain: { chain: Chain; usd: number }[];
+/** Поля — snake_case: бекенд серіалізує DTO без rename (crates/api-server/dto.rs). */
+export interface ChainFees {
+  chain: Chain;
+  fees_usd: number;
+  tx_count: number;
 }
 
-export interface AnalyticsSummary {
-  period: AnalyticsPeriod;
-  feesUsd: number;
-  sentUsd: number;
-  receivedUsd: number;
-  byChain: { chain: Chain; volumeUsd: number }[];
+/** Точка денного таймлайну комісій. */
+export interface FeePoint {
+  /** Unix seconds (початок дня). */
+  date: number;
+  fees_usd: number;
+}
+
+/** GET /v1/analytics/fees — витрати на комісії за період (F6.1). */
+export interface FeesResponse {
+  address: string;
+  period: string;
+  total_fees_usd: number;
+  by_chain: ChainFees[];
+  timeline: FeePoint[];
+  /** Службова примітка (напр., EVM-мережі пропущено без ETHERSCAN_API_KEY). */
+  note?: string;
+}
+
+export interface CategorySummary {
+  category: TxCategory;
+  tx_count: number;
+  volume_usd: number;
+}
+
+/** GET /v1/analytics/summary — зведення транзакцій за період. */
+export interface SummaryResponse {
+  address: string;
+  period: string;
+  total_in_usd: number;
+  total_out_usd: number;
+  total_fees_usd: number;
+  tx_count: number;
+  by_category: CategorySummary[];
+  by_chain: ChainFees[];
+  /** Службова примітка (напр., EVM-мережі пропущено без ETHERSCAN_API_KEY). */
+  note?: string;
 }
 
 // GET /v1/prices ----------------------------------------------------------

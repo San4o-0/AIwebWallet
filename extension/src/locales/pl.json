@@ -263,6 +263,7 @@
     "switchWalletFailed": "Nie udało się przełączyć portfela.",
     "renameWalletFailed": "Nie udało się zmienić nazwy.",
     "removeWalletFailed": "Nie udało się usunąć portfela.",
+    "walletLimit": "Maksymalnie {{max}} portfeli. Usuń jeden, aby dodać nowy.",
     "walletNotFound": "Nie znaleziono portfela.",
     "walletNotCreated": "Nie utworzono żadnego portfela.",
     "walletNameEmpty": "Nazwa nie może być pusta.",

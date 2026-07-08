@@ -51,7 +51,7 @@ function Choice({ onSelect }: { onSelect: (mode: Mode) => void }) {
         <h1 className="mt-5 font-display text-[28px] font-semibold leading-none text-ink">
           {t('common.appName')}
         </h1>
-        <div className="mt-4 h-px w-24 bg-brass/60" aria-hidden />
+        <div className="mt-4 h-px w-24 bg-accent/60" aria-hidden />
         <Eyebrow className="mt-2">{t('onboarding.tagline')}</Eyebrow>
         <p className="mt-4 max-w-[280px] text-sm leading-relaxed text-muted">
           {t('onboarding.intro')}
@@ -161,7 +161,7 @@ function CreateFlow({ onBack }: { onBack: () => void }) {
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
         />
-        {error !== null && <p className="text-xs text-terra">{error}</p>}
+        {error !== null && <p className="text-xs text-danger">{error}</p>}
         <div className="mt-auto flex flex-col gap-2 pt-4">
           <Button onClick={() => void toBackup()}>{t('common.next')}</Button>
           <Button variant="ghost" onClick={onBack}>
@@ -183,7 +183,7 @@ function CreateFlow({ onBack }: { onBack: () => void }) {
       <p className="text-sm leading-relaxed text-muted">{t('onboarding.create.backupHint')}</p>
 
       {/* Seed-фраза як документ: hairline-рамка, нумерований mono-список */}
-      <div className="animate-rise rounded-[14px] border border-hairline bg-surface">
+      <div className="animate-rise rounded-[10px] border border-hairline bg-surface">
         <div className="flex items-baseline justify-between border-b border-hairline px-4 py-2.5">
           <Eyebrow>{t('onboarding.create.recoveryDoc')}</Eyebrow>
           <span className="eyebrow text-[10px]">
@@ -212,11 +212,11 @@ function CreateFlow({ onBack }: { onBack: () => void }) {
           type="checkbox"
           checked={saved}
           onChange={(e) => setSaved(e.target.checked)}
-          className="mt-0.5 size-4 accent-brass"
+          className="mt-0.5 size-4 accent-accent"
         />
         {t('onboarding.create.savedConfirm')}
       </label>
-      {error !== null && <p className="text-xs text-terra">{error}</p>}
+      {error !== null && <p className="text-xs text-danger">{error}</p>}
       <div className="mt-auto flex flex-col gap-2 pt-2">
         <Button disabled={!saved || busy} onClick={() => void finish()}>
           {busy ? t('onboarding.create.creating') : t('onboarding.create.finish')}
@@ -289,7 +289,7 @@ function ImportFlow({ onBack }: { onBack: () => void }) {
             onClick={() => setSource(option.id)}
             className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
               source === option.id
-                ? 'bg-raised text-brass'
+                ? 'bg-raised text-accent'
                 : 'text-muted hover:text-ink'
             }`}
           >
@@ -313,7 +313,7 @@ function ImportFlow({ onBack }: { onBack: () => void }) {
         onChange={(e) => setPassword(e.target.value)}
         placeholder={t('common.passwordPlaceholder')}
       />
-      {error !== null && <p className="text-xs text-terra">{error}</p>}
+      {error !== null && <p className="text-xs text-danger">{error}</p>}
       <div className="mt-auto flex flex-col gap-2 pt-4">
         <Button disabled={busy || phrase.trim().length === 0} onClick={() => void doImport()}>
           {busy ? t('onboarding.import.importing') : t('onboarding.import.submit')}

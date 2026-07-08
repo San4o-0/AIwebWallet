@@ -260,6 +260,7 @@
     "switchWalletFailed": "ウォレットを切り替えられませんでした。",
     "renameWalletFailed": "名前を変更できませんでした。",
     "removeWalletFailed": "ウォレットを削除できませんでした。",
+    "walletLimit": "ウォレットは最大{{max}}件までです。追加するには1件削除してください。",
     "walletNotFound": "ウォレットが見つかりません。",
     "walletNotCreated": "ウォレットがまだ作成されていません。",
     "walletNameEmpty": "名前を空にすることはできません。",

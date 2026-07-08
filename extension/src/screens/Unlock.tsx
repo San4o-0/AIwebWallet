@@ -57,7 +57,7 @@ export default function Unlock() {
         <h1 className="mt-5 font-display text-[26px] font-semibold leading-none text-ink">
           {t('unlock.title')}
         </h1>
-        <div className="mt-4 h-px w-24 bg-brass/60" aria-hidden />
+        <div className="mt-4 h-px w-24 bg-accent/60" aria-hidden />
         <Eyebrow className="mt-2">{t('common.appName')}</Eyebrow>
       </div>
 
@@ -69,7 +69,7 @@ export default function Unlock() {
             onClick={() => setPickerOpen((open) => !open)}
             aria-expanded={pickerOpen}
             aria-label={t('unlock.pickerAria')}
-            className="flex w-full items-center justify-between gap-3 rounded-xl border border-hairline bg-surface px-4 py-3 text-start transition-colors hover:border-brass/50"
+            className="flex w-full items-center justify-between gap-3 rounded-xl border border-hairline bg-surface px-4 py-3 text-start transition-colors hover:border-accent/50"
           >
             <span className="min-w-0">
               <span className="block truncate text-sm font-semibold text-ink">
@@ -111,7 +111,7 @@ export default function Unlock() {
                     )}
                   </span>
                   {wallet.id === activeWalletId && (
-                    <IconCheck size={15} className="shrink-0 text-brass" />
+                    <IconCheck size={15} className="shrink-0 text-accent" />
                   )}
                 </button>
               ))}
@@ -133,7 +133,7 @@ export default function Unlock() {
           onChange={(e) => setPassword(e.target.value)}
           placeholder={t('unlock.passwordPlaceholder')}
         />
-        {error !== null && <p className="mt-2 text-start text-xs text-terra">{error}</p>}
+        {error !== null && <p className="mt-2 text-start text-xs text-danger">{error}</p>}
       </div>
 
       <div className="flex w-full flex-col items-center gap-3">

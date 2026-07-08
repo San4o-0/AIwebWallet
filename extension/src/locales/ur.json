@@ -261,6 +261,7 @@
     "switchWalletFailed": "والٹ تبدیل نہیں ہو سکا۔",
     "renameWalletFailed": "نام تبدیل نہیں ہو سکا۔",
     "removeWalletFailed": "والٹ حذف نہیں ہو سکا۔",
+    "walletLimit": "زیادہ سے زیادہ {{max}} والٹس ہو سکتے ہیں۔ نیا شامل کرنے کے لیے ایک حذف کریں۔",
     "walletNotFound": "والٹ نہیں ملا۔",
     "walletNotCreated": "کوئی والٹ نہیں بنایا گیا۔",
     "walletNameEmpty": "نام خالی نہیں ہو سکتا۔",

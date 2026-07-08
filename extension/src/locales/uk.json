@@ -263,6 +263,7 @@
     "switchWalletFailed": "Не вдалося перемкнути гаманець.",
     "renameWalletFailed": "Не вдалося перейменувати.",
     "removeWalletFailed": "Не вдалося видалити гаманець.",
+    "walletLimit": "Максимум {{max}} гаманців. Видаліть один, щоб додати новий.",
     "walletNotFound": "Гаманець не знайдено.",
     "walletNotCreated": "Гаманець не створено.",
     "walletNameEmpty": "Назва не може бути порожньою.",

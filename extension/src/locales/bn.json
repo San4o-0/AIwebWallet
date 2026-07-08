@@ -261,6 +261,7 @@
     "switchWalletFailed": "ওয়ালেট পরিবর্তন করা যায়নি।",
     "renameWalletFailed": "নাম বদলানো যায়নি।",
     "removeWalletFailed": "ওয়ালেট মুছে ফেলা যায়নি।",
+    "walletLimit": "সর্বোচ্চ {{max}}টি ওয়ালেট রাখা যাবে। নতুন যোগ করতে একটি মুছুন।",
     "walletNotFound": "ওয়ালেট পাওয়া যায়নি।",
     "walletNotCreated": "কোনো ওয়ালেট তৈরি করা হয়নি।",
     "walletNameEmpty": "নাম খালি হতে পারে না।",

@@ -263,6 +263,7 @@
     "switchWalletFailed": "Не удалось переключить кошелёк.",
     "renameWalletFailed": "Не удалось переименовать.",
     "removeWalletFailed": "Не удалось удалить кошелёк.",
+    "walletLimit": "Максимум {{max}} кошельков. Удалите один, чтобы добавить новый.",
     "walletNotFound": "Кошелёк не найден.",
     "walletNotCreated": "Кошелёк ещё не создан.",
     "walletNameEmpty": "Название не может быть пустым.",

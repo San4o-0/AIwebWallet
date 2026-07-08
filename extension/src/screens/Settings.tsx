@@ -24,6 +24,7 @@ import {
 } from '@/src/i18n';
 import { CHAIN_IDS } from '@/src/lib/chains';
 import { shortenAddress } from '@/src/lib/format';
+import { MAX_WALLETS } from '@/src/lib/vault-storage';
 import { walletCore, type WalletSummary } from '@/src/lib/wallet-core';
 import { useWalletStore, type Screen } from '@/src/store/wallet';
 
@@ -131,7 +132,7 @@ export default function Settings() {
         <Eyebrow className="mb-2.5">{t('settings.security')}</Eyebrow>
         <Card className="p-0">
           <div className="flex items-start gap-3 border-b border-hairline px-4 py-3">
-            <IconShield size={17} className="mt-0.5 shrink-0 text-sage" />
+            <IconShield size={17} className="mt-0.5 shrink-0 text-positive" />
             <p className="text-xs leading-relaxed text-muted">{t('settings.securityNote')}</p>
           </div>
           <SeedRevealRows />
@@ -140,8 +141,8 @@ export default function Settings() {
             onClick={() => void lock()}
             className="flex w-full items-center gap-3 px-4 py-3 text-start transition-colors hover:bg-raised/60"
           >
-            <IconLock size={17} className="shrink-0 text-terra" />
-            <span className="text-sm font-medium text-terra">{t('settings.lock')}</span>
+            <IconLock size={17} className="shrink-0 text-danger" />
+            <span className="text-sm font-medium text-danger">{t('settings.lock')}</span>
           </button>
         </Card>
       </section>
@@ -209,8 +210,8 @@ function SeedRevealRows() {
 
       {open && (
         <div className="animate-rise flex flex-col gap-3 px-4 pb-4">
-          <div className="rounded-[14px] border border-terra/40 bg-terra/5 p-3">
-            <p className="text-xs font-medium leading-relaxed text-terra">
+          <div className="rounded-[10px] border border-danger/40 bg-danger/5 p-3">
+            <p className="text-xs font-medium leading-relaxed text-danger">
               {t('settings.revealSeedWarning')}
             </p>
           </div>
@@ -231,7 +232,7 @@ function SeedRevealRows() {
                 }}
                 placeholder={t('common.passwordPlaceholder')}
               />
-              {error !== null && <p className="text-xs text-terra">{error}</p>}
+              {error !== null && <p className="text-xs text-danger">{error}</p>}
               <Button disabled={busy || password === ''} onClick={() => void reveal()}>
                 {busy ? t('settings.revealSeedChecking') : t('settings.revealSeedShow')}
               </Button>
@@ -332,20 +333,26 @@ function WalletsSection() {
             onError={setError}
           />
         ))}
-        <button
-          type="button"
-          onClick={startAddWallet}
-          className={`flex w-full items-center gap-3 px-4 py-3 text-start transition-colors hover:bg-raised/60 ${
-            wallets.length > 0 ? 'border-t border-hairline' : ''
-          }`}
-        >
-          <span className="flex size-[17px] shrink-0 items-center justify-center text-brass" aria-hidden>
-            +
-          </span>
-          <span className="text-sm font-medium text-brass">{t('settings.addWallet')}</span>
-        </button>
+        {wallets.length < MAX_WALLETS ? (
+          <button
+            type="button"
+            onClick={startAddWallet}
+            className={`flex w-full items-center gap-3 px-4 py-3 text-start transition-colors hover:bg-raised/60 ${
+              wallets.length > 0 ? 'border-t border-hairline' : ''
+            }`}
+          >
+            <span className="flex size-[17px] shrink-0 items-center justify-center text-accent" aria-hidden>
+              +
+            </span>
+            <span className="text-sm font-medium text-accent">{t('settings.addWallet')}</span>
+          </button>
+        ) : (
+          <p className="border-t border-hairline px-4 py-3 text-xs leading-relaxed text-muted">
+            {t('errors.walletLimit', { max: MAX_WALLETS })}
+          </p>
+        )}
       </Card>
-      {error !== null && <p className="mt-2 text-xs text-terra">{error}</p>}
+      {error !== null && <p className="mt-2 text-xs text-danger">{error}</p>}
     </section>
   );
 }
@@ -407,7 +414,7 @@ function WalletRow({
           <span className="flex items-center gap-2">
             <span className="truncate text-sm font-medium text-ink">{wallet.name}</span>
             {active && (
-              <span className="eyebrow shrink-0 rounded-full border border-brass/40 px-1.5 py-px text-[9px] text-brass">
+              <span className="eyebrow shrink-0 rounded-full border border-accent/40 px-1.5 py-px text-[9px] text-accent">
                 {t('settings.walletActive')}
               </span>
             )}
@@ -464,7 +471,7 @@ function WalletRow({
               {!confirmingRemove && (
                 <Button
                   variant="ghost"
-                  className="text-terra hover:text-terra"
+                  className="text-danger hover:text-danger"
                   disabled={busy}
                   onClick={() => setConfirmingRemove(true)}
                 >
@@ -516,8 +523,8 @@ function RemoveConfirm({
   };
 
   return (
-    <div className="animate-rise rounded-xl border border-terra/40 bg-terra/5 p-3">
-      <p className="text-xs font-medium leading-relaxed text-terra">
+    <div className="animate-rise rounded-xl border border-danger/40 bg-danger/5 p-3">
+      <p className="text-xs font-medium leading-relaxed text-danger">
         {t('settings.removeWarning')}
         {isOnly ? ` ${t('settings.removeWarningLast')}` : ''}
       </p>
@@ -526,7 +533,7 @@ function RemoveConfirm({
           type="checkbox"
           checked={confirmed}
           onChange={(e) => setConfirmed(e.target.checked)}
-          className="mt-0.5 size-4 shrink-0 accent-brass"
+          className="mt-0.5 size-4 shrink-0 accent-accent"
         />
         {t('settings.savedSeedConfirm')}
       </label>

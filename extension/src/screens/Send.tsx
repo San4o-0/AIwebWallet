@@ -180,10 +180,10 @@ export default function Send() {
         dir="ltr"
       />
 
-      {error !== null && <p className="text-xs leading-relaxed text-terra">{error}</p>}
+      {error !== null && <p className="text-xs leading-relaxed text-danger">{error}</p>}
       {txHash !== null && (
-        <div className="animate-rise rounded-[14px] border border-sage/40 bg-sage/10 p-4">
-          <p className="flex items-center gap-2 text-sm font-medium text-sage">
+        <div className="animate-rise rounded-[10px] border border-positive/40 bg-positive/10 p-4">
+          <p className="flex items-center gap-2 text-sm font-medium text-positive">
             <IconCheck size={16} />
             {t('send.sent')}
           </p>

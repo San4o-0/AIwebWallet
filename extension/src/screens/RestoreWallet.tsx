@@ -22,6 +22,7 @@ import { useTranslation } from 'react-i18next';
 import { Button, Field, SeedPhraseTextarea, StepHeader } from '@/src/components/ui';
 import { localizeUnknownError } from '@/src/i18n';
 import { shortenAddress } from '@/src/lib/format';
+import { MAX_WALLETS } from '@/src/lib/vault-storage';
 import { walletCore } from '@/src/lib/wallet-core';
 import { findActiveWallet, useWalletStore } from '@/src/store/wallet';
 import { loadWalletCoreWasm, toWasmError } from '@/src/wasm';
@@ -166,26 +167,29 @@ export default function RestoreWallet() {
               )}
             </div>
           )}
-          <div className="rounded-[14px] border border-terra/40 bg-terra/5 p-3.5">
-            <p className="text-xs font-medium leading-relaxed text-terra">
+          <div className="rounded-[10px] border border-danger/40 bg-danger/5 p-3.5">
+            <p className="text-xs font-medium leading-relaxed text-danger">
               {t('restore.noPhraseWarning')}
             </p>
           </div>
           {/* Вихід для тих, хто без фрази: новий незалежний гаманець через
-              звичайний флоу додавання; заблокований запис лишається в списку. */}
-          <div className="rounded-[14px] border border-hairline bg-surface p-3.5">
-            <p className="text-xs leading-relaxed text-muted">{t('restore.createNewHint')}</p>
-            <Button
-              variant="secondary"
-              className="mt-3 w-full"
-              onClick={() => {
-                wipeSecrets();
-                startAddWallet();
-              }}
-            >
-              {t('onboarding.createNew')}
-            </Button>
-          </div>
+              звичайний флоу додавання; заблокований запис лишається в списку.
+              При досягненні ліміту гаманців опція зникає. */}
+          {wallets.length < MAX_WALLETS && (
+            <div className="rounded-[10px] border border-hairline bg-surface p-3.5">
+              <p className="text-xs leading-relaxed text-muted">{t('restore.createNewHint')}</p>
+              <Button
+                variant="secondary"
+                className="mt-3 w-full"
+                onClick={() => {
+                  wipeSecrets();
+                  startAddWallet();
+                }}
+              >
+                {t('onboarding.createNew')}
+              </Button>
+            </div>
+          )}
           <div className="mt-auto flex flex-col gap-2 pt-4">
             <Button onClick={() => setStep('phrase')}>{t('restore.havePhrase')}</Button>
             <Button variant="ghost" onClick={cancel}>
@@ -218,9 +222,9 @@ export default function RestoreWallet() {
               setError(null);
             }}
           />
-          {error !== null && <p className="text-xs text-terra">{error}</p>}
+          {error !== null && <p className="text-xs text-danger">{error}</p>}
           {mismatch && (
-            <div className="animate-rise rounded-[14px] border border-terra/40 bg-terra/5 p-3.5">
+            <div className="animate-rise rounded-[10px] border border-danger/40 bg-danger/5 p-3.5">
               <p className="text-xs leading-relaxed text-ink">
                 {activeWallet !== null
                   ? t('restore.mismatchNamed', { name: activeWallet.name })
@@ -279,7 +283,7 @@ export default function RestoreWallet() {
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
           />
-          {error !== null && <p className="text-xs text-terra">{error}</p>}
+          {error !== null && <p className="text-xs text-danger">{error}</p>}
           <div className="mt-auto flex flex-col gap-2 pt-4">
             <Button disabled={busy} onClick={() => void finish()}>
               {busy

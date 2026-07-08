@@ -261,6 +261,7 @@
     "switchWalletFailed": "Gagal berganti dompet.",
     "renameWalletFailed": "Gagal mengubah nama.",
     "removeWalletFailed": "Gagal menghapus dompet.",
+    "walletLimit": "Maksimal {{max}} dompet. Hapus satu untuk menambahkan yang baru.",
     "walletNotFound": "Dompet tidak ditemukan.",
     "walletNotCreated": "Belum ada dompet yang dibuat.",
     "walletNameEmpty": "Nama tidak boleh kosong.",

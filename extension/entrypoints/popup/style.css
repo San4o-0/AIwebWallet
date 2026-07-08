@@ -1,107 +1,71 @@
 /*
- * Дизайн-система «цифровий приватний банк»: теплий графіт, слонова кістка,
- * латунний акцент. Єдина темна тема. Жодних градієнтів і неону.
+ * Дизайн-система «торговий термінал»: глибокий холодний графіт, бурштиновий
+ * CRT-сигнал, моноширинні цифри. Єдина темна тема. Без неону, гліча
+ * і градієнтних тіл — характер задають типографіка та жива палітра мереж.
  *
- * Шрифти — ТІЛЬКИ бандлом через @fontsource (CSP розширення блокує CDN).
- * Fraunces та Instrument Sans не мають кирилиці, тому в стеках стоять
- * кирилічні компаньйони (Lora / Golos Text) — @fontsource-файли з
- * unicode-range підхоплюють лише потрібні гліфи.
+ * Шрифти — ТІЛЬКИ бандлом через @fontsource (CSP розширення блокує CDN):
+ * IBM Plex Sans (body, рідна кирилиця) + JetBrains Mono (display, всі
+ * числа/суми, підписи-капсули; кирилиця вбудована).
  */
 @import "tailwindcss";
 
 /*
  * @font-face вручну (замість готових css @fontsource): підключаємо ТІЛЬКИ
- * woff2-сабсети — без legacy .woff-фолбеків (економія ~170 КБ бандла).
- * unicode-range — стандартні діапазони Google Fonts (latin / cyrillic).
+ * woff2-сабсети — без legacy .woff-фолбеків. unicode-range — стандартні
+ * діапазони Google Fonts (latin / cyrillic).
  */
 @font-face {
-  font-family: "Fraunces";
-  font-style: normal;
-  font-display: swap;
-  font-weight: 500;
-  src: url("@fontsource/fraunces/files/fraunces-latin-500-normal.woff2") format("woff2");
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
-    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
-    U+2212, U+2215, U+FEFF, U+FFFD;
-}
-@font-face {
-  font-family: "Fraunces";
-  font-style: normal;
-  font-display: swap;
-  font-weight: 600;
-  src: url("@fontsource/fraunces/files/fraunces-latin-600-normal.woff2") format("woff2");
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
-    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
-    U+2212, U+2215, U+FEFF, U+FFFD;
-}
-@font-face {
-  font-family: "Lora";
-  font-style: normal;
-  font-display: swap;
-  font-weight: 500;
-  src: url("@fontsource/lora/files/lora-cyrillic-500-normal.woff2") format("woff2");
-  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
-}
-@font-face {
-  font-family: "Lora";
-  font-style: normal;
-  font-display: swap;
-  font-weight: 600;
-  src: url("@fontsource/lora/files/lora-cyrillic-600-normal.woff2") format("woff2");
-  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
-}
-@font-face {
-  font-family: "Instrument Sans";
+  font-family: "IBM Plex Sans";
   font-style: normal;
   font-display: swap;
   font-weight: 400;
-  src: url("@fontsource/instrument-sans/files/instrument-sans-latin-400-normal.woff2") format("woff2");
+  src: url("@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-400-normal.woff2") format("woff2");
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
     U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
     U+2212, U+2215, U+FEFF, U+FFFD;
 }
 @font-face {
-  font-family: "Instrument Sans";
+  font-family: "IBM Plex Sans";
   font-style: normal;
   font-display: swap;
   font-weight: 500;
-  src: url("@fontsource/instrument-sans/files/instrument-sans-latin-500-normal.woff2") format("woff2");
+  src: url("@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-500-normal.woff2") format("woff2");
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
     U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
     U+2212, U+2215, U+FEFF, U+FFFD;
 }
 @font-face {
-  font-family: "Instrument Sans";
+  font-family: "IBM Plex Sans";
   font-style: normal;
   font-display: swap;
   font-weight: 600;
-  src: url("@fontsource/instrument-sans/files/instrument-sans-latin-600-normal.woff2") format("woff2");
+  src: url("@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-600-normal.woff2") format("woff2");
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
     U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
     U+2212, U+2215, U+FEFF, U+FFFD;
 }
 @font-face {
-  font-family: "Golos Text";
+  font-family: "IBM Plex Sans";
   font-style: normal;
   font-display: swap;
   font-weight: 400;
-  src: url("@fontsource/golos-text/files/golos-text-cyrillic-400-normal.woff2") format("woff2");
+  src: url("@fontsource/ibm-plex-sans/files/ibm-plex-sans-cyrillic-400-normal.woff2") format("woff2");
   unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
 }
 @font-face {
-  font-family: "Golos Text";
+  font-family: "IBM Plex Sans";
   font-style: normal;
   font-display: swap;
   font-weight: 500;
-  src: url("@fontsource/golos-text/files/golos-text-cyrillic-500-normal.woff2") format("woff2");
+  src: url("@fontsource/ibm-plex-sans/files/ibm-plex-sans-cyrillic-500-normal.woff2") format("woff2");
   unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
 }
 @font-face {
-  font-family: "Golos Text";
+  font-family: "IBM Plex Sans";
   font-style: normal;
   font-display: swap;
   font-weight: 600;
-  src: url("@fontsource/golos-text/files/golos-text-cyrillic-600-normal.woff2") format("woff2");
+  src: url("@fontsource/ibm-plex-sans/files/ibm-plex-sans-cyrillic-600-normal.woff2") format("woff2");
   unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
 }
 @font-face {
@@ -114,28 +78,94 @@
     U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
     U+2212, U+2215, U+FEFF, U+FFFD;
 }
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url("@fontsource/jetbrains-mono/files/jetbrains-mono-latin-500-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url("@fontsource/jetbrains-mono/files/jetbrains-mono-latin-600-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url("@fontsource/jetbrains-mono/files/jetbrains-mono-cyrillic-400-normal.woff2") format("woff2");
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url("@fontsource/jetbrains-mono/files/jetbrains-mono-cyrillic-500-normal.woff2") format("woff2");
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url("@fontsource/jetbrains-mono/files/jetbrains-mono-cyrillic-600-normal.woff2") format("woff2");
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
 
 @theme {
-  /* Кольори */
-  --color-bg: #121014; /* теплий графіт */
-  --color-surface: #1b181e; /* картки */
-  --color-raised: #242028; /* підняті поверхні */
-  --color-hairline: #2e2933; /* волосяні бордери */
-  --color-ink: #f2efe6; /* слонова кістка */
-  --color-muted: #9c95a3; /* вторинний текст */
-  --color-brass: #c9a96a; /* латунь: CTA, активний таб, фокус */
-  --color-brass-bright: #d9bc80; /* латунь hover */
-  --color-sage: #8faf8b; /* позитив / низький ризик */
-  --color-amber: #d0a054; /* попередження / середній ризик */
-  --color-terra: #c96a5a; /* небезпека / високий ризик */
+  /* Поверхні */
+  --color-bg: #0b0c0f; /* глибокий холодний графіт */
+  --color-surface: #14161a; /* картки */
+  --color-raised: #1c1f24; /* підняті поверхні */
+  --color-hairline: #262a31; /* волосяні бордери */
 
-  /* Типографіка */
-  --font-display: "Fraunces", "Lora", Georgia, serif;
-  --font-sans: "Instrument Sans", "Golos Text", system-ui, sans-serif;
+  /* Текст */
+  --color-ink: #e8eaed;
+  --color-muted: #8b929d;
+
+  /* Акцент — бурштиновий CRT-сигнал: CTA, активний таб, фокус */
+  --color-accent: #e8a33d;
+  --color-accent-bright: #f2b75c;
+
+  /* Статуси */
+  --color-positive: #3fae9f; /* teal: успіх / низький ризик */
+  --color-amber: #e8a33d; /* попередження / середній ризик (= акцент) */
+  --color-danger: #e0604c; /* небезпека / високий ризик */
+
+  /*
+   * Кольори мереж — категоріальна палітра графіків і бейджів.
+   * Відтінки підігнано під валідатор dataviz (dark, surface #14161A):
+   * lightness band 0.48–0.67, chroma ≥ 0.10, CVD ΔE(adjacent) ≥ 13.9, 3:1.
+   * Порядок фіксований = порядок реєстру мереж (src/lib/chains.ts).
+   */
+  --color-chain-ethereum: #7d8dd5;
+  --color-chain-polygon: #8247e5;
+  --color-chain-bsc: #b88a00;
+  --color-chain-arbitrum: #3f99d2;
+  --color-chain-base: #2151f5;
+  --color-chain-solana: #be51e9;
+  --color-chain-bitcoin: #d37900;
+  --color-chain-tron: #eb0029;
+
+  /* Типографіка: display і ВСІ числа — mono; body — Plex */
+  --font-display: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
 
-  /* Ритм */
-  --radius-card: 14px;
+  /* Ритм: квадратніші кути приладу */
+  --radius-card: 10px;
+  --radius-capsule: 7px;
 }
 
 :root {
@@ -168,20 +198,20 @@ body {
   overflow: hidden;
 }
 
-/* Видимий фокус — латунне кільце (клавіатурна навігація) */
+/* Видимий фокус — бурштинове кільце (клавіатурна навігація) */
 :focus-visible {
-  outline: 2px solid var(--color-brass);
+  outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
 
-/* Поля вводу мають власний фокус-стан: латунний бордер + тонке кільце,
+/* Поля вводу мають власний фокус-стан: бурштиновий бордер + тонке кільце,
    без другого зовнішнього кільця (щоб не подвоювався індикатор). */
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
   outline: none;
-  border-color: var(--color-brass);
-  box-shadow: 0 0 0 1px var(--color-brass);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 1px var(--color-accent);
 }
 
 /* Тонкий скролбар у списках */
@@ -196,29 +226,50 @@ select:focus-visible {
   background: transparent;
 }
 
-/* --- Наскрізна структурна мова: eyebrow small-caps + hairline --- */
+/* --- Наскрізна структурна мова: mono-eyebrow small-caps + hairline --- */
 
-/* Дрібний small-caps підпис над/під блоками */
+/* Дрібний технічний підпис над/під блоками — mono з широким трекінгом */
 @utility eyebrow {
-  font-family: var(--font-sans);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--color-muted);
 }
 
-/* Старостильні мінускульні цифри для великих серифних сум (якщо доступно) */
-@utility figures-oldstyle {
-  font-variant-numeric: oldstyle-nums;
-  font-feature-settings: "onum" 1;
+/* Статус/лейбл у mono-капсулі з квадратнішими кутами (radius 6–8px) */
+@utility capsule {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  border-radius: var(--radius-capsule);
 }
 
-/* Один осмислений transition на екран: м'яка поява суми/блоку */
+/*
+ * Signature: координатна міліметрівка приладу — ЛИШЕ в шапці Home.
+ * Ледь помітна сітка 12px + риски-поділки по нижній кромці.
+ */
+@utility grid-texture {
+  background-image:
+    linear-gradient(
+      color-mix(in oklab, var(--color-hairline) 42%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      color-mix(in oklab, var(--color-hairline) 42%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 12px 12px;
+}
+
+/* Один осмислений transition на екран: різка поява блоку (термінал) */
 @keyframes rise-in {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(4px);
   }
   to {
     opacity: 1;
@@ -226,7 +277,7 @@ select:focus-visible {
   }
 }
 @utility animate-rise {
-  animation: rise-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: rise-in 0.15s ease-out both;
 }
 
 /* Скелетон завантаження — без градієнтів, лише пульс поверхні */

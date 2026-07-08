@@ -22,6 +22,7 @@ import { fetchPortfolio } from '@/src/lib/api';
 import type { TokenBalance } from '@/src/lib/api-types';
 import { CHAINS, CHAIN_IDS, type Chain } from '@/src/lib/chains';
 import { formatUsd, shortenAddress } from '@/src/lib/format';
+import { MAX_WALLETS } from '@/src/lib/vault-storage';
 import { findActiveWallet, useWalletStore } from '@/src/store/wallet';
 
 export default function Home() {
@@ -77,7 +78,7 @@ export default function Home() {
             {formatUsd(portfolio?.totalUsd ?? 0)}
           </p>
         )}
-        <div className="mt-4 h-px w-full bg-brass/60" aria-hidden />
+        <div className="mt-4 h-px w-full bg-accent/60" aria-hidden />
         <Eyebrow className="mt-2">{t('home.totalBalance')}</Eyebrow>
       </section>
 
@@ -92,7 +93,7 @@ export default function Home() {
         <button
           type="button"
           onClick={() => setScreen('send')}
-          className="flex items-center justify-center gap-2 rounded-xl bg-brass px-4 py-3 text-sm font-semibold text-bg transition-colors hover:bg-brass-bright"
+          className="flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-bg transition-colors hover:bg-accent-bright"
         >
           <IconSend size={17} />
           {t('home.send')}
@@ -100,7 +101,7 @@ export default function Home() {
         <button
           type="button"
           onClick={() => setScreen('receive')}
-          className="flex items-center justify-center gap-2 rounded-xl border border-hairline bg-raised px-4 py-3 text-sm font-semibold text-ink transition-colors hover:border-brass/50"
+          className="flex items-center justify-center gap-2 rounded-xl border border-hairline bg-raised px-4 py-3 text-sm font-semibold text-ink transition-colors hover:border-accent/50"
         >
           <IconReceive size={17} />
           {t('home.receive')}
@@ -271,26 +272,32 @@ function WalletSwitcher() {
                     )}
                   </span>
                   {active && (
-                    <span className="shrink-0 text-[11px] font-medium text-brass">
+                    <span className="shrink-0 text-[11px] font-medium text-accent">
                       {t('settings.walletActive')}
                     </span>
                   )}
                 </button>
               );
             })}
-            <button
-              type="button"
-              onClick={() => {
-                setOpen(false);
-                startAddWallet();
-              }}
-              className="flex w-full items-center gap-2 border-t border-hairline px-3.5 py-2.5 text-start text-sm font-medium text-brass transition-colors hover:bg-surface"
-            >
-              <span aria-hidden>+</span>
-              {t('settings.addWallet')}
-            </button>
+            {wallets.length < MAX_WALLETS ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  startAddWallet();
+                }}
+                className="flex w-full items-center gap-2 border-t border-hairline px-3.5 py-2.5 text-start text-sm font-medium text-accent transition-colors hover:bg-surface"
+              >
+                <span aria-hidden>+</span>
+                {t('settings.addWallet')}
+              </button>
+            ) : (
+              <p className="border-t border-hairline px-3.5 py-2.5 text-xs leading-relaxed text-muted">
+                {t('errors.walletLimit', { max: MAX_WALLETS })}
+              </p>
+            )}
             {error !== null && (
-              <p className="border-t border-hairline px-3.5 py-2 text-xs text-terra">{error}</p>
+              <p className="border-t border-hairline px-3.5 py-2 text-xs text-danger">{error}</p>
             )}
           </div>
         </>

@@ -260,6 +260,7 @@
     "switchWalletFailed": "切换钱包失败。",
     "renameWalletFailed": "重命名失败。",
     "removeWalletFailed": "删除钱包失败。",
+    "walletLimit": "最多只能有{{max}}个钱包。要添加新钱包，请先删除一个。",
     "walletNotFound": "未找到该钱包。",
     "walletNotCreated": "尚未创建任何钱包。",
     "walletNameEmpty": "名称不能为空。",

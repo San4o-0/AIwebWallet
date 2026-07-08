@@ -261,6 +261,7 @@
     "switchWalletFailed": "Cüzdan değiştirilemedi.",
     "renameWalletFailed": "Yeniden adlandırılamadı.",
     "removeWalletFailed": "Cüzdan silinemedi.",
+    "walletLimit": "En fazla {{max}} cüzdan olabilir. Yeni eklemek için birini kaldırın.",
     "walletNotFound": "Cüzdan bulunamadı.",
     "walletNotCreated": "Henüz cüzdan oluşturulmadı.",
     "walletNameEmpty": "Ad boş olamaz.",

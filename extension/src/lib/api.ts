@@ -6,7 +6,6 @@
  */
 import type {
   AnalyticsPeriod,
-  AnalyticsSummary,
   BalancesRequest,
   BroadcastRequest,
   BroadcastResponse,
@@ -15,7 +14,7 @@ import type {
   DecodedTx,
   ExplainRequest,
   ExplainResponse,
-  FeeAnalytics,
+  FeesResponse,
   HistoryResponse,
   Portfolio,
   PricesResponse,
@@ -23,6 +22,7 @@ import type {
   RiskResult,
   SimulateRequest,
   SimulationResult,
+  SummaryResponse,
   TxParams,
 } from './api-types';
 import type { TokenBalance } from './api-types';
@@ -30,6 +30,7 @@ import type { Chain } from './chains';
 import { sharedLocale } from './i18n-bridge';
 import type { PendingSignRequest } from './messaging';
 import {
+  mockAnalyticsSummary,
   mockChatStream,
   mockExplainForRequest,
   mockFeeAnalytics,
@@ -289,25 +290,28 @@ export function broadcastTx(req: BroadcastRequest): Promise<BroadcastResponse> {
   );
 }
 
-/** GET /v1/analytics/fees — витрати на комісії (F6.1). */
+/** GET /v1/analytics/fees — витрати на комісії за період (F6.1). */
 export function fetchFeeAnalytics(
   address: string,
   period: AnalyticsPeriod,
-): Promise<FeeAnalytics> {
+): Promise<FeesResponse> {
   const params = new URLSearchParams({ address, period });
   return withMockFallback(
-    () => request<FeeAnalytics>(`/analytics/fees?${params.toString()}`),
-    mockFeeAnalytics,
+    () => request<FeesResponse>(`/analytics/fees?${params.toString()}`),
+    () => mockFeeAnalytics(period),
   );
 }
 
-/** GET /v1/analytics/summary — дані для дашборда. */
+/** GET /v1/analytics/summary — зведення транзакцій для екрана «Аналітика». */
 export function fetchAnalyticsSummary(
   address: string,
   period: AnalyticsPeriod,
-): Promise<AnalyticsSummary> {
+): Promise<SummaryResponse> {
   const params = new URLSearchParams({ address, period });
-  return request<AnalyticsSummary>(`/analytics/summary?${params.toString()}`);
+  return withMockFallback(
+    () => request<SummaryResponse>(`/analytics/summary?${params.toString()}`),
+    () => mockAnalyticsSummary(period),
+  );
 }
 
 /** GET /v1/prices — ціни (кешуються на бекенді, F2.5). */

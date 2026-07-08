@@ -261,6 +261,7 @@
     "switchWalletFailed": "Não foi possível mudar de carteira.",
     "renameWalletFailed": "Não foi possível renomear.",
     "removeWalletFailed": "Não foi possível eliminar a carteira.",
+    "walletLimit": "Máximo de {{max}} carteiras. Remova uma para adicionar outra.",
     "walletNotFound": "Carteira não encontrada.",
     "walletNotCreated": "Nenhuma carteira foi criada.",
     "walletNameEmpty": "O nome não pode estar vazio.",

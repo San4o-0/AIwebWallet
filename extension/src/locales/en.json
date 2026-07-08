@@ -261,6 +261,7 @@
     "switchWalletFailed": "Failed to switch wallets.",
     "renameWalletFailed": "Failed to rename.",
     "removeWalletFailed": "Failed to delete the wallet.",
+    "walletLimit": "You can have at most {{max}} wallets. Remove one to add another.",
     "walletNotFound": "Wallet not found.",
     "walletNotCreated": "No wallet has been created.",
     "walletNameEmpty": "The name cannot be empty.",

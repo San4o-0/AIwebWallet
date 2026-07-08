@@ -265,6 +265,7 @@
     "switchWalletFailed": "تعذّر تبديل المحفظة.",
     "renameWalletFailed": "تعذّرت إعادة التسمية.",
     "removeWalletFailed": "تعذّر حذف المحفظة.",
+    "walletLimit": "الحد الأقصى {{max}} محافظ. احذف واحدة لإضافة أخرى.",
     "walletNotFound": "المحفظة غير موجودة.",
     "walletNotCreated": "لم تُنشأ أي محفظة.",
     "walletNameEmpty": "لا يمكن أن يكون الاسم فارغًا.",

@@ -8,19 +8,10 @@ importers:
 
   .:
     dependencies:
-      '@fontsource/fraunces':
-        specifier: ^5.2.9
-        version: 5.2.9
-      '@fontsource/golos-text':
-        specifier: ^5.2.8
-        version: 5.2.8
-      '@fontsource/instrument-sans':
+      '@fontsource/ibm-plex-sans':
         specifier: ^5.2.8
         version: 5.2.8
       '@fontsource/jetbrains-mono':
-        specifier: ^5.2.8
-        version: 5.2.8
-      '@fontsource/lora':
         specifier: ^5.2.8
         version: 5.2.8
       '@tanstack/react-query':
@@ -295,20 +286,11 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@fontsource/fraunces@5.2.9':
-    resolution: {integrity: sha512-XDzuddBtoC7BZgZdBn6b7hsFZY2+V1hgN7yca5fBTKuHjb/lOd45a0Ji8dTUgFhPoL7RdGupo+bC2BFSt6UH8Q==}
-
-  '@fontsource/golos-text@5.2.8':
-    resolution: {integrity: sha512-8aJxXaRDbZVh97RBmL1nzUUI5K5KuG0b7LC/p5Q204/OF6IdpSeXTD6nxHwqrfLQXLr6hEO5c+y2rHqkHnuu2g==}
-
-  '@fontsource/instrument-sans@5.2.8':
-    resolution: {integrity: sha512-TJRYVbjZPx4DGMMU5lb5eFKrP3iLe9h7rz8Pk+dP958IZKiyHjYGXXwQZapVbBXcQN+YOiviVhAWxrjv8g6Z6g==}
+  '@fontsource/ibm-plex-sans@5.2.8':
+    resolution: {integrity: sha512-eztSXjDhPhcpxNIiGTgMebdLP9qS4rWkysuE1V7c+DjOR0qiezaiDaTwQE7bTnG5HxAY/8M43XKDvs3cYq6ZYQ==}
 
   '@fontsource/jetbrains-mono@5.2.8':
     resolution: {integrity: sha512-6w8/SG4kqvIMu7xd7wt6x3idn1Qux3p9N62s6G3rfldOUYHpWcc2FKrqf+Vo44jRvqWj2oAtTHrZXEP23oSKwQ==}
-
-  '@fontsource/lora@5.2.8':
-    resolution: {integrity: sha512-AQlfsHw4TP1x/eb2IZ6VjQ70ctKa39m9JN9A4zlvDOeKYLrCs+GaYIEQ86Y6YfSPGHn01bErXkRcyktOW0LOPQ==}
 
   '@isaacs/fs-minipass@4.0.1':
     resolution: {integrity: sha512-wgm9Ehl2jpeqP3zw/7mo3kRHFp5MEDhqAdwy1fTGkHAwnkGOVsgpvQhL8B5n1qlb01jV3n/bI0ZfZp5lWA1k4w==}
@@ -2253,15 +2235,9 @@ snapshots:
   '@esbuild/win32-x64@0.27.7':
     optional: true
 
-  '@fontsource/fraunces@5.2.9': {}
-
-  '@fontsource/golos-text@5.2.8': {}
-
-  '@fontsource/instrument-sans@5.2.8': {}
+  '@fontsource/ibm-plex-sans@5.2.8': {}
 
   '@fontsource/jetbrains-mono@5.2.8': {}
-
-  '@fontsource/lora@5.2.8': {}
 
   '@isaacs/fs-minipass@4.0.1':
     dependencies:

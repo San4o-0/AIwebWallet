@@ -260,6 +260,7 @@
     "switchWalletFailed": "Không chuyển được ví.",
     "renameWalletFailed": "Không đổi tên được.",
     "removeWalletFailed": "Không xóa được ví.",
+    "walletLimit": "Tối đa {{max}} ví. Hãy xóa một ví để thêm ví mới.",
     "walletNotFound": "Không tìm thấy ví.",
     "walletNotCreated": "Chưa có ví nào được tạo.",
     "walletNameEmpty": "Tên không được để trống.",

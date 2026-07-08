@@ -256,7 +256,7 @@ function ChainDetail({
 
         {/* Адреса як «візитівка»: QR на слоновій кістці в hairline-рамці */}
         <Card className="mt-4 flex flex-col items-center gap-4 p-5">
-          <div className="rounded-lg border border-brass/40 bg-ink p-3">
+          <div className="rounded-lg border border-accent/40 bg-ink p-3">
             <canvas ref={canvasRef} className="block size-[168px]" aria-label={t('receive.qrAria')} />
           </div>
 
@@ -273,20 +273,20 @@ function ChainDetail({
             onClick={() => void copy()}
             className={`flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors ${
               copied
-                ? 'bg-sage/15 text-sage'
-                : 'bg-brass text-bg hover:bg-brass-bright'
+                ? 'bg-positive/15 text-positive'
+                : 'bg-accent text-bg hover:bg-accent-bright'
             }`}
           >
             {copied ? <IconCheck size={16} /> : <IconCopy size={16} />}
             {copied ? t('receive.copied') : t('receive.copyAddress')}
           </button>
           {copyError && (
-            <p className="text-xs text-terra">{t('receive.clipboardError')}</p>
+            <p className="text-xs text-danger">{t('receive.clipboardError')}</p>
           )}
         </Card>
 
         {/* Попередження про мережу */}
-        <div className="mt-3 rounded-[14px] border border-amber/40 bg-amber/10 p-3.5">
+        <div className="mt-3 rounded-[10px] border border-amber/40 bg-amber/10 p-3.5">
           <p className="text-xs leading-relaxed text-ink">
             {t('receive.networkWarning', { chain: CHAINS[chain].label })}
           </p>
@@ -323,7 +323,7 @@ function ChainDetail({
                   key={provider.name}
                   type="button"
                   onClick={() => openProvider(provider)}
-                  className="flex items-center justify-between rounded-xl border border-hairline bg-raised px-3.5 py-2.5 text-sm font-medium text-ink transition-colors hover:border-brass/50"
+                  className="flex items-center justify-between rounded-xl border border-hairline bg-raised px-3.5 py-2.5 text-sm font-medium text-ink transition-colors hover:border-accent/50"
                 >
                   {provider.name}
                   <IconExternal size={15} className="text-muted" />

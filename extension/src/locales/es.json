@@ -261,6 +261,7 @@
     "switchWalletFailed": "No se pudo cambiar de cartera.",
     "renameWalletFailed": "No se pudo renombrar.",
     "removeWalletFailed": "No se pudo eliminar la cartera.",
+    "walletLimit": "Máximo {{max}} carteras. Elimina una para añadir otra.",
     "walletNotFound": "Cartera no encontrada.",
     "walletNotCreated": "No se ha creado ninguna cartera.",
     "walletNameEmpty": "El nombre no puede estar vacío.",

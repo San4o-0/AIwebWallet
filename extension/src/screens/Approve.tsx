@@ -26,8 +26,8 @@ const RISK_META: Record<
 > = {
   low: {
     labelKey: 'risk.low',
-    badge: 'border-sage/40 bg-sage/10 text-sage',
-    dot: 'bg-sage',
+    badge: 'border-positive/40 bg-positive/10 text-positive',
+    dot: 'bg-positive',
     card: 'border-hairline',
   },
   medium: {
@@ -38,9 +38,9 @@ const RISK_META: Record<
   },
   high: {
     labelKey: 'risk.high',
-    badge: 'border-terra/50 bg-terra/10 text-terra',
-    dot: 'bg-terra',
-    card: 'border-terra/60',
+    badge: 'border-danger/50 bg-danger/10 text-danger',
+    dot: 'bg-danger',
+    card: 'border-danger/60',
   },
 };
 
@@ -132,7 +132,7 @@ export default function Approve() {
        * Високий ризик — теракотова рамка всієї картки.
        */}
       <div
-        className={`animate-rise rounded-[14px] border bg-surface ${meta?.card ?? 'border-hairline'}`}
+        className={`animate-rise rounded-[10px] border bg-surface ${meta?.card ?? 'border-hairline'}`}
       >
         <div className="flex items-center justify-between gap-2 border-b border-hairline px-4 py-3">
           <Eyebrow>{t('approve.whatHappens')}</Eyebrow>
@@ -186,9 +186,9 @@ export default function Approve() {
       <div className="sticky bottom-0 -mx-5 mt-auto flex flex-col gap-3 border-t border-hairline bg-bg px-5 pb-4 pt-3">
         {/* F5.3: для високого ризику — додаткове підтвердження */}
         {isHigh && (
-          <div className="rounded-[14px] border border-terra/60 bg-terra/10 p-3.5">
+          <div className="rounded-[10px] border border-danger/60 bg-danger/10 p-3.5">
             <p className="mb-2.5 flex items-center gap-2 text-xs font-medium text-ink">
-              <IconShield size={15} className="shrink-0 text-terra" />
+              <IconShield size={15} className="shrink-0 text-danger" />
               {t('approve.confirmPrompt', { phrase: riskConfirmPhrase })}
             </p>
             <Field

@@ -97,7 +97,7 @@ export default function Activity() {
                     {tx.amountUsd !== null && (
                       <span
                         className={`shrink-0 text-sm font-semibold tabular-nums ${
-                          tx.amountUsd >= 0 ? 'text-sage' : 'text-ink'
+                          tx.amountUsd >= 0 ? 'text-positive' : 'text-ink'
                         }`}
                       >
                         {tx.amountUsd >= 0 ? '+' : ''}
@@ -113,7 +113,7 @@ export default function Activity() {
                       {tx.hash}
                     </span>
                     {tx.status === 'failed' && (
-                      <span className="ms-1.5 font-medium text-terra">
+                      <span className="ms-1.5 font-medium text-danger">
                         {t('activity.statusFailed')}
                       </span>
                     )}

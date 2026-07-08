@@ -17,11 +17,8 @@
     "postinstall": "wxt prepare"
   },
   "dependencies": {
-    "@fontsource/fraunces": "^5.2.9",
-    "@fontsource/golos-text": "^5.2.8",
-    "@fontsource/instrument-sans": "^5.2.8",
+    "@fontsource/ibm-plex-sans": "^5.2.8",
     "@fontsource/jetbrains-mono": "^5.2.8",
-    "@fontsource/lora": "^5.2.8",
     "@tanstack/react-query": "^5.90.0",
     "i18next": "^26.3.4",
     "qrcode": "^1.5.4",

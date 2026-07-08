@@ -90,7 +90,7 @@ export default function Chat() {
       <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-5">
         {messages.length === 0 && (
           <div className="my-auto flex flex-col items-center gap-3">
-            <IconSparkle size={22} className="text-brass" />
+            <IconSparkle size={22} className="text-accent" />
             <Eyebrow>{t('chat.tryAsking')}</Eyebrow>
             <div className="flex w-full flex-col gap-2">
               {SUGGESTION_KEYS.map((key) => (
@@ -98,7 +98,7 @@ export default function Chat() {
                   key={key}
                   type="button"
                   onClick={() => void send(t(key))}
-                  className="rounded-xl border border-hairline bg-surface px-3.5 py-2.5 text-start text-sm text-ink transition-colors hover:border-brass/50"
+                  className="rounded-xl border border-hairline bg-surface px-3.5 py-2.5 text-start text-sm text-ink transition-colors hover:border-accent/50"
                 >
                   {t(key)}
                 </button>
@@ -112,7 +112,7 @@ export default function Chat() {
             key={index}
             className={`max-w-[85%] whitespace-pre-wrap [overflow-wrap:anywhere] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
               message.role === 'user'
-                ? 'self-end rounded-ee-md border border-brass/25 bg-brass/10 text-ink'
+                ? 'self-end rounded-ee-md border border-accent/25 bg-accent/10 text-ink'
                 : 'self-start rounded-es-md border border-hairline bg-surface text-ink'
             }`}
           >
@@ -137,13 +137,13 @@ export default function Chat() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder={t('chat.placeholder')}
-          className="flex-1 rounded-xl border border-hairline bg-surface px-3.5 py-2.5 text-sm text-ink outline-none transition-colors placeholder:text-muted/50 focus:border-brass"
+          className="flex-1 rounded-xl border border-hairline bg-surface px-3.5 py-2.5 text-sm text-ink outline-none transition-colors placeholder:text-muted/50 focus:border-accent"
         />
         <button
           type="submit"
           disabled={streaming || input.trim().length === 0}
           aria-label={t('chat.sendAria')}
-          className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brass text-bg transition-colors hover:bg-brass-bright disabled:cursor-not-allowed disabled:bg-raised disabled:text-muted/60"
+          className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent text-bg transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:bg-raised disabled:text-muted/60"
         >
           <IconSend size={17} />
         </button>

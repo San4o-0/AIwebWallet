@@ -261,6 +261,7 @@
     "switchWalletFailed": "Wallet-Wechsel fehlgeschlagen.",
     "renameWalletFailed": "Umbenennen fehlgeschlagen.",
     "removeWalletFailed": "Wallet konnte nicht gelöscht werden.",
+    "walletLimit": "Maximal {{max}} Wallets. Entfernen Sie eine, um eine neue hinzuzufügen.",
     "walletNotFound": "Wallet nicht gefunden.",
     "walletNotCreated": "Es wurde noch keine Wallet erstellt.",
     "walletNameEmpty": "Der Name darf nicht leer sein.",
