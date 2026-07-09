@@ -227,7 +227,10 @@
     "confirmPrompt": "Untuk melanjutkan, ketik “{{phrase}}”",
     "confirmAria": "Ketik “{{phrase}}”",
     "reject": "Tolak",
-    "sign": "Tanda tangani"
+    "sign": "Tanda tangani",
+    "noRequestTitle": "Tidak ada permintaan tanda tangan",
+    "noRequestHint": "Layar ini terbuka saat sebuah dApp meminta Anda menandatangani. Saat ini tidak ada yang perlu ditinjau.",
+    "close": "Tutup"
   },
   "risk": {
     "low": "Risiko rendah",

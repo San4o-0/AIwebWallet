@@ -226,7 +226,10 @@
     "confirmPrompt": "続行するには「{{phrase}}」と入力してください",
     "confirmAria": "「{{phrase}}」と入力",
     "reject": "拒否",
-    "sign": "署名"
+    "sign": "署名",
+    "noRequestTitle": "署名リクエストはありません",
+    "noRequestHint": "この画面は、dApp が署名を求めたときに開きます。現在、確認する項目はありません。",
+    "close": "閉じる"
   },
   "risk": {
     "low": "低リスク",

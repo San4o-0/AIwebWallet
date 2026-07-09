@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { IconShield } from '@/src/components/icons';
-import { Button, Eyebrow, Field, ScreenTitle, Spinner } from '@/src/components/ui';
+import { Button, EmptyState, Eyebrow, Field, ScreenTitle, Spinner } from '@/src/components/ui';
 import { assessPendingRequest, explainPendingRequest } from '@/src/lib/api';
 import type { RiskLevel } from '@/src/lib/api-types';
 import {
@@ -16,7 +16,6 @@ import {
   type Json,
   type PendingSignRequest,
 } from '@/src/lib/messaging';
-import { mockPendingRequest } from '@/src/lib/mock-data';
 import { sendToBackground } from '@/src/lib/runtime';
 
 /** Бейдж ризику: колірна точка + підпис (без емодзі-світлофора). */
@@ -64,10 +63,10 @@ export default function Approve() {
     void (async () => {
       try {
         const pending = await sendToBackground({ type: MessageType.GetPendingRequests });
-        // Якщо черга порожня (відкрито вручну) — показуємо демо-запит.
-        setRequest(pending[0] ?? mockPendingRequest());
+        // Черга порожня — чесний порожній стан, без вигаданого запиту.
+        setRequest(pending[0] ?? null);
       } catch {
-        setRequest(mockPendingRequest());
+        setRequest(null);
       } finally {
         setLoaded(true);
       }
@@ -100,10 +99,26 @@ export default function Approve() {
     }
   };
 
-  if (!loaded || request === null) {
+  if (!loaded) {
     return (
       <div className="flex h-full min-h-[600px] flex-1 items-center justify-center">
         <Spinner />
+      </div>
+    );
+  }
+
+  // Немає запиту на підпис (вікно відкрито без активного запиту від dApp).
+  if (request === null) {
+    return (
+      <div className="flex h-full min-h-[600px] flex-1 flex-col items-center justify-center gap-5 p-6">
+        <EmptyState
+          icon={<IconShield size={22} />}
+          title={t('approve.noRequestTitle')}
+          hint={t('approve.noRequestHint')}
+        />
+        <Button variant="secondary" onClick={() => window.close()}>
+          {t('approve.close')}
+        </Button>
       </div>
     );
   }

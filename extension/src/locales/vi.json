@@ -226,7 +226,10 @@
     "confirmPrompt": "Để tiếp tục, hãy gõ “{{phrase}}”",
     "confirmAria": "Gõ “{{phrase}}”",
     "reject": "Từ chối",
-    "sign": "Ký"
+    "sign": "Ký",
+    "noRequestTitle": "Không có yêu cầu chữ ký",
+    "noRequestHint": "Màn hình này mở ra khi một dApp yêu cầu bạn ký. Hiện không có gì để xem xét.",
+    "close": "Đóng"
   },
   "risk": {
     "low": "Rủi ro thấp",

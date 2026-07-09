@@ -229,7 +229,10 @@
     "confirmPrompt": "Aby kontynuować, wpisz „{{phrase}}”",
     "confirmAria": "Wpisz „{{phrase}}”",
     "reject": "Odrzuć",
-    "sign": "Podpisz"
+    "sign": "Podpisz",
+    "noRequestTitle": "Brak żądania podpisu",
+    "noRequestHint": "Ten ekran otwiera się, gdy dApp prosi o podpis. W tej chwili nie ma nic do sprawdzenia.",
+    "close": "Zamknij"
   },
   "risk": {
     "low": "Niskie ryzyko",

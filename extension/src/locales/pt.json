@@ -227,7 +227,10 @@
     "confirmPrompt": "Para continuar, escreva “{{phrase}}”",
     "confirmAria": "Escreva “{{phrase}}”",
     "reject": "Rejeitar",
-    "sign": "Assinar"
+    "sign": "Assinar",
+    "noRequestTitle": "Nenhum pedido de assinatura",
+    "noRequestHint": "Esta tela abre quando uma dApp pede que você assine. No momento não há nada para revisar.",
+    "close": "Fechar"
   },
   "risk": {
     "low": "Risco baixo",

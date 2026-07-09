@@ -227,7 +227,10 @@
     "confirmPrompt": "Geben Sie zum Fortfahren „{{phrase}}“ ein",
     "confirmAria": "Geben Sie „{{phrase}}“ ein",
     "reject": "Ablehnen",
-    "sign": "Signieren"
+    "sign": "Signieren",
+    "noRequestTitle": "Keine Signaturanfrage",
+    "noRequestHint": "Dieser Bildschirm öffnet sich, wenn eine dApp Sie zum Signieren auffordert. Derzeit gibt es nichts zu prüfen.",
+    "close": "Schließen"
   },
   "risk": {
     "low": "Geringes Risiko",

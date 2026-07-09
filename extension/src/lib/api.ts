@@ -1,8 +1,11 @@
 /**
  * Типізований клієнт API бекенду (ТЗ §5): http://localhost:8080/v1.
  *
- * Поки бекенд (crates/api-server) у розробці, кожен метод має fallback на
- * мок-дані — гаманець залишається робочим без бекенду (fail-safe, ТЗ §1.2).
+ * Фінансові дані (баланси, історія, аналітика, чат) НЕ мають мок-fallback:
+ * якщо бекенд недоступний — екран показує стан помилки/порожнечі, а не
+ * вигадані цифри. Єдиний локальний fallback лишається для аналізу ризику
+ * підпису dApp (Approve) — це функція безпеки, а не фінансові дані: без
+ * оцінки ризику кнопку підпису не розблокувати.
  */
 import type {
   AnalyticsPeriod,
@@ -29,15 +32,7 @@ import type { TokenBalance } from './api-types';
 import type { Chain } from './chains';
 import { sharedLocale } from './i18n-bridge';
 import type { PendingSignRequest } from './messaging';
-import {
-  mockAnalyticsSummary,
-  mockChatStream,
-  mockExplainForRequest,
-  mockFeeAnalytics,
-  mockHistory,
-  mockPortfolio,
-  mockRiskForRequest,
-} from './mock-data';
+import { mockExplainForRequest, mockRiskForRequest } from './mock-data';
 import { extractDelta, parseSseStream } from './sse';
 
 export const API_BASE_URL = 'http://localhost:8080/v1';
@@ -78,13 +73,17 @@ function post<T>(path: string, body: unknown): Promise<T> {
   return request<T>(path, { method: 'POST', body: JSON.stringify(body) });
 }
 
-/** Виконує запит; якщо бекенд недоступний — повертає мок (з попередженням у консолі). */
-async function withMockFallback<T>(real: () => Promise<T>, mock: () => T): Promise<T> {
+/**
+ * Локальний fallback ТІЛЬКИ для оцінки ризику/пояснення підпису dApp (Approve).
+ * Фінансові ендпоінти його не використовують — вони кидають помилку, і екран
+ * показує стан помилки замість вигаданих даних.
+ */
+async function withRiskFallback<T>(real: () => Promise<T>, fallback: () => T): Promise<T> {
   try {
     return await real();
   } catch (error) {
-    console.warn('[aiwallet] Backend unavailable, using mock data:', error);
-    return mock();
+    console.warn('[aiwallet] Risk endpoint unavailable, using local heuristic:', error);
+    return fallback();
   }
 }
 
@@ -177,7 +176,7 @@ function toTokenBalance(chain: Chain, token: WireTokenBalance, isNative: boolean
 /**
  * Приводить відповідь /v1/balances до UI-форми Portfolio. Приймає і цільову
  * форму (якщо бекенд колись перейде на camelCase), і поточний wire-формат;
- * невідома форма → помилка → withMockFallback підставить мок (fail-safe).
+ * невідома форма → помилка → екран показує стан помилки (без вигаданих даних).
  */
 function normalizePortfolio(raw: unknown): Portfolio {
   const value = raw as Partial<Portfolio> & Partial<WirePortfolio>;
@@ -219,15 +218,12 @@ function normalizeHistory(raw: unknown): HistoryResponse {
 // ---------------------------------------------------------------------------
 
 /** POST /v1/balances — агрегований портфель по всіх мережах (F2.1). */
-export function fetchPortfolio(req: BalancesRequest): Promise<Portfolio> {
-  return withMockFallback(
-    async () => normalizePortfolio(await post<unknown>('/balances', req)),
-    mockPortfolio,
-  );
+export async function fetchPortfolio(req: BalancesRequest): Promise<Portfolio> {
+  return normalizePortfolio(await post<unknown>('/balances', req));
 }
 
 /** GET /v1/history — історія транзакцій з людськими описами (F3.6). */
-export function fetchHistory(
+export async function fetchHistory(
   address: string,
   chain?: Chain,
   cursor?: string,
@@ -235,10 +231,7 @@ export function fetchHistory(
   const params = new URLSearchParams({ address });
   if (chain) params.set('chain', chain);
   if (cursor) params.set('cursor', cursor);
-  return withMockFallback(
-    async () => normalizeHistory(await request<unknown>(`/history?${params.toString()}`)),
-    mockHistory,
-  );
+  return normalizeHistory(await request<unknown>(`/history?${params.toString()}`));
 }
 
 /** POST /v1/tx/decode — структурований розбір транзакції (F4.2). */
@@ -296,10 +289,7 @@ export function fetchFeeAnalytics(
   period: AnalyticsPeriod,
 ): Promise<FeesResponse> {
   const params = new URLSearchParams({ address, period });
-  return withMockFallback(
-    () => request<FeesResponse>(`/analytics/fees?${params.toString()}`),
-    () => mockFeeAnalytics(period),
-  );
+  return request<FeesResponse>(`/analytics/fees?${params.toString()}`);
 }
 
 /** GET /v1/analytics/summary — зведення транзакцій для екрана «Аналітика». */
@@ -308,10 +298,7 @@ export function fetchAnalyticsSummary(
   period: AnalyticsPeriod,
 ): Promise<SummaryResponse> {
   const params = new URLSearchParams({ address, period });
-  return withMockFallback(
-    () => request<SummaryResponse>(`/analytics/summary?${params.toString()}`),
-    () => mockAnalyticsSummary(period),
-  );
+  return request<SummaryResponse>(`/analytics/summary?${params.toString()}`);
 }
 
 /** GET /v1/prices — ціни (кешуються на бекенді, F2.5). */
@@ -324,35 +311,28 @@ export function fetchPrices(ids: readonly string[]): Promise<PricesResponse> {
 // ---------------------------------------------------------------------------
 
 /**
- * Стрімить відповідь AI по словах/токенах. fetch + ReadableStream + SSE-парсер;
- * якщо бекенд недоступний — локальний мок-стрім (fail-safe).
+ * Стрімить відповідь AI по словах/токенах. fetch + ReadableStream + SSE-парсер.
+ * Якщо бекенд недоступний — кидає помилку (екран Chat показує стан
+ * «зʼєднання перервано»), жодних вигаданих відповідей.
  */
 export async function* streamChat(
   req: ChatRequest,
   signal?: AbortSignal,
 ): AsyncGenerator<string, void, void> {
-  let body: ReadableStream<Uint8Array>;
   // Активна локаль UI → поле lang (бекенд поки ігнорує його — TODO на боці
   // crates/api-server: враховувати lang у промпті чату).
   const payload: ChatRequest = { lang: sharedLocale(), ...req };
-  try {
-    const response = await fetch(`${API_BASE_URL}/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
-      body: JSON.stringify(payload),
-      signal: signal ?? null,
-    });
-    if (!response.ok || response.body === null) {
-      throw new ApiError(response.status, 'Chat endpoint unavailable');
-    }
-    body = response.body;
-  } catch (error) {
-    console.warn('[aiwallet] /v1/chat unavailable, using mock stream:', error);
-    yield* mockChatStream(req);
-    return;
+  const response = await fetch(`${API_BASE_URL}/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
+    body: JSON.stringify(payload),
+    signal: signal ?? null,
+  });
+  if (!response.ok || response.body === null) {
+    throw new ApiError(response.status, 'Chat endpoint unavailable');
   }
 
-  for await (const data of parseSseStream(body)) {
+  for await (const data of parseSseStream(response.body)) {
     yield extractDelta(data);
   }
 }
@@ -389,7 +369,7 @@ export function assessPendingRequest(request: PendingSignRequest): Promise<RiskR
   if (riskReq === null) {
     return Promise.resolve(mockRiskForRequest(request));
   }
-  return withMockFallback(
+  return withRiskFallback(
     () => fetchTxRisk(riskReq),
     () => mockRiskForRequest(request),
   );
@@ -403,7 +383,7 @@ export function explainPendingRequest(
   if (riskReq === null) {
     return Promise.resolve(mockExplainForRequest(request));
   }
-  return withMockFallback(
+  return withRiskFallback(
     async () => {
       const { explanation } = await explainTx({
         decoded: null,

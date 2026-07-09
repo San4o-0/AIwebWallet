@@ -227,7 +227,10 @@
     "confirmPrompt": "Para continuar, escriba «{{phrase}}»",
     "confirmAria": "Escriba «{{phrase}}»",
     "reject": "Rechazar",
-    "sign": "Firmar"
+    "sign": "Firmar",
+    "noRequestTitle": "Sin solicitud de firma",
+    "noRequestHint": "Esta pantalla se abre cuando una dApp te pide firmar. En este momento no hay nada que revisar.",
+    "close": "Cerrar"
   },
   "risk": {
     "low": "Riesgo bajo",

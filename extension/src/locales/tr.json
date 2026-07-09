@@ -227,7 +227,10 @@
     "confirmPrompt": "Devam etmek için “{{phrase}}” yazın",
     "confirmAria": "“{{phrase}}” yazın",
     "reject": "Reddet",
-    "sign": "İmzala"
+    "sign": "İmzala",
+    "noRequestTitle": "İmza isteği yok",
+    "noRequestHint": "Bu ekran, bir dApp imzalamanızı istediğinde açılır. Şu anda incelenecek bir şey yok.",
+    "close": "Kapat"
   },
   "risk": {
     "low": "Düşük risk",

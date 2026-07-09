@@ -226,7 +226,10 @@
     "confirmPrompt": "如需继续，请输入“{{phrase}}”",
     "confirmAria": "请输入“{{phrase}}”",
     "reject": "拒绝",
-    "sign": "签名"
+    "sign": "签名",
+    "noRequestTitle": "没有签名请求",
+    "noRequestHint": "当 dApp 请求您签名时会打开此界面。目前没有需要审查的内容。",
+    "close": "关闭"
   },
   "risk": {
     "low": "低风险",

@@ -227,7 +227,10 @@
     "confirmPrompt": "Pour continuer, saisissez « {{phrase}} »",
     "confirmAria": "Saisissez « {{phrase}} »",
     "reject": "Refuser",
-    "sign": "Signer"
+    "sign": "Signer",
+    "noRequestTitle": "Aucune demande de signature",
+    "noRequestHint": "Cet écran s'ouvre lorsqu'une dApp vous demande de signer. Il n'y a rien à examiner pour le moment.",
+    "close": "Fermer"
   },
   "risk": {
     "low": "Risque faible",

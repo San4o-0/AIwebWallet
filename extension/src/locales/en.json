@@ -227,7 +227,10 @@
     "confirmPrompt": "To continue, type “{{phrase}}”",
     "confirmAria": "Type “{{phrase}}”",
     "reject": "Reject",
-    "sign": "Sign"
+    "sign": "Sign",
+    "noRequestTitle": "No signing request",
+    "noRequestHint": "This screen opens when a dApp asks you to sign. There is nothing to review right now.",
+    "close": "Close"
   },
   "risk": {
     "low": "Low risk",

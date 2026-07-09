@@ -292,5 +292,8 @@
   "mock.explain.transferLow": "Demo AI explanation for a simple transfer.",
   "mock.explain.chainId": "Demo AI explanation for a chain-id request.",
   "mock.chatAnswer": "Long demo chat answer shown when the backend is offline. Keep the trailing '_( … )_' marker sentence.",
-  "errors.walletLimit": "Shown instead of the 'Add wallet' button (Home switcher, Settings, restore flow) and as a background error when the vault limit is reached. {{max}} is a number (currently 5), keep the placeholder verbatim."
+  "errors.walletLimit": "Shown instead of the 'Add wallet' button (Home switcher, Settings, restore flow) and as a background error when the vault limit is reached. {{max}} is a number (currently 5), keep the placeholder verbatim.",
+  "approve.noRequestTitle": "Empty-state title on the sign screen when opened with no pending dApp request.",
+  "approve.noRequestHint": "Empty-state hint explaining when this screen normally appears. Keep to 1-2 short sentences.",
+  "approve.close": "Button that closes the sign popup window."
 }

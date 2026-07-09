@@ -227,7 +227,10 @@
     "confirmPrompt": "Per continuare, digita “{{phrase}}”",
     "confirmAria": "Digita “{{phrase}}”",
     "reject": "Rifiuta",
-    "sign": "Firma"
+    "sign": "Firma",
+    "noRequestTitle": "Nessuna richiesta di firma",
+    "noRequestHint": "Questa schermata si apre quando una dApp ti chiede di firmare. Al momento non c'è nulla da esaminare.",
+    "close": "Chiudi"
   },
   "risk": {
     "low": "Rischio basso",
