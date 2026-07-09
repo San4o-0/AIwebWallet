@@ -155,6 +155,24 @@
     "statusFailed": "失败",
     "statusPending": "处理中"
   },
+  "txDetail": {
+    "title": "交易",
+    "description": "说明",
+    "network": "网络",
+    "direction": "方向",
+    "dirIn": "转入",
+    "dirOut": "转出",
+    "dirSelf": "自转",
+    "dateTime": "日期和时间",
+    "hash": "交易哈希",
+    "copy": "复制",
+    "copied": "已复制",
+    "viewExplorer": "在区块浏览器中查看",
+    "externalService": "在新的浏览器标签页中打开该网络的区块浏览器。",
+    "statusConfirmed": "已确认",
+    "statusPending": "待确认",
+    "statusFailed": "失败"
+  },
   "analytics": {
     "periodAria": "时间范围",
     "period7d": "7天",

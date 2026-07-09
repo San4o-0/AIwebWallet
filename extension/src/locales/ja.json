@@ -155,6 +155,24 @@
     "statusFailed": "失敗",
     "statusPending": "処理中"
   },
+  "txDetail": {
+    "title": "取引",
+    "description": "説明",
+    "network": "ネットワーク",
+    "direction": "方向",
+    "dirIn": "受取",
+    "dirOut": "送付",
+    "dirSelf": "自己宛",
+    "dateTime": "日時",
+    "hash": "取引ハッシュ",
+    "copy": "コピー",
+    "copied": "コピーしました",
+    "viewExplorer": "エクスプローラーで表示",
+    "externalService": "ネットワークのブロックエクスプローラーを新しいブラウザタブで開きます。",
+    "statusConfirmed": "承認済み",
+    "statusPending": "保留中",
+    "statusFailed": "失敗"
+  },
   "analytics": {
     "periodAria": "期間",
     "period7d": "7日",

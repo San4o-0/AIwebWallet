@@ -156,6 +156,24 @@
     "statusFailed": "échouée",
     "statusPending": "en attente"
   },
+  "txDetail": {
+    "title": "Transaction",
+    "description": "Description",
+    "network": "Réseau",
+    "direction": "Sens",
+    "dirIn": "Entrante",
+    "dirOut": "Sortante",
+    "dirSelf": "Interne",
+    "dateTime": "Date et heure",
+    "hash": "Hash de la transaction",
+    "copy": "Copier",
+    "copied": "Copié",
+    "viewExplorer": "Voir dans l’explorateur",
+    "externalService": "Ouvre l’explorateur de blocs du réseau dans un nouvel onglet du navigateur.",
+    "statusConfirmed": "Confirmée",
+    "statusPending": "En attente",
+    "statusFailed": "Échouée"
+  },
   "analytics": {
     "periodAria": "Période",
     "period7d": "7J",

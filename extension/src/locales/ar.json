@@ -160,6 +160,24 @@
     "statusFailed": "فاشلة",
     "statusPending": "قيد الانتظار"
   },
+  "txDetail": {
+    "title": "المعاملة",
+    "description": "الوصف",
+    "network": "الشبكة",
+    "direction": "الاتجاه",
+    "dirIn": "واردة",
+    "dirOut": "صادرة",
+    "dirSelf": "ذاتية",
+    "dateTime": "التاريخ والوقت",
+    "hash": "هاش المعاملة",
+    "copy": "نسخ",
+    "copied": "تم النسخ",
+    "viewExplorer": "العرض في المستكشف",
+    "externalService": "يفتح مستكشف الكتل الخاص بالشبكة في علامة تبويب جديدة بالمتصفح.",
+    "statusConfirmed": "مؤكدة",
+    "statusPending": "قيد الانتظار",
+    "statusFailed": "فاشلة"
+  },
   "analytics": {
     "periodAria": "الفترة",
     "period7d": "7 أيام",

@@ -156,6 +156,24 @@
     "statusFailed": "failed",
     "statusPending": "pending"
   },
+  "txDetail": {
+    "title": "Transaction",
+    "description": "Description",
+    "network": "Network",
+    "direction": "Direction",
+    "dirIn": "Incoming",
+    "dirOut": "Outgoing",
+    "dirSelf": "Self",
+    "dateTime": "Date and time",
+    "hash": "Transaction hash",
+    "copy": "Copy",
+    "copied": "Copied",
+    "viewExplorer": "View in explorer",
+    "externalService": "Opens the network's block explorer in a new browser tab.",
+    "statusConfirmed": "Confirmed",
+    "statusPending": "Pending",
+    "statusFailed": "Failed"
+  },
   "analytics": {
     "periodAria": "Time period",
     "period7d": "7D",

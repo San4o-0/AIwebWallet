@@ -155,6 +155,24 @@
     "statusFailed": "thất bại",
     "statusPending": "đang chờ"
   },
+  "txDetail": {
+    "title": "Giao dịch",
+    "description": "Mô tả",
+    "network": "Mạng",
+    "direction": "Hướng",
+    "dirIn": "Nhận vào",
+    "dirOut": "Gửi đi",
+    "dirSelf": "Nội bộ",
+    "dateTime": "Ngày và giờ",
+    "hash": "Hash giao dịch",
+    "copy": "Sao chép",
+    "copied": "Đã sao chép",
+    "viewExplorer": "Xem trong trình khám phá",
+    "externalService": "Mở trình khám phá khối của mạng trong một tab trình duyệt mới.",
+    "statusConfirmed": "Đã xác nhận",
+    "statusPending": "Đang chờ",
+    "statusFailed": "Thất bại"
+  },
   "analytics": {
     "periodAria": "Khoảng thời gian",
     "period7d": "7 ngày",

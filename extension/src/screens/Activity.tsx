@@ -4,42 +4,18 @@
  * Аналітика — графіки комісій/зведення (src/screens/Analytics.tsx).
  */
 import { useQuery } from '@tanstack/react-query';
-import { useState, type ComponentType } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import {
-  IconActivity,
-  IconCheck,
-  IconGrid,
-  IconSend,
-  IconSparkle,
-  IconSwap,
-  type IconProps,
-} from '@/src/components/icons';
+import { IconActivity, IconGrid } from '@/src/components/icons';
 import { Card, EmptyState, ErrorNote, ScreenHeader } from '@/src/components/ui';
 import Analytics from '@/src/screens/Analytics';
+import TxDetail, { CATEGORY_ICON, CATEGORY_LABEL_KEY } from '@/src/screens/TxDetail';
 import { fetchHistory } from '@/src/lib/api';
-import type { TxCategory } from '@/src/lib/api-types';
+import type { HistoryEntry } from '@/src/lib/api-types';
 import { CHAINS } from '@/src/lib/chains';
 import { formatRelativeTime, formatUsd } from '@/src/lib/format';
 import { useWalletStore } from '@/src/store/wallet';
-
-/** i18n-ключі підписів категорій транзакцій. */
-const CATEGORY_LABEL_KEY: Record<TxCategory, string> = {
-  transfer: 'category.transfer',
-  swap: 'category.swap',
-  approve: 'category.approve',
-  mint: 'category.mint',
-  dapp: 'category.dapp',
-};
-
-const CATEGORY_ICON: Record<TxCategory, ComponentType<IconProps>> = {
-  transfer: IconSend,
-  swap: IconSwap,
-  approve: IconCheck,
-  mint: IconSparkle,
-  dapp: IconGrid,
-};
 
 type ActivityView = 'history' | 'analytics';
 
@@ -47,6 +23,7 @@ export default function Activity() {
   const { t } = useTranslation();
   const account = useWalletStore((s) => s.account);
   const [view, setView] = useState<ActivityView>('history');
+  const [selectedTx, setSelectedTx] = useState<HistoryEntry | null>(null);
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['history', account?.addresses.evm],
@@ -55,6 +32,11 @@ export default function Activity() {
   });
 
   const items = data?.items ?? [];
+
+  // Деталь обраної транзакції заміщує список (сегмент/нижнє меню лишаються).
+  if (selectedTx !== null) {
+    return <TxDetail tx={selectedTx} onBack={() => setSelectedTx(null)} />;
+  }
 
   return (
     <div className="flex flex-col gap-5 p-5 pb-24">
@@ -116,9 +98,11 @@ export default function Activity() {
           {items.map((tx, index) => {
             const Icon = CATEGORY_ICON[tx.category] ?? IconGrid;
             return (
-              <div
+              <button
                 key={tx.id}
-                className={`flex items-start gap-3 px-4 py-3.5 ${
+                type="button"
+                onClick={() => setSelectedTx(tx)}
+                className={`flex w-full items-start gap-3 px-4 py-3.5 text-start transition-colors hover:bg-raised/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset ${
                   index > 0 ? 'border-t border-hairline' : ''
                 }`}
               >
@@ -163,7 +147,7 @@ export default function Activity() {
                     )}
                   </p>
                 </div>
-              </div>
+              </button>
             );
           })}
         </Card>

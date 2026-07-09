@@ -158,6 +158,24 @@
     "statusFailed": "неудачная",
     "statusPending": "в обработке"
   },
+  "txDetail": {
+    "title": "Транзакция",
+    "description": "Описание",
+    "network": "Сеть",
+    "direction": "Направление",
+    "dirIn": "Входящая",
+    "dirOut": "Исходящая",
+    "dirSelf": "Внутренняя",
+    "dateTime": "Дата и время",
+    "hash": "Хеш транзакции",
+    "copy": "Копировать",
+    "copied": "Скопировано",
+    "viewExplorer": "Открыть в обозревателе",
+    "externalService": "Откроет блок-обозреватель сети в новой вкладке браузера.",
+    "statusConfirmed": "Подтверждена",
+    "statusPending": "В ожидании",
+    "statusFailed": "Ошибка"
+  },
   "analytics": {
     "periodAria": "Период",
     "period7d": "7 дн",

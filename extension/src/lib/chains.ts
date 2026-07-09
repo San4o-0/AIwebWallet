@@ -21,3 +21,24 @@ export type Chain = keyof typeof CHAINS;
 export const CHAIN_IDS = Object.keys(CHAINS) as Chain[];
 
 export type ChainKind = (typeof CHAINS)[Chain]['kind'];
+
+/**
+ * Базові URL блок-експлорерів для сторінки транзакції (за hash). Виносимо
+ * окремо від CHAINS, щоб не роздувати `as const`-реєстр; використовується у
+ * детальному перегляді транзакції (кнопка «Переглянути в експлорері»).
+ */
+const EXPLORER_TX_BASE: Record<Chain, string> = {
+  ethereum: 'https://etherscan.io/tx/',
+  polygon: 'https://polygonscan.com/tx/',
+  bsc: 'https://bscscan.com/tx/',
+  arbitrum: 'https://arbiscan.io/tx/',
+  base: 'https://basescan.org/tx/',
+  solana: 'https://solscan.io/tx/',
+  bitcoin: 'https://mempool.space/tx/',
+  tron: 'https://tronscan.org/#/transaction/',
+};
+
+/** Повний URL сторінки транзакції в блок-експлорері мережі. */
+export function explorerTxUrl(chain: Chain, hash: string): string {
+  return `${EXPLORER_TX_BASE[chain]}${hash}`;
+}

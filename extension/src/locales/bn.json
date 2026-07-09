@@ -156,6 +156,24 @@
     "statusFailed": "ব্যর্থ",
     "statusPending": "অপেক্ষমাণ"
   },
+  "txDetail": {
+    "title": "লেনদেন",
+    "description": "বিবরণ",
+    "network": "নেটওয়ার্ক",
+    "direction": "দিক",
+    "dirIn": "প্রাপ্ত",
+    "dirOut": "প্রেরিত",
+    "dirSelf": "নিজস্ব",
+    "dateTime": "তারিখ ও সময়",
+    "hash": "লেনদেন হ্যাশ",
+    "copy": "কপি করুন",
+    "copied": "কপি হয়েছে",
+    "viewExplorer": "এক্সপ্লোরারে দেখুন",
+    "externalService": "নেটওয়ার্কের ব্লক এক্সপ্লোরার একটি নতুন ব্রাউজার ট্যাবে খোলে।",
+    "statusConfirmed": "নিশ্চিত",
+    "statusPending": "অপেক্ষমাণ",
+    "statusFailed": "ব্যর্থ"
+  },
   "analytics": {
     "periodAria": "সময়কাল",
     "period7d": "7 দিন",

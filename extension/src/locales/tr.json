@@ -156,6 +156,24 @@
     "statusFailed": "başarısız",
     "statusPending": "beklemede"
   },
+  "txDetail": {
+    "title": "İşlem",
+    "description": "Açıklama",
+    "network": "Ağ",
+    "direction": "Yön",
+    "dirIn": "Gelen",
+    "dirOut": "Giden",
+    "dirSelf": "Kendi",
+    "dateTime": "Tarih ve saat",
+    "hash": "İşlem hash’i",
+    "copy": "Kopyala",
+    "copied": "Kopyalandı",
+    "viewExplorer": "Gezginde görüntüle",
+    "externalService": "Ağın blok gezginini yeni bir tarayıcı sekmesinde açar.",
+    "statusConfirmed": "Onaylandı",
+    "statusPending": "Beklemede",
+    "statusFailed": "Başarısız"
+  },
   "analytics": {
     "periodAria": "Dönem",
     "period7d": "7G",

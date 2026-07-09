@@ -155,6 +155,24 @@
     "statusFailed": "실패",
     "statusPending": "대기 중"
   },
+  "txDetail": {
+    "title": "거래",
+    "description": "설명",
+    "network": "네트워크",
+    "direction": "방향",
+    "dirIn": "입금",
+    "dirOut": "출금",
+    "dirSelf": "자기 거래",
+    "dateTime": "날짜 및 시간",
+    "hash": "거래 해시",
+    "copy": "복사",
+    "copied": "복사됨",
+    "viewExplorer": "탐색기에서 보기",
+    "externalService": "네트워크의 블록 탐색기를 새 브라우저 탭에서 엽니다.",
+    "statusConfirmed": "확인됨",
+    "statusPending": "대기 중",
+    "statusFailed": "실패"
+  },
   "analytics": {
     "periodAria": "기간",
     "period7d": "7일",

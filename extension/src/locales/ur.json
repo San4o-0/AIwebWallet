@@ -156,6 +156,24 @@
     "statusFailed": "ناکام",
     "statusPending": "زیر التوا"
   },
+  "txDetail": {
+    "title": "لین دین",
+    "description": "تفصیل",
+    "network": "نیٹ ورک",
+    "direction": "سمت",
+    "dirIn": "موصول",
+    "dirOut": "روانہ",
+    "dirSelf": "اپنا",
+    "dateTime": "تاریخ اور وقت",
+    "hash": "لین دین ہیش",
+    "copy": "کاپی کریں",
+    "copied": "کاپی ہو گیا",
+    "viewExplorer": "ایکسپلورر میں دیکھیں",
+    "externalService": "نیٹ ورک کا بلاک ایکسپلورر نئے براؤزر ٹیب میں کھولتا ہے۔",
+    "statusConfirmed": "تصدیق شدہ",
+    "statusPending": "زیر التوا",
+    "statusFailed": "ناکام"
+  },
   "analytics": {
     "periodAria": "مدت",
     "period7d": "7 دن",

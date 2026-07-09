@@ -156,6 +156,24 @@
     "statusFailed": "fallida",
     "statusPending": "pendiente"
   },
+  "txDetail": {
+    "title": "Transacción",
+    "description": "Descripción",
+    "network": "Red",
+    "direction": "Dirección",
+    "dirIn": "Entrante",
+    "dirOut": "Saliente",
+    "dirSelf": "Propia",
+    "dateTime": "Fecha y hora",
+    "hash": "Hash de la transacción",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "viewExplorer": "Ver en el explorador",
+    "externalService": "Abre el explorador de bloques de la red en una nueva pestaña del navegador.",
+    "statusConfirmed": "Confirmada",
+    "statusPending": "Pendiente",
+    "statusFailed": "Fallida"
+  },
   "analytics": {
     "periodAria": "Período",
     "period7d": "7D",

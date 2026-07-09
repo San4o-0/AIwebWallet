@@ -158,6 +158,24 @@
     "statusFailed": "невдала",
     "statusPending": "в обробці"
   },
+  "txDetail": {
+    "title": "Транзакція",
+    "description": "Опис",
+    "network": "Мережа",
+    "direction": "Напрям",
+    "dirIn": "Вхідна",
+    "dirOut": "Вихідна",
+    "dirSelf": "Власна",
+    "dateTime": "Дата й час",
+    "hash": "Хеш транзакції",
+    "copy": "Скопіювати",
+    "copied": "Скопійовано",
+    "viewExplorer": "Переглянути в експлорері",
+    "externalService": "Відкриє блок-експлорер мережі в новій вкладці браузера.",
+    "statusConfirmed": "Підтверджено",
+    "statusPending": "В очікуванні",
+    "statusFailed": "Помилка"
+  },
   "analytics": {
     "periodAria": "Період",
     "period7d": "7д",

@@ -156,6 +156,24 @@
     "statusFailed": "gagal",
     "statusPending": "tertunda"
   },
+  "txDetail": {
+    "title": "Transaksi",
+    "description": "Deskripsi",
+    "network": "Jaringan",
+    "direction": "Arah",
+    "dirIn": "Masuk",
+    "dirOut": "Keluar",
+    "dirSelf": "Sendiri",
+    "dateTime": "Tanggal dan waktu",
+    "hash": "Hash transaksi",
+    "copy": "Salin",
+    "copied": "Tersalin",
+    "viewExplorer": "Lihat di explorer",
+    "externalService": "Membuka block explorer jaringan di tab browser baru.",
+    "statusConfirmed": "Terkonfirmasi",
+    "statusPending": "Tertunda",
+    "statusFailed": "Gagal"
+  },
   "analytics": {
     "periodAria": "Periode",
     "period7d": "7 hr",

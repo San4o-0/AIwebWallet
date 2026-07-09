@@ -158,6 +158,24 @@
     "statusFailed": "nieudana",
     "statusPending": "w toku"
   },
+  "txDetail": {
+    "title": "Transakcja",
+    "description": "Opis",
+    "network": "Sieć",
+    "direction": "Kierunek",
+    "dirIn": "Przychodząca",
+    "dirOut": "Wychodząca",
+    "dirSelf": "Własna",
+    "dateTime": "Data i godzina",
+    "hash": "Hash transakcji",
+    "copy": "Kopiuj",
+    "copied": "Skopiowano",
+    "viewExplorer": "Zobacz w eksploratorze",
+    "externalService": "Otwiera eksplorator bloków sieci w nowej karcie przeglądarki.",
+    "statusConfirmed": "Potwierdzona",
+    "statusPending": "Oczekująca",
+    "statusFailed": "Nieudana"
+  },
   "analytics": {
     "periodAria": "Okres",
     "period7d": "7 dni",

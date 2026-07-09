@@ -10,6 +10,7 @@ import { getActiveLocale, i18n } from '@/src/i18n';
 /** Кеш форматерів на локаль (створення Intl.* відносно дороге). */
 const usdFormatters = new Map<string, Intl.NumberFormat>();
 const rtfFormatters = new Map<string, Intl.RelativeTimeFormat>();
+const dateTimeFormatters = new Map<string, Intl.DateTimeFormat>();
 
 function usdFormatter(): Intl.NumberFormat {
   const locale = getActiveLocale();
@@ -54,4 +55,19 @@ export function formatRelativeTime(timestamp: number): string {
   if (hours < 24) return rtf.format(-hours, 'hour');
   const days = Math.round(hours / 24);
   return rtf.format(-days, 'day');
+}
+
+function dateTimeFormatter(): Intl.DateTimeFormat {
+  const locale = getActiveLocale();
+  let formatter = dateTimeFormatters.get(locale);
+  if (formatter === undefined) {
+    formatter = new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' });
+    dateTimeFormatters.set(locale, formatter);
+  }
+  return formatter;
+}
+
+/** Абсолютна дата й час (unix ms) активною локаллю — для детального перегляду tx. */
+export function formatDateTime(timestamp: number): string {
+  return dateTimeFormatter().format(timestamp);
 }

@@ -156,6 +156,24 @@
     "statusFailed": "विफल",
     "statusPending": "लंबित"
   },
+  "txDetail": {
+    "title": "लेन-देन",
+    "description": "विवरण",
+    "network": "नेटवर्क",
+    "direction": "दिशा",
+    "dirIn": "प्राप्त",
+    "dirOut": "भेजा गया",
+    "dirSelf": "स्वयं",
+    "dateTime": "दिनांक और समय",
+    "hash": "लेन-देन हैश",
+    "copy": "कॉपी करें",
+    "copied": "कॉपी हो गया",
+    "viewExplorer": "एक्सप्लोरर में देखें",
+    "externalService": "नेटवर्क का ब्लॉक एक्सप्लोरर एक नए ब्राउज़र टैब में खोलता है।",
+    "statusConfirmed": "पुष्ट",
+    "statusPending": "लंबित",
+    "statusFailed": "विफल"
+  },
   "analytics": {
     "periodAria": "अवधि",
     "period7d": "7 दिन",

@@ -156,6 +156,24 @@
     "statusFailed": "non riuscita",
     "statusPending": "in attesa"
   },
+  "txDetail": {
+    "title": "Transazione",
+    "description": "Descrizione",
+    "network": "Rete",
+    "direction": "Direzione",
+    "dirIn": "In entrata",
+    "dirOut": "In uscita",
+    "dirSelf": "Interna",
+    "dateTime": "Data e ora",
+    "hash": "Hash della transazione",
+    "copy": "Copia",
+    "copied": "Copiato",
+    "viewExplorer": "Apri nell’explorer",
+    "externalService": "Apre l’explorer di blocchi della rete in una nuova scheda del browser.",
+    "statusConfirmed": "Confermata",
+    "statusPending": "In sospeso",
+    "statusFailed": "Non riuscita"
+  },
   "analytics": {
     "periodAria": "Periodo",
     "period7d": "7G",

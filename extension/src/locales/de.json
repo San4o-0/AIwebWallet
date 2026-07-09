@@ -156,6 +156,24 @@
     "statusFailed": "fehlgeschlagen",
     "statusPending": "ausstehend"
   },
+  "txDetail": {
+    "title": "Transaktion",
+    "description": "Beschreibung",
+    "network": "Netzwerk",
+    "direction": "Richtung",
+    "dirIn": "Eingehend",
+    "dirOut": "Ausgehend",
+    "dirSelf": "Eigen",
+    "dateTime": "Datum und Uhrzeit",
+    "hash": "Transaktions-Hash",
+    "copy": "Kopieren",
+    "copied": "Kopiert",
+    "viewExplorer": "Im Explorer ansehen",
+    "externalService": "Öffnet den Block-Explorer des Netzwerks in einem neuen Browser-Tab.",
+    "statusConfirmed": "Bestätigt",
+    "statusPending": "Ausstehend",
+    "statusFailed": "Fehlgeschlagen"
+  },
   "analytics": {
     "periodAria": "Zeitraum",
     "period7d": "7T",
