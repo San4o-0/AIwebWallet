@@ -147,11 +147,31 @@
   "activity": {
     "eyebrow": "Historial",
     "title": "Actividad",
+    "viewAria": "Vista de actividad",
+    "viewHistory": "Historial",
+    "viewAnalytics": "Análisis",
     "backendDown": "El backend no responde: no se pudo cargar el historial.",
     "emptyTitle": "Aún no hay transacciones",
     "emptyHint": "En cuanto envíe o reciba fondos, aquí aparecerán registros comentados.",
     "statusFailed": "fallida",
     "statusPending": "pendiente"
+  },
+  "analytics": {
+    "periodAria": "Período",
+    "period7d": "7D",
+    "period30d": "30D",
+    "period90d": "90D",
+    "period1y": "1A",
+    "backendDown": "El backend no responde: no se pudieron cargar los análisis.",
+    "emptyTitle": "Sin datos en este período",
+    "emptyHint": "Las comisiones y las estadísticas de transacciones aparecerán aquí cuando haya actividad en el período seleccionado.",
+    "feesTitle": "Comisiones pagadas",
+    "txCountTitle": "Transacciones",
+    "feesOverTime": "Comisiones en el tiempo",
+    "byChain": "Por red",
+    "byCategory": "Por categoría",
+    "feesChartAria": "Gráfico de barras de comisiones en el tiempo",
+    "txShort": "{{n}} tx"
   },
   "category": {
     "transfer": "Transferencia",

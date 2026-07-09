@@ -146,11 +146,31 @@
   "activity": {
     "eyebrow": "历史",
     "title": "交易记录",
+    "viewAria": "活动视图",
+    "viewHistory": "历史",
+    "viewAnalytics": "分析",
     "backendDown": "后端无响应——历史记录未能加载。",
     "emptyTitle": "暂无交易",
     "emptyHint": "当您发送或收到资金后，带注释的记录将显示在这里。",
     "statusFailed": "失败",
     "statusPending": "处理中"
+  },
+  "analytics": {
+    "periodAria": "时间范围",
+    "period7d": "7天",
+    "period30d": "30天",
+    "period90d": "90天",
+    "period1y": "1年",
+    "backendDown": "后端无响应——分析数据未能加载。",
+    "emptyTitle": "该时段暂无数据",
+    "emptyHint": "所选时段内有活动后，手续费和交易统计将显示在此处。",
+    "feesTitle": "已付手续费",
+    "txCountTitle": "交易笔数",
+    "feesOverTime": "手续费走势",
+    "byChain": "按网络",
+    "byCategory": "按类别",
+    "feesChartAria": "手续费随时间变化的柱状图",
+    "txShort": "{{n}} 笔"
   },
   "category": {
     "transfer": "转账",

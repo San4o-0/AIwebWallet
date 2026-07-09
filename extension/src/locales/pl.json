@@ -149,11 +149,31 @@
   "activity": {
     "eyebrow": "Historia",
     "title": "Aktywność",
+    "viewAria": "Widok aktywności",
+    "viewHistory": "Historia",
+    "viewAnalytics": "Analityka",
     "backendDown": "Backend nie odpowiada — historia nie została wczytana.",
     "emptyTitle": "Brak transakcji",
     "emptyHint": "Gdy tylko wyślesz lub odbierzesz środki, pojawią się tu wpisy z objaśnieniami.",
     "statusFailed": "nieudana",
     "statusPending": "w toku"
+  },
+  "analytics": {
+    "periodAria": "Okres",
+    "period7d": "7 dni",
+    "period30d": "30 dni",
+    "period90d": "90 dni",
+    "period1y": "1 rok",
+    "backendDown": "Backend nie odpowiada — analityka nie została wczytana.",
+    "emptyTitle": "Brak danych za ten okres",
+    "emptyHint": "Opłaty i statystyki transakcji pojawią się tutaj, gdy w wybranym okresie pojawi się aktywność.",
+    "feesTitle": "Zapłacone opłaty",
+    "txCountTitle": "Transakcje",
+    "feesOverTime": "Opłaty w czasie",
+    "byChain": "Według sieci",
+    "byCategory": "Według kategorii",
+    "feesChartAria": "Wykres słupkowy opłat w czasie",
+    "txShort": "{{n}} tx"
   },
   "category": {
     "transfer": "Przelew",

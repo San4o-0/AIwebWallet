@@ -146,11 +146,31 @@
   "activity": {
     "eyebrow": "기록",
     "title": "활동",
+    "viewAria": "활동 보기",
+    "viewHistory": "기록",
+    "viewAnalytics": "분석",
     "backendDown": "백엔드가 응답하지 않아 기록을 불러오지 못했습니다.",
     "emptyTitle": "아직 거래가 없습니다",
     "emptyHint": "자금을 보내거나 받으면 설명이 달린 기록이 여기에 표시됩니다.",
     "statusFailed": "실패",
     "statusPending": "대기 중"
+  },
+  "analytics": {
+    "periodAria": "기간",
+    "period7d": "7일",
+    "period30d": "30일",
+    "period90d": "90일",
+    "period1y": "1년",
+    "backendDown": "백엔드가 응답하지 않아 분석을 불러오지 못했습니다.",
+    "emptyTitle": "이 기간의 데이터가 없습니다",
+    "emptyHint": "선택한 기간에 활동이 있으면 수수료와 거래 통계가 여기에 표시됩니다.",
+    "feesTitle": "지불한 수수료",
+    "txCountTitle": "거래 수",
+    "feesOverTime": "수수료 추이",
+    "byChain": "네트워크별",
+    "byCategory": "카테고리별",
+    "feesChartAria": "시간에 따른 수수료 막대 차트",
+    "txShort": "{{n}}건"
   },
   "category": {
     "transfer": "이체",

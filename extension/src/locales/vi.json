@@ -146,11 +146,31 @@
   "activity": {
     "eyebrow": "Lịch sử",
     "title": "Hoạt động",
+    "viewAria": "Chế độ xem hoạt động",
+    "viewHistory": "Lịch sử",
+    "viewAnalytics": "Phân tích",
     "backendDown": "Backend không phản hồi — không tải được lịch sử.",
     "emptyTitle": "Chưa có giao dịch",
     "emptyHint": "Ngay khi bạn gửi hoặc nhận tiền, các bản ghi kèm chú giải sẽ xuất hiện tại đây.",
     "statusFailed": "thất bại",
     "statusPending": "đang chờ"
+  },
+  "analytics": {
+    "periodAria": "Khoảng thời gian",
+    "period7d": "7 ngày",
+    "period30d": "30 ngày",
+    "period90d": "90 ngày",
+    "period1y": "1 năm",
+    "backendDown": "Backend không phản hồi — không tải được dữ liệu phân tích.",
+    "emptyTitle": "Không có dữ liệu cho khoảng thời gian này",
+    "emptyHint": "Phí và thống kê giao dịch sẽ hiển thị tại đây khi có hoạt động trong khoảng thời gian đã chọn.",
+    "feesTitle": "Phí đã trả",
+    "txCountTitle": "Giao dịch",
+    "feesOverTime": "Phí theo thời gian",
+    "byChain": "Theo mạng",
+    "byCategory": "Theo danh mục",
+    "feesChartAria": "Biểu đồ cột phí theo thời gian",
+    "txShort": "{{n}} GD"
   },
   "category": {
     "transfer": "Chuyển tiền",

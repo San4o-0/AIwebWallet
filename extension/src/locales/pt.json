@@ -147,11 +147,31 @@
   "activity": {
     "eyebrow": "Histórico",
     "title": "Atividade",
+    "viewAria": "Vista da atividade",
+    "viewHistory": "Histórico",
+    "viewAnalytics": "Análises",
     "backendDown": "O backend não responde — o histórico não foi carregado.",
     "emptyTitle": "Ainda não há transações",
     "emptyHint": "Assim que enviar ou receber fundos, os movimentos anotados aparecerão aqui.",
     "statusFailed": "falhou",
     "statusPending": "pendente"
+  },
+  "analytics": {
+    "periodAria": "Período",
+    "period7d": "7D",
+    "period30d": "30D",
+    "period90d": "90D",
+    "period1y": "1A",
+    "backendDown": "O backend não responde — as análises não foram carregadas.",
+    "emptyTitle": "Sem dados neste período",
+    "emptyHint": "As taxas e as estatísticas de transações aparecerão aqui assim que houver atividade no período selecionado.",
+    "feesTitle": "Taxas pagas",
+    "txCountTitle": "Transações",
+    "feesOverTime": "Taxas ao longo do tempo",
+    "byChain": "Por rede",
+    "byCategory": "Por categoria",
+    "feesChartAria": "Gráfico de barras das taxas ao longo do tempo",
+    "txShort": "{{n}} tx"
   },
   "category": {
     "transfer": "Transferência",

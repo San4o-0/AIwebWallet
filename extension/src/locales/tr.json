@@ -147,11 +147,31 @@
   "activity": {
     "eyebrow": "Geçmiş",
     "title": "Etkinlik",
+    "viewAria": "Etkinlik görünümü",
+    "viewHistory": "Geçmiş",
+    "viewAnalytics": "Analiz",
     "backendDown": "Arka uç yanıt vermiyor — geçmiş yüklenemedi.",
     "emptyTitle": "Henüz işlem yok",
     "emptyHint": "Para gönderdiğinizde veya aldığınızda açıklamalı kayıtlar burada görünür.",
     "statusFailed": "başarısız",
     "statusPending": "beklemede"
+  },
+  "analytics": {
+    "periodAria": "Dönem",
+    "period7d": "7G",
+    "period30d": "30G",
+    "period90d": "90G",
+    "period1y": "1Y",
+    "backendDown": "Arka uç yanıt vermiyor — analizler yüklenemedi.",
+    "emptyTitle": "Bu dönem için veri yok",
+    "emptyHint": "Seçilen dönemde etkinlik olduğunda ücretler ve işlem istatistikleri burada görünür.",
+    "feesTitle": "Ödenen ücretler",
+    "txCountTitle": "İşlemler",
+    "feesOverTime": "Zaman içinde ücretler",
+    "byChain": "Ağa göre",
+    "byCategory": "Kategoriye göre",
+    "feesChartAria": "Zaman içindeki ücretlerin çubuk grafiği",
+    "txShort": "{{n}} işlem"
   },
   "category": {
     "transfer": "Transfer",

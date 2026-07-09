@@ -147,11 +147,31 @@
   "activity": {
     "eyebrow": "Historique",
     "title": "Activité",
+    "viewAria": "Vue de l'activité",
+    "viewHistory": "Historique",
+    "viewAnalytics": "Analyses",
     "backendDown": "Le backend ne répond pas — l'historique n'a pas été chargé.",
     "emptyTitle": "Aucune transaction pour l'instant",
     "emptyHint": "Dès que vous enverrez ou recevrez des fonds, des entrées annotées apparaîtront ici.",
     "statusFailed": "échouée",
     "statusPending": "en attente"
+  },
+  "analytics": {
+    "periodAria": "Période",
+    "period7d": "7J",
+    "period30d": "30J",
+    "period90d": "90J",
+    "period1y": "1A",
+    "backendDown": "Le backend ne répond pas — les analyses n'ont pas été chargées.",
+    "emptyTitle": "Aucune donnée pour cette période",
+    "emptyHint": "Les frais et les statistiques de transactions apparaîtront ici dès qu'il y aura de l'activité sur la période sélectionnée.",
+    "feesTitle": "Frais payés",
+    "txCountTitle": "Transactions",
+    "feesOverTime": "Frais dans le temps",
+    "byChain": "Par réseau",
+    "byCategory": "Par catégorie",
+    "feesChartAria": "Histogramme des frais dans le temps",
+    "txShort": "{{n}} tx"
   },
   "category": {
     "transfer": "Transfert",

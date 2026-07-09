@@ -147,11 +147,31 @@
   "activity": {
     "eyebrow": "تاریخچہ",
     "title": "سرگرمی",
+    "viewAria": "سرگرمی کا منظر",
+    "viewHistory": "تاریخچہ",
+    "viewAnalytics": "تجزیات",
     "backendDown": "بیک اینڈ جواب نہیں دے رہا — تاریخچہ لوڈ نہیں ہوا۔",
     "emptyTitle": "ابھی کوئی لین دین نہیں",
     "emptyHint": "جیسے ہی آپ رقم بھیجیں یا وصول کریں گے، یہاں وضاحت کے ساتھ ریکارڈ نظر آئیں گے۔",
     "statusFailed": "ناکام",
     "statusPending": "زیر التوا"
+  },
+  "analytics": {
+    "periodAria": "مدت",
+    "period7d": "7 دن",
+    "period30d": "30 دن",
+    "period90d": "90 دن",
+    "period1y": "1 سال",
+    "backendDown": "بیک اینڈ جواب نہیں دے رہا — تجزیات لوڈ نہیں ہوئے۔",
+    "emptyTitle": "اس مدت کا کوئی ڈیٹا نہیں",
+    "emptyHint": "منتخب مدت میں سرگرمی ہوتے ہی فیس اور لین دین کے اعداد و شمار یہاں نظر آئیں گے۔",
+    "feesTitle": "ادا شدہ فیس",
+    "txCountTitle": "لین دین",
+    "feesOverTime": "وقت کے ساتھ فیس",
+    "byChain": "نیٹ ورک کے لحاظ سے",
+    "byCategory": "زمرے کے لحاظ سے",
+    "feesChartAria": "وقت کے ساتھ فیس کا بار چارٹ",
+    "txShort": "{{n}} لین دین"
   },
   "category": {
     "transfer": "منتقلی",

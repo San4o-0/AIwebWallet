@@ -147,11 +147,31 @@
   "activity": {
     "eyebrow": "Cronologia",
     "title": "Attività",
+    "viewAria": "Vista attività",
+    "viewHistory": "Cronologia",
+    "viewAnalytics": "Analisi",
     "backendDown": "Il backend non risponde — la cronologia non è stata caricata.",
     "emptyTitle": "Ancora nessuna transazione",
     "emptyHint": "Appena invii o ricevi fondi, qui compariranno le voci con le spiegazioni.",
     "statusFailed": "non riuscita",
     "statusPending": "in attesa"
+  },
+  "analytics": {
+    "periodAria": "Periodo",
+    "period7d": "7G",
+    "period30d": "30G",
+    "period90d": "90G",
+    "period1y": "1A",
+    "backendDown": "Il backend non risponde — le analisi non sono state caricate.",
+    "emptyTitle": "Nessun dato per questo periodo",
+    "emptyHint": "Le commissioni e le statistiche delle transazioni appariranno qui non appena ci sarà attività nel periodo selezionato.",
+    "feesTitle": "Commissioni pagate",
+    "txCountTitle": "Transazioni",
+    "feesOverTime": "Commissioni nel tempo",
+    "byChain": "Per rete",
+    "byCategory": "Per categoria",
+    "feesChartAria": "Grafico a barre delle commissioni nel tempo",
+    "txShort": "{{n}} tx"
   },
   "category": {
     "transfer": "Trasferimento",

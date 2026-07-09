@@ -147,11 +147,31 @@
   "activity": {
     "eyebrow": "ইতিহাস",
     "title": "কার্যকলাপ",
+    "viewAria": "কার্যকলাপ ভিউ",
+    "viewHistory": "ইতিহাস",
+    "viewAnalytics": "বিশ্লেষণ",
     "backendDown": "ব্যাকএন্ড সাড়া দিচ্ছে না — ইতিহাস লোড হয়নি।",
     "emptyTitle": "এখনও কোনো লেনদেন নেই",
     "emptyHint": "তহবিল পাঠানো বা গ্রহণ করলেই এখানে ব্যাখ্যাসহ রেকর্ড দেখা যাবে।",
     "statusFailed": "ব্যর্থ",
     "statusPending": "অপেক্ষমাণ"
+  },
+  "analytics": {
+    "periodAria": "সময়কাল",
+    "period7d": "7 দিন",
+    "period30d": "30 দিন",
+    "period90d": "90 দিন",
+    "period1y": "1 বছর",
+    "backendDown": "ব্যাকএন্ড সাড়া দিচ্ছে না — বিশ্লেষণ লোড হয়নি।",
+    "emptyTitle": "এই সময়কালে কোনো ডেটা নেই",
+    "emptyHint": "নির্বাচিত সময়কালে কার্যকলাপ হলে ফি ও লেনদেনের পরিসংখ্যান এখানে দেখা যাবে।",
+    "feesTitle": "প্রদত্ত ফি",
+    "txCountTitle": "লেনদেন",
+    "feesOverTime": "সময়ের সাথে ফি",
+    "byChain": "নেটওয়ার্ক অনুযায়ী",
+    "byCategory": "বিভাগ অনুযায়ী",
+    "feesChartAria": "সময়ের সাথে ফির বার চার্ট",
+    "txShort": "{{n}} লেনদেন"
   },
   "category": {
     "transfer": "স্থানান্তর",

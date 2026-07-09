@@ -147,11 +147,31 @@
   "activity": {
     "eyebrow": "Verlauf",
     "title": "Aktivität",
+    "viewAria": "Aktivitätsansicht",
+    "viewHistory": "Verlauf",
+    "viewAnalytics": "Analysen",
     "backendDown": "Backend antwortet nicht — der Verlauf wurde nicht geladen.",
     "emptyTitle": "Noch keine Transaktionen",
     "emptyHint": "Sobald Sie Gelder senden oder empfangen, erscheinen hier kommentierte Einträge.",
     "statusFailed": "fehlgeschlagen",
     "statusPending": "ausstehend"
+  },
+  "analytics": {
+    "periodAria": "Zeitraum",
+    "period7d": "7T",
+    "period30d": "30T",
+    "period90d": "90T",
+    "period1y": "1J",
+    "backendDown": "Backend antwortet nicht — die Analysen wurden nicht geladen.",
+    "emptyTitle": "Keine Daten für diesen Zeitraum",
+    "emptyHint": "Gebühren und Transaktionsstatistiken erscheinen hier, sobald es im gewählten Zeitraum Aktivität gibt.",
+    "feesTitle": "Gezahlte Gebühren",
+    "txCountTitle": "Transaktionen",
+    "feesOverTime": "Gebühren im Zeitverlauf",
+    "byChain": "Nach Netzwerk",
+    "byCategory": "Nach Kategorie",
+    "feesChartAria": "Balkendiagramm der Gebühren im Zeitverlauf",
+    "txShort": "{{n}} Tx"
   },
   "category": {
     "transfer": "Transfer",

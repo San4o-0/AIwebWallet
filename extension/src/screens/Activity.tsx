@@ -1,6 +1,10 @@
-/** Історія транзакцій з людськими описами (F3.6, F4.4). */
+/**
+ * Активність: сегмент «Історія | Аналітика» (нижнє меню не розширюємо).
+ * Історія — транзакції з людськими описами (F3.6, F4.4);
+ * Аналітика — графіки комісій/зведення (src/screens/Analytics.tsx).
+ */
 import { useQuery } from '@tanstack/react-query';
-import type { ComponentType } from 'react';
+import { useState, type ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -13,6 +17,7 @@ import {
   type IconProps,
 } from '@/src/components/icons';
 import { Card, EmptyState, ErrorNote, ScreenHeader } from '@/src/components/ui';
+import Analytics from '@/src/screens/Analytics';
 import { fetchHistory } from '@/src/lib/api';
 import type { TxCategory } from '@/src/lib/api-types';
 import { CHAINS } from '@/src/lib/chains';
@@ -36,14 +41,17 @@ const CATEGORY_ICON: Record<TxCategory, ComponentType<IconProps>> = {
   dapp: IconGrid,
 };
 
+type ActivityView = 'history' | 'analytics';
+
 export default function Activity() {
   const { t } = useTranslation();
   const account = useWalletStore((s) => s.account);
+  const [view, setView] = useState<ActivityView>('history');
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['history', account?.addresses.evm],
     queryFn: () => fetchHistory(account?.addresses.evm ?? ''),
-    enabled: account !== null,
+    enabled: account !== null && view === 'history',
   });
 
   const items = data?.items ?? [];
@@ -52,6 +60,37 @@ export default function Activity() {
     <div className="flex flex-col gap-5 p-5 pb-24">
       <ScreenHeader eyebrow={t('activity.eyebrow')} title={t('activity.title')} />
 
+      {/* Сегмент «Історія | Аналітика» — нижнє меню не розширюємо */}
+      <div
+        role="tablist"
+        aria-label={t('activity.viewAria')}
+        className="grid grid-cols-2 gap-1 rounded-lg border border-hairline bg-surface p-1"
+      >
+        {(
+          [
+            { id: 'history', label: t('activity.viewHistory') },
+            { id: 'analytics', label: t('activity.viewAnalytics') },
+          ] as const
+        ).map((option) => (
+          <button
+            key={option.id}
+            type="button"
+            role="tab"
+            aria-selected={view === option.id}
+            onClick={() => setView(option.id)}
+            className={`rounded-[7px] px-3 py-1.5 text-sm font-medium transition-colors duration-100 ${
+              view === option.id ? 'bg-raised text-accent' : 'text-muted hover:text-ink'
+            }`}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+
+      {view === 'analytics' && <Analytics />}
+
+      {view === 'history' && (
+        <>
       {isLoading && (
         <div className="flex flex-col gap-2">
           <div className="skeleton h-20 w-full" />
@@ -128,6 +167,8 @@ export default function Activity() {
             );
           })}
         </Card>
+      )}
+        </>
       )}
     </div>
   );

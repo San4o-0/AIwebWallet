@@ -485,9 +485,7 @@ function ChainBars({
       label: CHAINS[id].label,
       color: CHAINS[id].color,
       usd: entry.fees_usd,
-      detail: `${CHAINS[id].label}: ${formatUsd(entry.fees_usd)} · ${t('analytics.txShort', {
-        count: entry.tx_count,
-      })}`,
+      detail: `${CHAINS[id].label}: ${formatUsd(entry.fees_usd)} · ${t('analytics.txShort', { n: entry.tx_count })}`,
     };
   });
   return <HBars rows={rows} />;
@@ -511,9 +509,7 @@ function CategoryBars({
       label,
       color: AMBER_RAMP[Math.min(index, AMBER_RAMP.length - 1)],
       usd: entry.volume_usd,
-      detail: `${label}: ${formatUsd(entry.volume_usd)} · ${t('analytics.txShort', {
-        count: entry.tx_count,
-      })}`,
+      detail: `${label}: ${formatUsd(entry.volume_usd)} · ${t('analytics.txShort', { n: entry.tx_count })}`,
     };
   });
   return <HBars rows={rows} />;

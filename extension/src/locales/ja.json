@@ -146,11 +146,31 @@
   "activity": {
     "eyebrow": "履歴",
     "title": "アクティビティ",
+    "viewAria": "アクティビティの表示",
+    "viewHistory": "履歴",
+    "viewAnalytics": "分析",
     "backendDown": "バックエンドが応答していないため、履歴を読み込めませんでした。",
     "emptyTitle": "取引はまだありません",
     "emptyHint": "資金を送金または受け取ると、注釈付きの記録がここに表示されます。",
     "statusFailed": "失敗",
     "statusPending": "処理中"
+  },
+  "analytics": {
+    "periodAria": "期間",
+    "period7d": "7日",
+    "period30d": "30日",
+    "period90d": "90日",
+    "period1y": "1年",
+    "backendDown": "バックエンドが応答していないため、分析を読み込めませんでした。",
+    "emptyTitle": "この期間のデータはありません",
+    "emptyHint": "選択した期間にアクティビティがあると、手数料と取引の統計がここに表示されます。",
+    "feesTitle": "支払った手数料",
+    "txCountTitle": "取引数",
+    "feesOverTime": "手数料の推移",
+    "byChain": "ネットワーク別",
+    "byCategory": "カテゴリー別",
+    "feesChartAria": "手数料の推移を示す棒グラフ",
+    "txShort": "{{n}}件"
   },
   "category": {
     "transfer": "送金",

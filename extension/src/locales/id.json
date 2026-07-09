@@ -147,11 +147,31 @@
   "activity": {
     "eyebrow": "Riwayat",
     "title": "Aktivitas",
+    "viewAria": "Tampilan aktivitas",
+    "viewHistory": "Riwayat",
+    "viewAnalytics": "Analitik",
     "backendDown": "Backend tidak merespons — riwayat tidak dimuat.",
     "emptyTitle": "Belum ada transaksi",
     "emptyHint": "Begitu Anda mengirim atau menerima dana, catatan beranotasi akan muncul di sini.",
     "statusFailed": "gagal",
     "statusPending": "tertunda"
+  },
+  "analytics": {
+    "periodAria": "Periode",
+    "period7d": "7 hr",
+    "period30d": "30 hr",
+    "period90d": "90 hr",
+    "period1y": "1 thn",
+    "backendDown": "Backend tidak merespons — analitik tidak dimuat.",
+    "emptyTitle": "Tidak ada data untuk periode ini",
+    "emptyHint": "Biaya dan statistik transaksi akan muncul di sini setelah ada aktivitas pada periode yang dipilih.",
+    "feesTitle": "Biaya dibayar",
+    "txCountTitle": "Transaksi",
+    "feesOverTime": "Biaya dari waktu ke waktu",
+    "byChain": "Per jaringan",
+    "byCategory": "Per kategori",
+    "feesChartAria": "Diagram batang biaya dari waktu ke waktu",
+    "txShort": "{{n}} tx"
   },
   "category": {
     "transfer": "Transfer",

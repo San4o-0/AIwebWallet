@@ -147,11 +147,31 @@
   "activity": {
     "eyebrow": "इतिहास",
     "title": "गतिविधि",
+    "viewAria": "गतिविधि दृश्य",
+    "viewHistory": "इतिहास",
+    "viewAnalytics": "विश्लेषण",
     "backendDown": "बैकएंड जवाब नहीं दे रहा — इतिहास लोड नहीं हुआ।",
     "emptyTitle": "अभी कोई लेनदेन नहीं",
     "emptyHint": "जैसे ही आप धनराशि भेजेंगे या प्राप्त करेंगे, यहाँ व्याख्या सहित रिकॉर्ड दिखाई देंगे।",
     "statusFailed": "विफल",
     "statusPending": "लंबित"
+  },
+  "analytics": {
+    "periodAria": "अवधि",
+    "period7d": "7 दिन",
+    "period30d": "30 दिन",
+    "period90d": "90 दिन",
+    "period1y": "1 वर्ष",
+    "backendDown": "बैकएंड जवाब नहीं दे रहा — विश्लेषण लोड नहीं हुआ।",
+    "emptyTitle": "इस अवधि का कोई डेटा नहीं",
+    "emptyHint": "चुनी गई अवधि में गतिविधि होते ही शुल्क और लेनदेन के आँकड़े यहाँ दिखेंगे।",
+    "feesTitle": "चुकाया गया शुल्क",
+    "txCountTitle": "लेनदेन",
+    "feesOverTime": "समय के साथ शुल्क",
+    "byChain": "नेटवर्क के अनुसार",
+    "byCategory": "श्रेणी के अनुसार",
+    "feesChartAria": "समय के साथ शुल्क का बार चार्ट",
+    "txShort": "{{n}} लेनदेन"
   },
   "category": {
     "transfer": "ट्रांसफ़र",

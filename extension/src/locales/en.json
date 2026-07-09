@@ -147,11 +147,31 @@
   "activity": {
     "eyebrow": "History",
     "title": "Activity",
+    "viewAria": "Activity view",
+    "viewHistory": "History",
+    "viewAnalytics": "Analytics",
     "backendDown": "Backend is not responding — history was not loaded.",
     "emptyTitle": "No transactions yet",
     "emptyHint": "As soon as you send or receive funds, annotated records will appear here.",
     "statusFailed": "failed",
     "statusPending": "pending"
+  },
+  "analytics": {
+    "periodAria": "Time period",
+    "period7d": "7D",
+    "period30d": "30D",
+    "period90d": "90D",
+    "period1y": "1Y",
+    "backendDown": "Backend is not responding — analytics were not loaded.",
+    "emptyTitle": "No data for this period",
+    "emptyHint": "Fees and transaction stats will appear here once there is activity in the selected period.",
+    "feesTitle": "Fees paid",
+    "txCountTitle": "Transactions",
+    "feesOverTime": "Fees over time",
+    "byChain": "By network",
+    "byCategory": "By category",
+    "feesChartAria": "Bar chart of fees over time",
+    "txShort": "{{n}} tx"
   },
   "category": {
     "transfer": "Transfer",

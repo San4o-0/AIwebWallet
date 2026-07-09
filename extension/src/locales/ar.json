@@ -151,11 +151,31 @@
   "activity": {
     "eyebrow": "السجل",
     "title": "النشاط",
+    "viewAria": "عرض النشاط",
+    "viewHistory": "السجل",
+    "viewAnalytics": "التحليلات",
     "backendDown": "الخادم الخلفي لا يستجيب — لم يُحمَّل السجل.",
     "emptyTitle": "لا معاملات بعد",
     "emptyHint": "بمجرد أن ترسل أموالًا أو تستلمها، ستظهر هنا سجلات مشروحة.",
     "statusFailed": "فاشلة",
     "statusPending": "قيد الانتظار"
+  },
+  "analytics": {
+    "periodAria": "الفترة",
+    "period7d": "7 أيام",
+    "period30d": "30 يومًا",
+    "period90d": "90 يومًا",
+    "period1y": "سنة",
+    "backendDown": "الخادم الخلفي لا يستجيب — لم تُحمَّل التحليلات.",
+    "emptyTitle": "لا بيانات لهذه الفترة",
+    "emptyHint": "ستظهر الرسوم وإحصاءات المعاملات هنا بمجرد وجود نشاط في الفترة المحددة.",
+    "feesTitle": "الرسوم المدفوعة",
+    "txCountTitle": "المعاملات",
+    "feesOverTime": "الرسوم عبر الزمن",
+    "byChain": "حسب الشبكة",
+    "byCategory": "حسب الفئة",
+    "feesChartAria": "مخطط شريطي للرسوم عبر الزمن",
+    "txShort": "{{n}} معاملة"
   },
   "category": {
     "transfer": "تحويل",
