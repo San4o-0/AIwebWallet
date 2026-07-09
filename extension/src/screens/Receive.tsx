@@ -144,14 +144,14 @@ function ChainList({
 }) {
   const { t } = useTranslation();
   return (
-    <div className="flex flex-col gap-6 p-5 pb-24">
+    <div className="screen-in flex flex-col gap-6 p-5 pb-24">
       <ScreenHeader eyebrow={t('receive.eyebrow')} title={t('receive.title')}>
         <p className="mt-2 text-sm leading-relaxed text-muted">{t('receive.chooseNetwork')}</p>
       </ScreenHeader>
 
       <section>
         <Eyebrow className="mb-2.5">{t('common.networks')}</Eyebrow>
-        <Card className="p-0">
+        <Card className="stagger-rise p-0">
           {CHAIN_IDS.map((id, index) => {
             const hasAddress = addressFor(id, addresses) !== '';
             return (
@@ -271,7 +271,7 @@ function ChainDetail({
           <button
             type="button"
             onClick={() => void copy()}
-            className={`flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors ${
+            className={`flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-[background-color,color,transform] duration-100 active:scale-[0.99] ${
               copied
                 ? 'bg-positive/15 text-positive'
                 : 'bg-accent text-bg hover:bg-accent-bright'

@@ -80,7 +80,7 @@ export default function Analytics() {
   const note = fees.data?.note ?? summary.data?.note;
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="screen-in flex flex-col gap-5">
       {/* Фільтр періоду — один ряд над усім, що він скоупить */}
       <div
         role="radiogroup"

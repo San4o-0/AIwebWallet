@@ -147,7 +147,7 @@ export default function RestoreWallet() {
   };
 
   return (
-    <div className="flex h-full flex-col overflow-y-auto p-5">
+    <div className="screen-in flex h-full flex-col overflow-y-auto p-5">
       {step === 'explain' && (
         <div className="flex min-h-full flex-1 flex-col gap-5">
           <StepHeader

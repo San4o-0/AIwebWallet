@@ -130,7 +130,7 @@ export default function Approve() {
   const meta = risk !== undefined ? RISK_META[risk.level] : null;
 
   return (
-    <div className="flex h-full min-h-[600px] flex-1 flex-col gap-5 overflow-y-auto p-5">
+    <div className="screen-in flex h-full min-h-[600px] flex-1 flex-col gap-5 overflow-y-auto p-5">
       <header>
         <Eyebrow className="mb-1">{t('approve.eyebrow')}</Eyebrow>
         <ScreenTitle>{t(METHOD_TITLE_KEY[request.method])}</ScreenTitle>
@@ -201,7 +201,7 @@ export default function Approve() {
       <div className="sticky bottom-0 -mx-5 mt-auto flex flex-col gap-3 border-t border-hairline bg-bg px-5 pb-4 pt-3">
         {/* F5.3: для високого ризику — додаткове підтвердження */}
         {isHigh && (
-          <div className="rounded-[10px] border border-danger/60 bg-danger/10 p-3.5">
+          <div className="attention-danger animate-rise rounded-[10px] border border-danger/60 bg-danger/10 p-3.5">
             <p className="mb-2.5 flex items-center gap-2 text-xs font-medium text-ink">
               <IconShield size={15} className="shrink-0 text-danger" />
               {t('approve.confirmPrompt', { phrase: riskConfirmPhrase })}

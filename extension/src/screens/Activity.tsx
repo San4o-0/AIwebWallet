@@ -39,7 +39,7 @@ export default function Activity() {
   }
 
   return (
-    <div className="flex flex-col gap-5 p-5 pb-24">
+    <div className="screen-in flex flex-col gap-5 p-5 pb-24">
       <ScreenHeader eyebrow={t('activity.eyebrow')} title={t('activity.title')} />
 
       {/* Сегмент «Історія | Аналітика» — нижнє меню не розширюємо */}
@@ -94,7 +94,7 @@ export default function Activity() {
       )}
 
       {items.length > 0 && (
-        <Card className="p-0">
+        <Card className="stagger-rise p-0">
           {items.map((tx, index) => {
             const Icon = CATEGORY_ICON[tx.category] ?? IconGrid;
             return (

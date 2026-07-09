@@ -106,17 +106,20 @@ export default function App() {
               type="button"
               onClick={() => setScreen(tab.screen)}
               aria-current={active ? 'page' : undefined}
-              className={`relative flex flex-col items-center justify-center gap-1 text-[11px] font-medium tracking-wide transition-colors ${
+              className={`group relative flex flex-col items-center justify-center gap-1 text-[11px] font-medium tracking-wide transition-colors ${
                 active ? 'text-accent' : 'text-muted hover:text-ink'
               }`}
             >
-              {/* Латунна риска над активною вкладкою */}
+              {/* Латунна риска над активною вкладкою — виростає з центру */}
               <span
-                className={`absolute -top-px left-1/2 h-0.5 w-6 -translate-x-1/2 rounded-full bg-accent transition-opacity ${
-                  active ? 'opacity-100' : 'opacity-0'
+                className={`absolute -top-px left-1/2 h-0.5 w-6 -translate-x-1/2 rounded-full bg-accent transition-[opacity,transform] duration-150 ${
+                  active ? 'scale-x-100 opacity-100' : 'scale-x-0 opacity-0'
                 }`}
               />
-              <Icon size={19} />
+              <Icon
+                size={19}
+                className="transition-transform duration-100 group-active:scale-90"
+              />
               {t(tab.labelKey)}
             </button>
           );

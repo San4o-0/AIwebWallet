@@ -80,7 +80,7 @@ export default function Chat() {
   };
 
   return (
-    <div className="flex h-full flex-col pb-14">
+    <div className="screen-in flex h-full flex-col pb-14">
       <div className="border-b border-hairline p-5 pb-4">
         <Eyebrow className="mb-1">{t('chat.eyebrow')}</Eyebrow>
         <ScreenTitle>{t('chat.title')}</ScreenTitle>
@@ -92,13 +92,13 @@ export default function Chat() {
           <div className="my-auto flex flex-col items-center gap-3">
             <IconSparkle size={22} className="text-accent" />
             <Eyebrow>{t('chat.tryAsking')}</Eyebrow>
-            <div className="flex w-full flex-col gap-2">
+            <div className="stagger-rise flex w-full flex-col gap-2">
               {SUGGESTION_KEYS.map((key) => (
                 <button
                   key={key}
                   type="button"
                   onClick={() => void send(t(key))}
-                  className="rounded-xl border border-hairline bg-surface px-3.5 py-2.5 text-start text-sm text-ink transition-colors hover:border-accent/50"
+                  className="rounded-xl border border-hairline bg-surface px-3.5 py-2.5 text-start text-sm text-ink transition-[border-color,transform] duration-100 hover:border-accent/50 active:scale-[0.99]"
                 >
                   {t(key)}
                 </button>
@@ -110,14 +110,18 @@ export default function Chat() {
         {messages.map((message, index) => (
           <div
             key={index}
-            className={`max-w-[85%] whitespace-pre-wrap [overflow-wrap:anywhere] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
+            className={`animate-rise max-w-[85%] whitespace-pre-wrap [overflow-wrap:anywhere] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
               message.role === 'user'
                 ? 'self-end rounded-ee-md border border-accent/25 bg-accent/10 text-ink'
                 : 'self-start rounded-es-md border border-hairline bg-surface text-ink'
             }`}
           >
             {message.content.length === 0 && streaming ? (
-              <span className="animate-pulse text-muted">{t('chat.thinking')}</span>
+              <span className="typing-dots" role="status" aria-label={t('chat.thinking')}>
+                <span />
+                <span />
+                <span />
+              </span>
             ) : (
               message.content
             )}
@@ -143,7 +147,7 @@ export default function Chat() {
           type="submit"
           disabled={streaming || input.trim().length === 0}
           aria-label={t('chat.sendAria')}
-          className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent text-bg transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:bg-raised disabled:text-muted/60"
+          className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent text-bg transition-[background-color,transform] duration-100 hover:bg-accent-bright active:scale-95 disabled:cursor-not-allowed disabled:bg-raised disabled:text-muted/60 disabled:active:scale-100"
         >
           <IconSend size={17} />
         </button>

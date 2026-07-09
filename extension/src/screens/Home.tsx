@@ -53,7 +53,7 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-5 pb-24">
+    <div className="screen-in flex flex-col gap-6 p-5 pb-24">
       <header className="flex items-start justify-between gap-3">
         <WalletSwitcher />
         <div className="flex shrink-0 gap-2">
@@ -93,7 +93,7 @@ export default function Home() {
         <button
           type="button"
           onClick={() => setScreen('send')}
-          className="flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-bg transition-colors hover:bg-accent-bright"
+          className="flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-bg transition-[background-color,transform] duration-100 hover:bg-accent-bright active:scale-[0.98]"
         >
           <IconSend size={17} />
           {t('home.send')}
@@ -101,7 +101,7 @@ export default function Home() {
         <button
           type="button"
           onClick={() => setScreen('receive')}
-          className="flex items-center justify-center gap-2 rounded-xl border border-hairline bg-raised px-4 py-3 text-sm font-semibold text-ink transition-colors hover:border-accent/50"
+          className="flex items-center justify-center gap-2 rounded-xl border border-hairline bg-raised px-4 py-3 text-sm font-semibold text-ink transition-[border-color,transform] duration-100 hover:border-accent/50 active:scale-[0.98]"
         >
           <IconReceive size={17} />
           {t('home.receive')}
@@ -110,7 +110,7 @@ export default function Home() {
 
       <section>
         <Eyebrow className="mb-2.5">{t('common.networks')}</Eyebrow>
-        <Card className="p-0">
+        <Card className="stagger-rise p-0">
           {CHAIN_IDS.map((chain, index) => {
             const tokens = byChain.get(chain) ?? [];
             const chainUsd = tokens.reduce((sum, t) => sum + t.usdValue, 0);
@@ -149,7 +149,7 @@ export default function Home() {
           <EmptyState title={t('home.noAssetsTitle')} hint={t('home.noAssetsHint')} />
         )}
         {!isLoading && (portfolio?.tokens?.length ?? 0) > 0 && (
-          <Card className="p-0">
+          <Card className="stagger-rise p-0">
             {(portfolio?.tokens ?? []).map((token, index) => (
               <div
                 key={`${token.chain}-${token.symbol}-${token.contractAddress ?? 'native'}`}

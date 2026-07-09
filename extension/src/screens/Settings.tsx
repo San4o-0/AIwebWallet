@@ -61,7 +61,7 @@ export default function Settings() {
   ];
 
   return (
-    <div className="flex flex-col gap-6 p-5 pb-24">
+    <div className="screen-in flex flex-col gap-6 p-5 pb-24">
       <ScreenHeader eyebrow={t('settings.eyebrow')} title={t('settings.title')} />
 
       <WalletsSection />
@@ -317,7 +317,7 @@ function WalletsSection() {
   return (
     <section>
       <Eyebrow className="mb-2.5">{t('settings.wallets')}</Eyebrow>
-      <Card className="p-0">
+      <Card className="stagger-rise p-0">
         {wallets.map((wallet, index) => (
           <WalletRow
             key={wallet.id}
@@ -458,8 +458,9 @@ function WalletRow({
                   {t('settings.switch')}
                 </Button>
               )}
+              {/* Перейменувати — бурштиновий заповнений (акцент палітри) */}
               <Button
-                variant="ghost"
+                variant="primary"
                 disabled={busy}
                 onClick={() => {
                   setName(wallet.name);
@@ -468,10 +469,10 @@ function WalletRow({
               >
                 {t('settings.rename')}
               </Button>
+              {/* Видалити — деструктивна, заповнений danger-фон */}
               {!confirmingRemove && (
                 <Button
-                  variant="ghost"
-                  className="text-danger hover:text-danger"
+                  variant="danger"
                   disabled={busy}
                   onClick={() => setConfirmingRemove(true)}
                 >

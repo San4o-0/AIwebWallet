@@ -46,7 +46,7 @@ export default function Unlock() {
 
   return (
     <form
-      className="flex h-full flex-col items-center justify-center gap-6 overflow-y-auto p-6 text-center"
+      className="screen-in flex h-full flex-col items-center justify-center gap-6 overflow-y-auto p-6 text-center"
       onSubmit={(e) => {
         e.preventDefault();
         void submit();

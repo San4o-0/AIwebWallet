@@ -117,7 +117,7 @@ export default function Send() {
 
   return (
     <form
-      className="flex min-h-full flex-col gap-5 p-5 pb-24"
+      className="screen-in flex min-h-full flex-col gap-5 p-5 pb-24"
       onSubmit={(e) => {
         e.preventDefault();
         void submit();

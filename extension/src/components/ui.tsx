@@ -34,7 +34,7 @@ export function Button({ variant = 'primary', className = '', ...rest }: ButtonP
   return (
     <button
       {...rest}
-      className={`rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors duration-100 disabled:cursor-not-allowed ${buttonStyles[variant]} ${className}`}
+      className={`rounded-lg px-4 py-2.5 text-sm font-semibold transition-[background-color,border-color,color,transform] duration-100 active:scale-[0.98] disabled:cursor-not-allowed disabled:active:scale-100 ${buttonStyles[variant]} ${className}`}
     />
   );
 }
@@ -275,7 +275,7 @@ export function IconButton({
       title={label}
       aria-label={label}
       {...rest}
-      className={`flex size-9 items-center justify-center rounded-lg border border-hairline bg-surface text-muted transition-colors duration-100 hover:border-accent/50 hover:text-accent ${className}`}
+      className={`flex size-9 items-center justify-center rounded-lg border border-hairline bg-surface text-muted transition-[border-color,color,transform] duration-100 hover:border-accent/50 hover:text-accent active:scale-95 ${className}`}
     />
   );
 }

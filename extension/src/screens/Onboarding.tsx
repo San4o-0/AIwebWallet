@@ -33,7 +33,7 @@ export default function Onboarding() {
   const [mode, setMode] = useState<Mode>('choice');
 
   return (
-    <div className="flex h-full flex-col overflow-y-auto p-5">
+    <div className="screen-in flex h-full flex-col overflow-y-auto p-5">
       {mode === 'choice' &&
         (addingWallet ? <AddWalletChoice onSelect={setMode} /> : <Choice onSelect={setMode} />)}
       {mode === 'create' && <CreateFlow onBack={() => setMode('choice')} />}
