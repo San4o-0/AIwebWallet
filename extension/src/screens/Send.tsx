@@ -11,8 +11,11 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { ChainIcon } from '@/src/components/chain-icons';
 import { IconCheck, IconChevronLeft } from '@/src/components/icons';
-import { Button, Field, ScreenHeader, Select } from '@/src/components/ui';
+import { SelectMenu, type SelectOption } from '@/src/components/SelectMenu';
+import { TokenIcon } from '@/src/components/token-icons';
+import { Button, Field, ScreenHeader } from '@/src/components/ui';
 import { localizeUnknownError } from '@/src/i18n';
 import { broadcastTx, fetchTxParams } from '@/src/lib/api';
 import { CHAINS, CHAIN_IDS, type Chain } from '@/src/lib/chains';
@@ -45,6 +48,35 @@ export default function Send() {
   const tokens = useMemo(() => KNOWN_ERC20[chain] ?? [], [chain]);
   const token = tokens.find((t) => t.symbol === asset) ?? null;
   const symbol = token?.symbol ?? CHAINS[chain].symbol;
+
+  // Пункти селектора мережі: іконка мережі + назва + тикер праворуч.
+  const networkOptions = useMemo<SelectOption<Chain>[]>(
+    () =>
+      CHAIN_IDS.map((id) => ({
+        value: id,
+        label: CHAINS[id].label,
+        secondary: CHAINS[id].symbol,
+        icon: <ChainIcon chain={id} size={20} />,
+      })),
+    [],
+  );
+
+  // Пункти селектора активу: нативна монета (іконка мережі) + відомі токени.
+  const assetOptions = useMemo<SelectOption<string>[]>(
+    () => [
+      {
+        value: NATIVE_ASSET,
+        label: t('send.nativeCoin', { symbol: CHAINS[chain].symbol }),
+        icon: <ChainIcon chain={chain} size={20} />,
+      },
+      ...tokens.map((tk) => ({
+        value: tk.symbol,
+        label: t('send.erc20Option', { symbol: tk.symbol }),
+        icon: <TokenIcon symbol={tk.symbol} size={20} />,
+      })),
+    ],
+    [chain, tokens, t],
+  );
 
   const selectChain = (next: Chain) => {
     setChain(next);
@@ -134,23 +166,20 @@ export default function Send() {
 
       <ScreenHeader eyebrow={t('send.eyebrow')} title={t('send.title')} />
 
-      <Select label={t('send.network')} value={chain} onChange={(e) => selectChain(e.target.value as Chain)}>
-        {CHAIN_IDS.map((id) => (
-          <option key={id} value={id}>
-            {CHAINS[id].label} ({CHAINS[id].symbol})
-          </option>
-        ))}
-      </Select>
+      <SelectMenu
+        label={t('send.network')}
+        value={chain}
+        options={networkOptions}
+        onChange={selectChain}
+      />
 
       {tokens.length > 0 && (
-        <Select label={t('send.asset')} value={asset} onChange={(e) => setAsset(e.target.value)}>
-          <option value={NATIVE_ASSET}>{t('send.nativeCoin', { symbol: CHAINS[chain].symbol })}</option>
-          {tokens.map((token) => (
-            <option key={token.symbol} value={token.symbol}>
-              {t('send.erc20Option', { symbol: token.symbol })}
-            </option>
-          ))}
-        </Select>
+        <SelectMenu
+          label={t('send.asset')}
+          value={asset}
+          options={assetOptions}
+          onChange={setAsset}
+        />
       )}
 
       <Field
