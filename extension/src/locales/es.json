@@ -119,7 +119,9 @@
     "sent": "Transacción enviada a la red",
     "feeNote": "Comisión: nivel «standard» según la estimación EIP-1559 del nodo.",
     "signing": "Firmando…",
-    "submit": "Revisar y enviar"
+    "submit": "Revisar y enviar",
+    "available": "Disponible:",
+    "max": "Máx"
   },
   "receive": {
     "eyebrow": "Recarga",

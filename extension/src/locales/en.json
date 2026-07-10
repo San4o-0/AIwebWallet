@@ -119,7 +119,9 @@
     "sent": "Transaction sent to the network",
     "feeNote": "Fee: “standard” tier from the node's EIP-1559 estimate.",
     "signing": "Signing…",
-    "submit": "Review and send"
+    "submit": "Review and send",
+    "available": "Available:",
+    "max": "Max"
   },
   "receive": {
     "eyebrow": "Top up",

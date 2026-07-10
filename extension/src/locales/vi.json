@@ -118,7 +118,9 @@
     "sent": "Giao dịch đã được gửi lên mạng lưới",
     "feeNote": "Phí: mức “standard” theo ước tính EIP-1559 của node.",
     "signing": "Đang ký…",
-    "submit": "Xem lại và gửi"
+    "submit": "Xem lại và gửi",
+    "available": "Khả dụng:",
+    "max": "Tối đa"
   },
   "receive": {
     "eyebrow": "Nạp tiền",

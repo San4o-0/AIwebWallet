@@ -118,7 +118,9 @@
     "sent": "交易已发送至网络",
     "feeNote": "手续费：按节点 EIP-1559 估算的“standard”档位。",
     "signing": "正在签名…",
-    "submit": "确认并发送"
+    "submit": "确认并发送",
+    "available": "可用：",
+    "max": "最大"
   },
   "receive": {
     "eyebrow": "充值",

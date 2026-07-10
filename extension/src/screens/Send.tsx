@@ -8,6 +8,7 @@
  * справжній tx hash. Solana/Bitcoin — TODO (потрібна збірка транзакцій цих
  * мереж у ядрі).
  */
+import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -17,7 +18,7 @@ import { SelectMenu, type SelectOption } from '@/src/components/SelectMenu';
 import { TokenIcon } from '@/src/components/token-icons';
 import { Button, Field, ScreenHeader } from '@/src/components/ui';
 import { localizeUnknownError } from '@/src/i18n';
-import { broadcastTx, fetchTxParams } from '@/src/lib/api';
+import { broadcastTx, fetchPortfolio, fetchTxParams } from '@/src/lib/api';
 import { CHAINS, CHAIN_IDS, type Chain } from '@/src/lib/chains';
 import {
   isEvmAddress,
@@ -48,6 +49,33 @@ export default function Send() {
   const tokens = useMemo(() => KNOWN_ERC20[chain] ?? [], [chain]);
   const token = tokens.find((t) => t.symbol === asset) ?? null;
   const symbol = token?.symbol ?? CHAINS[chain].symbol;
+
+  // Портфель — той самий queryKey що на Home, тож дані переиспользуються з кешу.
+  const { data: portfolio } = useQuery({
+    queryKey: ['portfolio', account?.addresses.evm],
+    queryFn: () =>
+      fetchPortfolio({
+        addresses: {
+          evm: account !== null ? [account.addresses.evm] : [],
+          solana:
+            account !== null && account.addresses.solana !== '' ? [account.addresses.solana] : [],
+          bitcoin:
+            account !== null && account.addresses.bitcoin !== '' ? [account.addresses.bitcoin] : [],
+          tron: account !== null && account.addresses.tron !== '' ? [account.addresses.tron] : [],
+        },
+      }),
+    enabled: account !== null,
+  });
+
+  // Доступний баланс обраного активу (нативний / токен) у поточній мережі.
+  const available = useMemo(() => {
+    const list = portfolio?.tokens ?? [];
+    const match =
+      asset === NATIVE_ASSET
+        ? list.find((tk) => tk.chain === chain && tk.isNative)
+        : list.find((tk) => tk.chain === chain && !tk.isNative && tk.symbol === asset);
+    return match?.amount ?? null;
+  }, [portfolio, chain, asset]);
 
   // Пункти селектора мережі: іконка мережі + назва + тикер праворуч.
   const networkOptions = useMemo<SelectOption<Chain>[]>(
@@ -200,14 +228,33 @@ export default function Send() {
         spellCheck={false}
       />
 
-      <Field
-        label={t('send.amount', { symbol })}
-        value={amount}
-        onChange={(e) => setAmount(e.target.value)}
-        placeholder="0.0"
-        inputMode="decimal"
-        dir="ltr"
-      />
+      <div>
+        <Field
+          label={t('send.amount', { symbol })}
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          placeholder="0.0"
+          inputMode="decimal"
+          dir="ltr"
+        />
+        {available !== null && (
+          <div className="mt-2 flex items-center justify-between gap-2 text-xs">
+            <span className="text-muted">
+              {t('send.available')}{' '}
+              <span className="font-mono tabular-nums text-ink" dir="ltr">
+                {available} {symbol}
+              </span>
+            </span>
+            <button
+              type="button"
+              onClick={() => setAmount(available)}
+              className="rounded-md px-2 py-1 font-semibold text-accent transition-colors hover:bg-accent/10"
+            >
+              {t('send.max')}
+            </button>
+          </div>
+        )}
+      </div>
 
       {error !== null && <p className="text-xs leading-relaxed text-danger">{error}</p>}
       {txHash !== null && (

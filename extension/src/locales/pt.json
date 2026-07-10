@@ -119,7 +119,9 @@
     "sent": "Transação enviada para a rede",
     "feeNote": "Taxa: nível “standard” da estimativa EIP-1559 do nó.",
     "signing": "A assinar…",
-    "submit": "Rever e enviar"
+    "submit": "Rever e enviar",
+    "available": "Disponível:",
+    "max": "Máx"
   },
   "receive": {
     "eyebrow": "Depósito",

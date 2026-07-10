@@ -119,7 +119,9 @@
     "sent": "Transaktion an das Netzwerk gesendet",
     "feeNote": "Gebühr: Stufe „standard“ aus der EIP-1559-Schätzung des Nodes.",
     "signing": "Wird signiert…",
-    "submit": "Prüfen und senden"
+    "submit": "Prüfen und senden",
+    "available": "Verfügbar:",
+    "max": "Max"
   },
   "receive": {
     "eyebrow": "Aufladen",

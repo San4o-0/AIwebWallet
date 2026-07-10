@@ -119,7 +119,9 @@
     "sent": "Transaksi terkirim ke jaringan",
     "feeNote": "Biaya: tingkat “standard” dari estimasi EIP-1559 node.",
     "signing": "Menandatangani…",
-    "submit": "Tinjau dan kirim"
+    "submit": "Tinjau dan kirim",
+    "available": "Tersedia:",
+    "max": "Maks"
   },
   "receive": {
     "eyebrow": "Isi saldo",

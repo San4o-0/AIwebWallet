@@ -118,7 +118,9 @@
     "sent": "트랜잭션이 네트워크로 전송되었습니다",
     "feeNote": "수수료: 노드의 EIP-1559 추정에 따른 “standard” 등급입니다.",
     "signing": "서명 중…",
-    "submit": "확인 후 보내기"
+    "submit": "확인 후 보내기",
+    "available": "사용 가능:",
+    "max": "최대"
   },
   "receive": {
     "eyebrow": "입금",

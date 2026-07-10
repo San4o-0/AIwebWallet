@@ -119,7 +119,9 @@
     "sent": "İşlem ağa gönderildi",
     "feeNote": "Ücret: düğümün EIP-1559 tahminindeki “standard” seviyesi.",
     "signing": "İmzalanıyor…",
-    "submit": "İncele ve gönder"
+    "submit": "İncele ve gönder",
+    "available": "Kullanılabilir:",
+    "max": "Maks"
   },
   "receive": {
     "eyebrow": "Para yatırma",

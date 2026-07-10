@@ -118,7 +118,9 @@
     "sent": "トランザクションをネットワークに送信しました",
     "feeNote": "手数料：ノードの EIP-1559 推定による「standard」ティアです。",
     "signing": "署名中…",
-    "submit": "確認して送金"
+    "submit": "確認して送金",
+    "available": "利用可能：",
+    "max": "最大"
   },
   "receive": {
     "eyebrow": "入金",

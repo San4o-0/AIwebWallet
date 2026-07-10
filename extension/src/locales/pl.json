@@ -121,7 +121,9 @@
     "sent": "Transakcja wysłana do sieci",
     "feeNote": "Opłata: poziom „standard” z szacunku EIP-1559 węzła.",
     "signing": "Podpisywanie…",
-    "submit": "Sprawdź i wyślij"
+    "submit": "Sprawdź i wyślij",
+    "available": "Dostępne:",
+    "max": "Maks."
   },
   "receive": {
     "eyebrow": "Zasilenie",

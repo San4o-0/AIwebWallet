@@ -295,5 +295,7 @@
   "errors.walletLimit": "Shown instead of the 'Add wallet' button (Home switcher, Settings, restore flow) and as a background error when the vault limit is reached. {{max}} is a number (currently 5), keep the placeholder verbatim.",
   "approve.noRequestTitle": "Empty-state title on the sign screen when opened with no pending dApp request.",
   "approve.noRequestHint": "Empty-state hint explaining when this screen normally appears. Keep to 1-2 short sentences.",
-  "approve.close": "Button that closes the sign popup window."
+  "approve.close": "Button that closes the sign popup window.",
+  "send.available": "Label before the available balance of the selected asset on the Send amount field, e.g. \"Available: 6.55 ETH\". Keep short.",
+  "send.max": "Small button that fills the amount field with the full available balance. One short word."
 }

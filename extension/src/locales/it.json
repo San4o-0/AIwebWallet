@@ -119,7 +119,9 @@
     "sent": "Transazione inviata alla rete",
     "feeNote": "Commissione: livello “standard” dalla stima EIP-1559 del nodo.",
     "signing": "Firma…",
-    "submit": "Rivedi e invia"
+    "submit": "Rivedi e invia",
+    "available": "Disponibile:",
+    "max": "Max"
   },
   "receive": {
     "eyebrow": "Ricarica",

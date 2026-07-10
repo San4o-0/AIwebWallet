@@ -119,7 +119,9 @@
     "sent": "Transaction envoyée au réseau",
     "feeNote": "Frais : palier « standard » selon l'estimation EIP-1559 du nœud.",
     "signing": "Signature…",
-    "submit": "Vérifier et envoyer"
+    "submit": "Vérifier et envoyer",
+    "available": "Disponible :",
+    "max": "Max"
   },
   "receive": {
     "eyebrow": "Approvisionnement",

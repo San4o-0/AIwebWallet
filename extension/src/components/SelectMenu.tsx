@@ -141,7 +141,10 @@ export function SelectMenu<T extends string>({
   };
 
   return (
-    <label className="block text-start">
+    // НЕ <label>: нативний label переадресовує клік будь-де всередині на свій
+    // контрол (тригер), тож клік по бекдропу/пункту закривав і одразу знову
+    // відкривав список. Тригер підписаний через aria-labelledby — a11y збережено.
+    <div className="block text-start">
       {label !== undefined && (
         <span id={`${baseId}-label`} className="eyebrow mb-2 block">
           {label}
@@ -225,6 +228,6 @@ export function SelectMenu<T extends string>({
           </>
         )}
       </div>
-    </label>
+    </div>
   );
 }
