@@ -2,12 +2,14 @@
  * Екран «Ще»: гаманці (multi-vault: перемикання, перейменування, додавання,
  * видалення), акаунт, дії, мова інтерфейсу, безпека.
  */
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
+  IconCheck,
   IconChevronDown,
   IconChevronRight,
+  IconCopy,
   IconKey,
   IconLock,
   IconQr,
@@ -84,15 +86,7 @@ export default function Settings() {
                 ['TRON', account.addresses.tron],
               ] as const
             ).map(([label, address]) => (
-              <div
-                key={label}
-                className="flex items-center justify-between border-b border-hairline px-4 py-2.5 last:border-b-0"
-              >
-                <span className="text-xs text-muted">{label}</span>
-                <span className="font-mono text-xs text-ink" dir="ltr">
-                  {address !== '' ? shortenAddress(address, 6) : '—'}
-                </span>
-              </div>
+              <AddressRow key={label} label={label} address={address} />
             ))}
           </Card>
         </section>
@@ -545,6 +539,51 @@ function RemoveConfirm({
         <Button variant="ghost" disabled={busy} onClick={onCancel}>
           {t('common.cancel')}
         </Button>
+      </div>
+    </div>
+  );
+}
+
+/** Рядок адреси акаунта: підпис, скорочена адреса і кнопка копіювання з фідбеком. */
+function AddressRow({ label, address }: { label: string; address: string }) {
+  const { t } = useTranslation();
+  const [copied, setCopied] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const empty = address === '';
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(address);
+      setCopied(true);
+    } catch {
+      /* clipboard недоступний — тихо ігноруємо, адресу видно й вручну */
+    }
+    if (timer.current !== null) clearTimeout(timer.current);
+    timer.current = setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="flex items-center justify-between gap-2 border-b border-hairline px-4 py-2.5 last:border-b-0">
+      <span className="shrink-0 text-xs text-muted">{label}</span>
+      <div className="flex min-w-0 items-center gap-2">
+        <span className="truncate font-mono text-xs text-ink" dir="ltr">
+          {empty ? '—' : shortenAddress(address, 6)}
+        </span>
+        {!empty && (
+          <button
+            type="button"
+            onClick={() => void copy()}
+            aria-label={copied ? t('receive.copied') : t('receive.copyAddress')}
+            title={copied ? t('receive.copied') : t('receive.copyAddress')}
+            className="flex size-7 shrink-0 items-center justify-center rounded-md text-muted transition-colors hover:bg-raised hover:text-ink active:scale-95"
+          >
+            {copied ? (
+              <IconCheck size={14} className="text-positive" />
+            ) : (
+              <IconCopy size={14} />
+            )}
+          </button>
+        )}
       </div>
     </div>
   );
