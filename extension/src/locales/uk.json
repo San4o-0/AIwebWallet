@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "AI Wallet",
+    "appName": "Argus",
     "back": "Назад",
     "next": "Далі",
     "cancel": "Скасувати",
@@ -275,7 +275,7 @@
     "revealSeedShow": "Показати фразу",
     "revealSeedHide": "Приховати фразу",
     "lock": "Заблокувати гаманець",
-    "footer": "AI Wallet {{version}} · {{networks}} мереж · non-custodial"
+    "footer": "Argus {{version}} · {{networks}} мереж · non-custodial"
   },
   "wallets": {
     "defaultName": "Гаманець {{number}}",

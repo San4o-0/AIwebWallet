@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "AI Wallet",
+    "appName": "Argus",
     "back": "Quay lại",
     "next": "Tiếp theo",
     "cancel": "Hủy",
@@ -272,7 +272,7 @@
     "revealSeedShow": "Hiện cụm từ",
     "revealSeedHide": "Ẩn cụm từ",
     "lock": "Khóa ví",
-    "footer": "AI Wallet {{version}} · {{networks}} mạng lưới · phi lưu ký"
+    "footer": "Argus {{version}} · {{networks}} mạng lưới · phi lưu ký"
   },
   "wallets": {
     "defaultName": "Ví {{number}}",

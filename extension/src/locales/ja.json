@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "AI Wallet",
+    "appName": "Argus",
     "back": "戻る",
     "next": "次へ",
     "cancel": "キャンセル",
@@ -272,7 +272,7 @@
     "revealSeedShow": "フレーズを表示",
     "revealSeedHide": "フレーズを隠す",
     "lock": "ウォレットをロック",
-    "footer": "AI Wallet {{version}} · {{networks}} ネットワーク · ノンカストディアル"
+    "footer": "Argus {{version}} · {{networks}} ネットワーク · ノンカストディアル"
   },
   "wallets": {
     "defaultName": "ウォレット {{number}}",

@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "AI Wallet",
+    "appName": "Argus",
     "back": "Voltar",
     "next": "Avançar",
     "cancel": "Cancelar",
@@ -273,7 +273,7 @@
     "revealSeedShow": "Mostrar frase",
     "revealSeedHide": "Ocultar frase",
     "lock": "Bloquear a carteira",
-    "footer": "AI Wallet {{version}} · {{networks}} redes · non-custodial"
+    "footer": "Argus {{version}} · {{networks}} redes · non-custodial"
   },
   "wallets": {
     "defaultName": "Carteira {{number}}",

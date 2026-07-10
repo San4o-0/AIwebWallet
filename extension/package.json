@@ -3,12 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "AI Wallet — non-custodial криптогаманець з AI-помічником (браузерне розширення, WXT + React + TS)",
+  "description": "Argus — non-custodial криптогаманець з AI-помічником (браузерне розширення, WXT + React + TS)",
   "scripts": {
     "dev": "wxt",
     "dev:firefox": "wxt -b firefox",
-    "build": "wxt build",
+    "build": "node scripts/build-icons.mjs && wxt build",
     "build:wasm": "node scripts/build-wasm.mjs",
+    "build:icons": "node scripts/build-icons.mjs",
     "zip": "wxt zip",
     "typecheck": "tsc --noEmit",
     "check:locales": "node scripts/check-locales.mjs",
@@ -28,6 +29,7 @@
     "zustand": "^5.0.8"
   },
   "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/vite": "^4.1.13",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^18.3.24",

@@ -186,8 +186,14 @@ export function IconGrid({ size, ...props }: IconProps) {
 }
 
 /**
- * Фірмовий знак: подвійний ромб (сейфовий вензель) у латуні.
- * Використовується на Onboarding / Unlock.
+ * Фірмовий знак Argus — «всевидющий вартовий»: діафрагма-око-щит.
+ *   • зовнішній контур — геометричний щит (гострий шестикутник, вершини вгору/вниз);
+ *   • всередині — око-лінза з двох дуг (мигдаль);
+ *   • фасетна діафрагма — вписаний шестикутник-апертура (flat-top, повернутий на 30°
+ *     відносно щита → обертальна симетрія приладу);
+ *   • у центрі — filled бурштинова зіниця-крапка.
+ * Та сама мова, що й попередній знак: тонкі бурштинові штрихи 1.5px, лінійне
+ * з'єднання, центральна крапка. Використовується на Onboarding / Unlock.
  */
 export function BrandMark({ size = 44, ...props }: IconProps) {
   return (
@@ -199,19 +205,29 @@ export function BrandMark({ size = 44, ...props }: IconProps) {
       aria-hidden
       {...props}
     >
+      {/* Щит — гострий шестикутник (pointy-top) */}
       <path
-        d="M22 4 40 22 22 40 4 22 22 4Z"
+        d="M22 4 37.6 13 37.6 31 22 40 6.4 31 6.4 13Z"
         stroke="var(--color-accent)"
         strokeWidth="1.5"
         strokeLinejoin="round"
       />
+      {/* Око-лінза — мигдаль із двох дуг */}
       <path
-        d="M22 13 31 22 22 31 13 22 22 13Z"
+        d="M10 22Q22 12 34 22 22 32 10 22Z"
         stroke="var(--color-accent)"
         strokeWidth="1.5"
         strokeLinejoin="round"
       />
-      <circle cx="22" cy="22" r="1.8" fill="var(--color-accent)" />
+      {/* Фасетна діафрагма — апертура (flat-top шестикутник) */}
+      <path
+        d="M27 22 24.5 17.7 19.5 17.7 17 22 19.5 26.3 24.5 26.3Z"
+        stroke="var(--color-accent)"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      {/* Зіниця */}
+      <circle cx="22" cy="22" r="2" fill="var(--color-accent)" />
     </svg>
   );
 }

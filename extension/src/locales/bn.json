@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "AI Wallet",
+    "appName": "Argus",
     "back": "পেছনে",
     "next": "পরবর্তী",
     "cancel": "বাতিল",
@@ -273,7 +273,7 @@
     "revealSeedShow": "ফ্রেজ দেখান",
     "revealSeedHide": "ফ্রেজ লুকান",
     "lock": "ওয়ালেট লক করুন",
-    "footer": "AI Wallet {{version}} · {{networks}}টি নেটওয়ার্ক · নন-কাস্টোডিয়াল"
+    "footer": "Argus {{version}} · {{networks}}টি নেটওয়ার্ক · নন-কাস্টোডিয়াল"
   },
   "wallets": {
     "defaultName": "ওয়ালেট {{number}}",

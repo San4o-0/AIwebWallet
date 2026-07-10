@@ -6,14 +6,34 @@ import { defineConfig } from 'wxt';
 export default defineConfig({
   modules: ['@wxt-dev/module-react'],
   manifest: ({ browser }) => ({
-    name: 'AI Wallet',
+    name: 'Argus',
     // Англійська як мова маніфеста за замовчуванням (сторінка стора).
     // TODO(i18n): локалізувати name/description через chrome.i18n `_locales`
     // + `default_locale` (__MSG_*__), коли з'являться перекладені описи —
     // рантайм-i18n попапа цього механізму не потребує.
     description:
-      'Non-custodial crypto wallet with an AI assistant: transaction explanations, risk analysis, chat.',
+      'Argus — a non-custodial AI crypto wallet that explains every transaction, warns you before you sign, and analyzes your activity.',
     permissions: ['storage', 'alarms'],
+    // Фірмова іконка розширення (генерується scripts/build-icons.mjs у
+    // public/icon/{N}.png; WXT копіює public/ у корінь .output).
+    icons: {
+      16: 'icon/16.png',
+      32: 'icon/32.png',
+      48: 'icon/48.png',
+      96: 'icon/96.png',
+      128: 'icon/128.png',
+    },
+    // Іконка тулбар-кнопки. WXT нормалізує `action` під MV3 і під
+    // Firefox-MV2 (browser_action) автоматично.
+    action: {
+      default_icon: {
+        16: 'icon/16.png',
+        32: 'icon/32.png',
+        48: 'icon/48.png',
+        96: 'icon/96.png',
+        128: 'icon/128.png',
+      },
+    },
     // Явний ID для Firefox (about:debugging приймає і без нього, але для
     // підпису/оновлень addons.mozilla.org ID обов'язковий).
     ...(browser === 'firefox'

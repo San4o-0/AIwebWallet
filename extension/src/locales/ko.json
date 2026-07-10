@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "AI Wallet",
+    "appName": "Argus",
     "back": "뒤로",
     "next": "다음",
     "cancel": "취소",
@@ -272,7 +272,7 @@
     "revealSeedShow": "구문 보기",
     "revealSeedHide": "구문 숨기기",
     "lock": "지갑 잠금",
-    "footer": "AI Wallet {{version}} · 네트워크 {{networks}}개 · 비수탁형"
+    "footer": "Argus {{version}} · 네트워크 {{networks}}개 · 비수탁형"
   },
   "wallets": {
     "defaultName": "지갑 {{number}}",

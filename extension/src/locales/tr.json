@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "AI Wallet",
+    "appName": "Argus",
     "back": "Geri",
     "next": "İleri",
     "cancel": "İptal",
@@ -273,7 +273,7 @@
     "revealSeedShow": "İfadeyi göster",
     "revealSeedHide": "İfadeyi gizle",
     "lock": "Cüzdanı kilitle",
-    "footer": "AI Wallet {{version}} · {{networks}} ağ · non-custodial"
+    "footer": "Argus {{version}} · {{networks}} ağ · non-custodial"
   },
   "wallets": {
     "defaultName": "Cüzdan {{number}}",

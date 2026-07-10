@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "AI Wallet",
+    "appName": "Argus",
     "back": "Kembali",
     "next": "Lanjut",
     "cancel": "Batal",
@@ -273,7 +273,7 @@
     "revealSeedShow": "Tampilkan frasa",
     "revealSeedHide": "Sembunyikan frasa",
     "lock": "Kunci dompet",
-    "footer": "AI Wallet {{version}} · {{networks}} jaringan · non-kustodial"
+    "footer": "Argus {{version}} · {{networks}} jaringan · non-kustodial"
   },
   "wallets": {
     "defaultName": "Dompet {{number}}",

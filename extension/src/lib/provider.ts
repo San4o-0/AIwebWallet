@@ -140,7 +140,7 @@ const PROVIDER_ICON =
 export function announceEip6963(provider: AiWalletProvider): void {
   const info: Eip6963ProviderInfo = {
     uuid: crypto.randomUUID(),
-    name: 'AI Wallet',
+    name: 'Argus',
     icon: PROVIDER_ICON,
     rdns: 'app.aiwallet',
   };

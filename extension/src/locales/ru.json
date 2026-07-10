@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "AI Wallet",
+    "appName": "Argus",
     "back": "Назад",
     "next": "Далее",
     "cancel": "Отмена",
@@ -275,7 +275,7 @@
     "revealSeedShow": "Показать фразу",
     "revealSeedHide": "Скрыть фразу",
     "lock": "Заблокировать кошелёк",
-    "footer": "AI Wallet {{version}} · {{networks}} сетей · non-custodial"
+    "footer": "Argus {{version}} · {{networks}} сетей · non-custodial"
   },
   "wallets": {
     "defaultName": "Кошелёк {{number}}",

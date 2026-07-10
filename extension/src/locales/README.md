@@ -1,4 +1,4 @@
-# Локалі AI Wallet / AI Wallet locales
+# Локалі Argus / Argus locales
 
 ## For translator agents (how to add a language)
 

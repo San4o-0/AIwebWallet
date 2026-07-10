@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "AI Wallet",
+    "appName": "Argus",
     "back": "返回",
     "next": "下一步",
     "cancel": "取消",
@@ -272,7 +272,7 @@
     "revealSeedShow": "显示助记词",
     "revealSeedHide": "隐藏助记词",
     "lock": "锁定钱包",
-    "footer": "AI Wallet {{version}} · {{networks}} 个网络 · 非托管"
+    "footer": "Argus {{version}} · {{networks}} 个网络 · 非托管"
   },
   "wallets": {
     "defaultName": "钱包 {{number}}",
