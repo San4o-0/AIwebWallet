@@ -10,6 +10,9 @@ use async_trait::async_trait;
 use serde::Deserialize;
 
 use crate::error::AdapterError;
+use crate::reliability::{
+    handle_json_response, handle_text_response, HttpFailure, ReliabilityLayer,
+};
 use crate::types::{
     Address, ChainId, FeeEstimate, FeeRate, TokenBalance, TransactionRecord, TxRequest, TxStatus,
 };
@@ -23,6 +26,8 @@ pub const DEFAULT_MEMPOOL_API: &str = "https://mempool.space/api";
 pub struct BitcoinAdapter {
     http: reqwest::Client,
     base_url: String,
+    /// Retry-with-backoff + per-provider concurrency limit for mempool.space.
+    reliability: ReliabilityLayer,
 }
 
 impl Default for BitcoinAdapter {
@@ -43,6 +48,7 @@ impl BitcoinAdapter {
         BitcoinAdapter {
             http: reqwest::Client::new(),
             base_url: base_url.into().trim_end_matches('/').to_string(),
+            reliability: ReliabilityLayer::with_defaults(),
         }
     }
 
@@ -59,13 +65,17 @@ impl BitcoinAdapter {
 
     async fn get_json<T: serde::de::DeserializeOwned>(&self, path: &str) -> Result<T, AdapterError> {
         let url = format!("{}{path}", self.base_url);
-        let response = self.http.get(&url).send().await?;
-        if !response.status().is_success() {
-            let code = response.status().as_u16() as i64;
-            let message = response.text().await.unwrap_or_default();
-            return Err(AdapterError::Rpc { code, message });
-        }
-        Ok(response.json().await?)
+        self.reliability
+            .run(|| async {
+                let response = self
+                    .http
+                    .get(&url)
+                    .send()
+                    .await
+                    .map_err(HttpFailure::from_reqwest)?;
+                handle_json_response(response).await
+            })
+            .await
     }
 }
 
@@ -267,16 +277,19 @@ impl ChainAdapter for BitcoinAdapter {
             return Err(AdapterError::InvalidInput("empty signed transaction".into()));
         }
         let url = format!("{}/tx", self.base_url);
-        let response = self.http.post(&url).body(hex::encode(signed_tx)).send().await?;
-        let status = response.status();
-        let body = response.text().await?;
-        if !status.is_success() {
-            return Err(AdapterError::Rpc {
-                code: status.as_u16() as i64,
-                message: body,
-            });
-        }
-        Ok(body.trim().to_string())
+        let raw = hex::encode(signed_tx);
+        self.reliability
+            .run(|| async {
+                let response = self
+                    .http
+                    .post(&url)
+                    .body(raw.clone())
+                    .send()
+                    .await
+                    .map_err(HttpFailure::from_reqwest)?;
+                handle_text_response(response).await
+            })
+            .await
     }
 
     async fn get_transaction_history(

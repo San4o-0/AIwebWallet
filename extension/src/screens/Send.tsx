@@ -51,7 +51,7 @@ export default function Send() {
   const symbol = token?.symbol ?? CHAINS[chain].symbol;
 
   // Портфель — той самий queryKey що на Home, тож дані переиспользуються з кешу.
-  const { data: portfolio } = useQuery({
+  const { data: portfolio, isLoading: balanceLoading } = useQuery({
     queryKey: ['portfolio', account?.addresses.evm],
     queryFn: () =>
       fetchPortfolio({
@@ -68,13 +68,15 @@ export default function Send() {
   });
 
   // Доступний баланс обраного активу (нативний / токен) у поточній мережі.
-  const available = useMemo(() => {
-    const list = portfolio?.tokens ?? [];
+  // null — коли портфель ще не завантажено або бекенд недоступний (не вигадуємо
+  // цифру); знайдений запис із нульовим amount дає "0", а не null.
+  const available = useMemo<string | null>(() => {
+    if (portfolio === undefined) return null;
     const match =
       asset === NATIVE_ASSET
-        ? list.find((tk) => tk.chain === chain && tk.isNative)
-        : list.find((tk) => tk.chain === chain && !tk.isNative && tk.symbol === asset);
-    return match?.amount ?? null;
+        ? portfolio.tokens.find((tk) => tk.chain === chain && tk.isNative)
+        : portfolio.tokens.find((tk) => tk.chain === chain && !tk.isNative && tk.symbol === asset);
+    return match?.amount ?? '0';
   }, [portfolio, chain, asset]);
 
   // Пункти селектора мережі: іконка мережі + назва + тикер праворуч.
@@ -237,23 +239,22 @@ export default function Send() {
           inputMode="decimal"
           dir="ltr"
         />
-        {available !== null && (
-          <div className="mt-2 flex items-center justify-between gap-2 text-xs">
-            <span className="text-muted">
-              {t('send.available')}{' '}
-              <span className="font-mono tabular-nums text-ink" dir="ltr">
-                {available} {symbol}
-              </span>
+        <div className="mt-2 flex items-center justify-between gap-2 text-xs">
+          <span className="text-muted">
+            {t('send.available')}{' '}
+            <span className="font-mono tabular-nums text-ink" dir="ltr">
+              {available !== null ? `${available} ${symbol}` : balanceLoading ? '…' : '—'}
             </span>
-            <button
-              type="button"
-              onClick={() => setAmount(available)}
-              className="rounded-md px-2 py-1 font-semibold text-accent transition-colors hover:bg-accent/10"
-            >
-              {t('send.max')}
-            </button>
-          </div>
-        )}
+          </span>
+          <button
+            type="button"
+            onClick={() => available !== null && setAmount(available)}
+            disabled={available === null}
+            className="rounded-md px-2 py-1 font-semibold text-accent transition-colors hover:bg-accent/10 disabled:cursor-not-allowed disabled:text-muted disabled:hover:bg-transparent"
+          >
+            {t('send.max')}
+          </button>
+        </div>
       </div>
 
       {error !== null && <p className="text-xs leading-relaxed text-danger">{error}</p>}

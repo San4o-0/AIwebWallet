@@ -29,6 +29,7 @@ pub mod bitcoin;
 pub mod error;
 pub mod evm;
 mod jsonrpc;
+mod reliability;
 pub mod solana;
 pub mod tron;
 pub mod types;

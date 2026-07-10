@@ -32,6 +32,12 @@ pub enum AdapterError {
     /// Operation is not supported by this adapter (yet).
     #[error("unsupported operation: {0}")]
     Unsupported(String),
+
+    /// A transient upstream failure (429 / 5xx / network) that persisted after
+    /// the retry budget was exhausted. Distinguished from one-shot errors so
+    /// callers can back off or surface a "provider busy" state.
+    #[error("rate limited: gave up after {attempts} attempt(s): {message}")]
+    RateLimited { attempts: u32, message: String },
 }
 
 impl AdapterError {

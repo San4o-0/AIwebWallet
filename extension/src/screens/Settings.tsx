@@ -2,7 +2,7 @@
  * Екран «Ще»: гаманці (multi-vault: перемикання, перейменування, додавання,
  * видалення), акаунт, дії, мова інтерфейсу, безпека.
  */
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -16,7 +16,8 @@ import {
   IconSend,
   IconShield,
 } from '@/src/components/icons';
-import { Button, Card, Eyebrow, Field, ScreenHeader, Select } from '@/src/components/ui';
+import { SelectMenu, type SelectOption } from '@/src/components/SelectMenu';
+import { Button, Card, Eyebrow, Field, ScreenHeader } from '@/src/components/ui';
 import {
   LOCALE_NATIVE_NAMES,
   SUPPORTED_LOCALES,
@@ -274,21 +275,26 @@ function LanguageSection() {
     void setLocale(locale);
   };
 
+  const options = useMemo<SelectOption<Locale>[]>(
+    () =>
+      SUPPORTED_LOCALES.map((locale) => ({
+        value: locale,
+        label: LOCALE_NATIVE_NAMES[locale],
+        secondary: locale.toUpperCase(),
+      })),
+    [],
+  );
+
   return (
     <section>
       <Eyebrow className="mb-2.5">{t('settings.language')}</Eyebrow>
       <Card>
-        <Select
+        <SelectMenu
           label={t('settings.languageLabel')}
           value={current}
-          onChange={(e) => onChange(e.target.value as Locale)}
-        >
-          {SUPPORTED_LOCALES.map((locale) => (
-            <option key={locale} value={locale}>
-              {LOCALE_NATIVE_NAMES[locale]}
-            </option>
-          ))}
-        </Select>
+          options={options}
+          onChange={onChange}
+        />
         <p className="mt-2.5 text-xs leading-relaxed text-muted">{t('settings.languageHint')}</p>
       </Card>
     </section>

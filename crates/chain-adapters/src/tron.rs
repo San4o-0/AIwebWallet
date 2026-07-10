@@ -20,6 +20,7 @@ use serde_json::json;
 use tokio::sync::Mutex;
 
 use crate::error::AdapterError;
+use crate::reliability::{handle_json_response, HttpFailure, ReliabilityLayer};
 use crate::types::{
     Address, ChainId, FeeEstimate, FeeRate, TokenBalance, TransactionRecord, TxRequest, TxStatus,
 };
@@ -67,6 +68,8 @@ pub struct TronAdapter {
     api_key: Option<String>,
     /// Кеш відповідей /v1/accounts (TTL 10 с), спільний між клонами.
     account_cache: AccountCache,
+    /// Retry-with-backoff + ліміт одночасних запитів до TronGrid.
+    reliability: ReliabilityLayer,
 }
 
 impl Default for TronAdapter {
@@ -88,6 +91,7 @@ impl TronAdapter {
             tokens,
             api_key: None,
             account_cache: Arc::new(Mutex::new(HashMap::new())),
+            reliability: ReliabilityLayer::with_defaults(),
         }
     }
 
@@ -117,13 +121,16 @@ impl TronAdapter {
 
     async fn get_json<T: serde::de::DeserializeOwned>(&self, path: &str) -> Result<T, AdapterError> {
         let url = format!("{}{path}", self.base_url);
-        let response = self.with_auth(self.http.get(&url)).send().await?;
-        if !response.status().is_success() {
-            let code = response.status().as_u16() as i64;
-            let message = response.text().await.unwrap_or_default();
-            return Err(AdapterError::Rpc { code, message });
-        }
-        Ok(response.json().await?)
+        self.reliability
+            .run(|| async {
+                let response = self
+                    .with_auth(self.http.get(&url))
+                    .send()
+                    .await
+                    .map_err(HttpFailure::from_reqwest)?;
+                handle_json_response(response).await
+            })
+            .await
     }
 
     async fn post_json<T: serde::de::DeserializeOwned>(
@@ -132,13 +139,16 @@ impl TronAdapter {
         body: serde_json::Value,
     ) -> Result<T, AdapterError> {
         let url = format!("{}{path}", self.base_url);
-        let response = self.with_auth(self.http.post(&url).json(&body)).send().await?;
-        if !response.status().is_success() {
-            let code = response.status().as_u16() as i64;
-            let message = response.text().await.unwrap_or_default();
-            return Err(AdapterError::Rpc { code, message });
-        }
-        Ok(response.json().await?)
+        self.reliability
+            .run(|| async {
+                let response = self
+                    .with_auth(self.http.post(&url).json(&body))
+                    .send()
+                    .await
+                    .map_err(HttpFailure::from_reqwest)?;
+                handle_json_response(response).await
+            })
+            .await
     }
 
     /// Акаунт із /v1/accounts (None — акаунт ще не активований у мережі:

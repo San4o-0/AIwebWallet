@@ -12,6 +12,7 @@ use serde_json::json;
 
 use crate::error::AdapterError;
 use crate::jsonrpc::JsonRpcClient;
+use crate::reliability::RetryPolicy;
 use crate::types::{
     Address, ChainId, FeeEstimate, FeeRate, TokenBalance, TransactionRecord, TxRequest,
 };
@@ -55,7 +56,9 @@ impl EvmAdapter {
         }
         Ok(EvmAdapter {
             chain,
-            rpc: JsonRpcClient::new(rpc_url),
+            // Opt in to retry + per-provider rate limiting (Solana keeps the
+            // plain `JsonRpcClient::new`; only EVM uses the reliable client).
+            rpc: JsonRpcClient::with_reliability(rpc_url, RetryPolicy::default()),
             tokens: Vec::new(),
         })
     }
