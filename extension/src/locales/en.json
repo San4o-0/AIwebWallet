@@ -239,6 +239,22 @@
     "medium": "Medium risk",
     "high": "High risk"
   },
+  "connections": {
+    "eyebrow": "Permissions",
+    "title": "Connected sites",
+    "note": "Only these sites can see your address. Everything else gets an empty response, even while the wallet is unlocked. Connecting never grants the right to spend: every transaction still needs a separate signature.",
+    "listEyebrow": "Sites ({{count}})",
+    "connectedAt": "Connected on {{date}}",
+    "insecure": "Not secure",
+    "disconnect": "Disconnect",
+    "disconnectNamed": "Disconnect {{origin}}",
+    "disconnectAll": "Disconnect all sites",
+    "disconnectAllConfirm": "Disconnect all",
+    "disconnectAllWarning": "Access will be revoked for every connected site ({{count}}). They will have to ask for a connection again.",
+    "disconnecting": "Disconnecting…",
+    "emptyTitle": "No connected sites",
+    "emptyHint": "When a dApp asks to connect and you approve it, it will appear here — and you can revoke its access at any time."
+  },
   "settings": {
     "eyebrow": "Settings",
     "title": "More",
@@ -261,6 +277,8 @@
     "sendActionHint": "Transfers on EVM networks",
     "addressesAction": "Addresses and QR codes",
     "addressesActionHint": "Receiving and top-up",
+    "connectionsAction": "Connected sites",
+    "connectionsActionHint": "Which dApps can see your address",
     "language": "Language",
     "languageLabel": "Interface language",
     "languageHint": "Defaults to your browser language; a manual choice is saved on this device. Languages without a translation are shown in English for now.",
@@ -318,11 +336,18 @@
     "invalidAmount": "Invalid amount.",
     "tooManyDecimals": "Too many decimal places (maximum {{max}}).",
     "amountNotPositive": "The amount must be greater than zero.",
+    "chainIdMismatch": "Signing refused: the backend returned network id {{actual}}, but {{chain}} is {{expected}}. The transaction was NOT signed — a mismatched network id would make your signature valid on a different chain. Check the backend URL and your connection.",
+    "chainNotEvm": "{{chain}} is not an EVM network: an EIP-1559 transaction cannot be built for it.",
+    "txParamsInvalid": "Signing refused: the backend returned implausible transaction parameters (nonce, gas or fees). The transaction was NOT signed.",
+    "feeTooHigh": "Signing refused: the backend returned an implausibly high fee — {{gwei}} gwei, above the {{limit}} gwei safety limit. The transaction was NOT signed.",
+    "connectionsLoadFailed": "Failed to load the list of connected sites.",
+    "disconnectFailed": "Failed to disconnect the site.",
     "api": {
       "txParamsFailed": "Failed to fetch transaction parameters: {{detail}}",
       "txParamsUnavailable": "Failed to fetch transaction parameters: the backend is unavailable ({{url}}). Start the api-server and try again.",
       "broadcastFailed": "Failed to broadcast the transaction: {{detail}}",
-      "broadcastUnavailable": "Failed to broadcast the transaction: the backend is unavailable ({{url}}). Start the api-server and try again."
+      "broadcastUnavailable": "Failed to broadcast the transaction: the backend is unavailable ({{url}}). Start the api-server and try again.",
+      "insecureBaseUrl": "Request blocked: this build points at the backend over an unencrypted connection ({{url}}). Over cleartext an attacker can swap the network id and fees of a transaction, so requests are disabled. Rebuild the extension with an https address."
     }
   },
   "mock": {

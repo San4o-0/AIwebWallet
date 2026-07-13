@@ -239,6 +239,22 @@
     "medium": "Mittleres Risiko",
     "high": "Hohes Risiko"
   },
+  "connections": {
+    "eyebrow": "Berechtigungen",
+    "title": "Verbundene Websites",
+    "note": "Nur diese Websites sehen Ihre Adresse. Alle anderen erhalten eine leere Antwort — auch bei entsperrter Wallet. Eine Verbindung erlaubt niemals das Ausgeben von Guthaben: Jede Transaktion braucht weiterhin eine eigene Signatur.",
+    "listEyebrow": "Websites ({{count}})",
+    "connectedAt": "Verbunden am {{date}}",
+    "insecure": "Ohne TLS",
+    "disconnect": "Trennen",
+    "disconnectNamed": "{{origin}} trennen",
+    "disconnectAll": "Alle Websites trennen",
+    "disconnectAllConfirm": "Alle trennen",
+    "disconnectAllWarning": "Der Zugriff wird für jede verbundene Website ({{count}}) widerrufen. Sie müssen die Verbindung erneut anfragen.",
+    "disconnecting": "Wird getrennt…",
+    "emptyTitle": "Keine verbundenen Websites",
+    "emptyHint": "Sobald eine dApp eine Verbindung anfragt und Sie zustimmen, erscheint sie hier — den Zugriff können Sie jederzeit widerrufen."
+  },
   "settings": {
     "eyebrow": "Einstellungen",
     "title": "Mehr",
@@ -261,6 +277,8 @@
     "sendActionHint": "Überweisungen in EVM-Netzwerken",
     "addressesAction": "Adressen und QR-Codes",
     "addressesActionHint": "Empfangen und Aufladen",
+    "connectionsAction": "Verbundene Websites",
+    "connectionsActionHint": "Welche dApps Ihre Adresse sehen",
     "language": "Sprache",
     "languageLabel": "Sprache der Oberfläche",
     "languageHint": "Standard ist Ihre Browsersprache; eine manuelle Auswahl wird auf diesem Gerät gespeichert. Sprachen ohne Übersetzung erscheinen vorerst auf Englisch.",
@@ -318,11 +336,18 @@
     "invalidAmount": "Ungültiger Betrag.",
     "tooManyDecimals": "Zu viele Nachkommastellen (maximal {{max}}).",
     "amountNotPositive": "Der Betrag muss größer als null sein.",
+    "chainIdMismatch": "Signatur verweigert: Das Backend lieferte die Netzwerk-ID {{actual}}, {{chain}} hat aber {{expected}}. Die Transaktion wurde NICHT signiert — eine falsche Netzwerk-ID würde Ihre Signatur in einer anderen Chain gültig machen. Prüfen Sie die Backend-URL und Ihre Verbindung.",
+    "chainNotEvm": "{{chain}} ist kein EVM-Netzwerk: Eine EIP-1559-Transaktion lässt sich dafür nicht erstellen.",
+    "txParamsInvalid": "Signatur verweigert: Das Backend lieferte unplausible Transaktionsparameter (Nonce, Gas oder Gebühren). Die Transaktion wurde NICHT signiert.",
+    "feeTooHigh": "Signatur verweigert: Das Backend lieferte eine unplausibel hohe Gebühr — {{gwei}} gwei, über der Sicherheitsgrenze von {{limit}} gwei. Die Transaktion wurde NICHT signiert.",
+    "connectionsLoadFailed": "Die Liste der verbundenen Websites konnte nicht geladen werden.",
+    "disconnectFailed": "Die Website konnte nicht getrennt werden.",
     "api": {
       "txParamsFailed": "Transaktionsparameter konnten nicht abgerufen werden: {{detail}}",
       "txParamsUnavailable": "Transaktionsparameter konnten nicht abgerufen werden: Das Backend ist nicht erreichbar ({{url}}). Starten Sie den api-server und versuchen Sie es erneut.",
       "broadcastFailed": "Transaktion konnte nicht übertragen werden: {{detail}}",
-      "broadcastUnavailable": "Transaktion konnte nicht übertragen werden: Das Backend ist nicht erreichbar ({{url}}). Starten Sie den api-server und versuchen Sie es erneut."
+      "broadcastUnavailable": "Transaktion konnte nicht übertragen werden: Das Backend ist nicht erreichbar ({{url}}). Starten Sie den api-server und versuchen Sie es erneut.",
+      "insecureBaseUrl": "Anfrage blockiert: Dieser Build zeigt über eine unverschlüsselte Verbindung auf das Backend ({{url}}). Im Klartext kann ein Angreifer Netzwerk-ID und Gebühren einer Transaktion austauschen, deshalb sind Anfragen deaktiviert. Bauen Sie die Erweiterung mit einer https-Adresse neu."
     }
   },
   "mock": {

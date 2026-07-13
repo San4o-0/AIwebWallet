@@ -239,6 +239,22 @@
     "medium": "Rischio medio",
     "high": "Rischio alto"
   },
+  "connections": {
+    "eyebrow": "Autorizzazioni",
+    "title": "Siti connessi",
+    "note": "Solo questi siti possono vedere il tuo indirizzo. Tutti gli altri ricevono una risposta vuota, anche a portafoglio sbloccato. La connessione non dà mai il diritto di spendere: ogni transazione richiede comunque una firma separata.",
+    "listEyebrow": "Siti ({{count}})",
+    "connectedAt": "Connesso il {{date}}",
+    "insecure": "Senza TLS",
+    "disconnect": "Disconnetti",
+    "disconnectNamed": "Disconnetti {{origin}}",
+    "disconnectAll": "Disconnetti tutti i siti",
+    "disconnectAllConfirm": "Disconnetti tutti",
+    "disconnectAllWarning": "L’accesso sarà revocato per ogni sito connesso ({{count}}). Dovranno richiedere di nuovo la connessione.",
+    "disconnecting": "Disconnessione…",
+    "emptyTitle": "Nessun sito connesso",
+    "emptyHint": "Quando una dApp chiederà di connettersi e la approverai, comparirà qui — potrai revocarne l’accesso in qualsiasi momento."
+  },
   "settings": {
     "eyebrow": "Impostazioni",
     "title": "Altro",
@@ -261,6 +277,8 @@
     "sendActionHint": "Trasferimenti sulle reti EVM",
     "addressesAction": "Indirizzi e codici QR",
     "addressesActionHint": "Ricezione e ricarica",
+    "connectionsAction": "Siti connessi",
+    "connectionsActionHint": "Quali dApp vedono il tuo indirizzo",
     "language": "Lingua",
     "languageLabel": "Lingua dell'interfaccia",
     "languageHint": "Per impostazione predefinita è la lingua del browser; la scelta manuale viene salvata su questo dispositivo. Le lingue senza traduzione per ora sono mostrate in inglese.",
@@ -318,11 +336,18 @@
     "invalidAmount": "Importo non valido.",
     "tooManyDecimals": "Troppe cifre decimali (massimo {{max}}).",
     "amountNotPositive": "L'importo deve essere maggiore di zero.",
+    "chainIdMismatch": "Firma rifiutata: il backend ha restituito l’id di rete {{actual}}, ma {{chain}} è {{expected}}. La transazione NON è stata firmata: un id di rete errato renderebbe la tua firma valida su un’altra chain. Controlla l’URL del backend e la connessione.",
+    "chainNotEvm": "{{chain}} non è una rete EVM: non è possibile costruire una transazione EIP-1559.",
+    "txParamsInvalid": "Firma rifiutata: il backend ha restituito parametri di transazione non plausibili (nonce, gas o commissioni). La transazione NON è stata firmata.",
+    "feeTooHigh": "Firma rifiutata: il backend ha restituito una commissione non plausibile — {{gwei}} gwei, oltre il limite di sicurezza di {{limit}} gwei. La transazione NON è stata firmata.",
+    "connectionsLoadFailed": "Impossibile caricare l’elenco dei siti connessi.",
+    "disconnectFailed": "Impossibile disconnettere il sito.",
     "api": {
       "txParamsFailed": "Impossibile ottenere i parametri della transazione: {{detail}}",
       "txParamsUnavailable": "Impossibile ottenere i parametri della transazione: il backend non è disponibile ({{url}}). Avvia l'api-server e riprova.",
       "broadcastFailed": "Impossibile trasmettere la transazione: {{detail}}",
-      "broadcastUnavailable": "Impossibile trasmettere la transazione: il backend non è disponibile ({{url}}). Avvia l'api-server e riprova."
+      "broadcastUnavailable": "Impossibile trasmettere la transazione: il backend non è disponibile ({{url}}). Avvia l'api-server e riprova.",
+      "insecureBaseUrl": "Richiesta bloccata: questa build punta al backend su una connessione non cifrata ({{url}}). In chiaro un attaccante può sostituire l’id di rete e le commissioni di una transazione, quindi le richieste sono disattivate. Ricompila l’estensione con un indirizzo https."
     }
   },
   "mock": {

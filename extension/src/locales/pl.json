@@ -241,6 +241,22 @@
     "medium": "Średnie ryzyko",
     "high": "Wysokie ryzyko"
   },
+  "connections": {
+    "eyebrow": "Uprawnienia",
+    "title": "Połączone witryny",
+    "note": "Tylko te witryny widzą Twój adres. Pozostałe otrzymują pustą odpowiedź, nawet gdy portfel jest odblokowany. Połączenie nigdy nie daje prawa do wydawania środków: każda transakcja wymaga osobnego podpisu.",
+    "listEyebrow": "Witryny ({{count}})",
+    "connectedAt": "Połączono {{date}}",
+    "insecure": "Bez TLS",
+    "disconnect": "Odłącz",
+    "disconnectNamed": "Odłącz {{origin}}",
+    "disconnectAll": "Odłącz wszystkie witryny",
+    "disconnectAllConfirm": "Odłącz wszystkie",
+    "disconnectAllWarning": "Dostęp zostanie cofnięty każdej połączonej witrynie ({{count}}). Będą musiały poprosić o połączenie ponownie.",
+    "disconnecting": "Odłączanie…",
+    "emptyTitle": "Brak połączonych witryn",
+    "emptyHint": "Gdy dApp poprosi o połączenie, a Ty je zatwierdzisz, pojawi się tutaj — dostęp możesz cofnąć w każdej chwili."
+  },
   "settings": {
     "eyebrow": "Ustawienia",
     "title": "Więcej",
@@ -263,6 +279,8 @@
     "sendActionHint": "Przelewy w sieciach EVM",
     "addressesAction": "Adresy i kody QR",
     "addressesActionHint": "Odbiór i zasilenie",
+    "connectionsAction": "Połączone witryny",
+    "connectionsActionHint": "Które dApp widzą Twój adres",
     "language": "Język",
     "languageLabel": "Język interfejsu",
     "languageHint": "Domyślnie język przeglądarki; ręczny wybór jest zapisywany na tym urządzeniu. Języki bez tłumaczenia są na razie wyświetlane po angielsku.",
@@ -320,11 +338,18 @@
     "invalidAmount": "Nieprawidłowa kwota.",
     "tooManyDecimals": "Za dużo miejsc po przecinku (maksymalnie {{max}}).",
     "amountNotPositive": "Kwota musi być większa od zera.",
+    "chainIdMismatch": "Odmowa podpisu: backend zwrócił id sieci {{actual}}, podczas gdy {{chain}} to {{expected}}. Transakcja NIE została podpisana — błędne id sieci sprawiłoby, że Twój podpis byłby ważny w innym łańcuchu. Sprawdź adres backendu i połączenie.",
+    "chainNotEvm": "{{chain}} nie jest siecią EVM: nie da się zbudować dla niej transakcji EIP-1559.",
+    "txParamsInvalid": "Odmowa podpisu: backend zwrócił nieprawdopodobne parametry transakcji (nonce, gas lub opłaty). Transakcja NIE została podpisana.",
+    "feeTooHigh": "Odmowa podpisu: backend zwrócił nieprawdopodobnie wysoką opłatę — {{gwei}} gwei, powyżej limitu bezpieczeństwa {{limit}} gwei. Transakcja NIE została podpisana.",
+    "connectionsLoadFailed": "Nie udało się wczytać listy połączonych witryn.",
+    "disconnectFailed": "Nie udało się odłączyć witryny.",
     "api": {
       "txParamsFailed": "Nie udało się pobrać parametrów transakcji: {{detail}}",
       "txParamsUnavailable": "Nie udało się pobrać parametrów transakcji: backend jest niedostępny ({{url}}). Uruchom api-server i spróbuj ponownie.",
       "broadcastFailed": "Nie udało się rozgłosić transakcji: {{detail}}",
-      "broadcastUnavailable": "Nie udało się rozgłosić transakcji: backend jest niedostępny ({{url}}). Uruchom api-server i spróbuj ponownie."
+      "broadcastUnavailable": "Nie udało się rozgłosić transakcji: backend jest niedostępny ({{url}}). Uruchom api-server i spróbuj ponownie.",
+      "insecureBaseUrl": "Żądanie zablokowane: ta kompilacja łączy się z backendem przez nieszyfrowane połączenie ({{url}}). W otwartym kanale atakujący może podmienić id sieci i opłaty transakcji, dlatego żądania są wyłączone. Zbuduj rozszerzenie ponownie z adresem https."
     }
   },
   "mock": {

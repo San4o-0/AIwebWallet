@@ -40,8 +40,26 @@ pub struct Config {
     /// Env: `TRONGRID_API_KEY`.
     pub trongrid_api_key: Option<String>,
     /// CORS allowlist (origin розширення). Env: `ALLOWED_ORIGINS` (через кому).
-    /// TODO: у проді — тільки extension origin (ТЗ розділ 6, п.6).
+    ///
+    /// Порожній список = dev-режим: дозволяються лише схеми `chrome-extension://`,
+    /// `moz-extension://` і localhost (див. `routes::cors_layer`). Звичайні
+    /// веб-сторінки заблоковані в обох режимах.
     pub allowed_origins: Vec<String>,
+    /// Загальний вхідний ліміт per-IP на всі `/v1/*`.
+    /// Env: `RATE_LIMIT_RPM` (дефолт 60), `RATE_LIMIT_BURST` (дефолт 20).
+    pub rate_limit_rpm: u32,
+    pub rate_limit_burst: u32,
+    /// Жорсткіший ліміт per-IP на AI-ендпоінти (`/v1/chat`, `/v1/tx/explain`) —
+    /// це прямі гроші за токени OpenAI.
+    /// Env: `CHAT_RATE_LIMIT_RPM` (дефолт 5), `CHAT_RATE_LIMIT_BURST` (дефолт 2).
+    pub chat_rate_limit_rpm: u32,
+    pub chat_rate_limit_burst: u32,
+    /// Чи довіряти `X-Forwarded-For`/`X-Real-IP` при визначенні IP клієнта.
+    /// Env: `TRUST_PROXY_HEADERS` (`1`/`true`), дефолт `false`.
+    ///
+    /// Вмикати ТІЛЬКИ якщо сервер стоїть за довіреним реверс-проксі/LB.
+    /// Інакше клієнт підмінить заголовок і обійде rate limiting.
+    pub trust_proxy_headers: bool,
     /// RPC-ендпоінти мереж (дефолти — публічні ноди).
     pub rpc: RpcConfig,
 }
@@ -119,6 +137,15 @@ pub mod defaults {
     pub const MEMPOOL_SPACE_URL: &str = "https://mempool.space/api";
     pub const COINGECKO_API_URL: &str = "https://api.coingecko.com/api/v3";
     pub const ETHERSCAN_API_URL: &str = "https://api.etherscan.io/v2/api";
+
+    /// Загальний ліміт: 60 запитів/хв per-IP, сплеск до 20 (розширення при
+    /// відкритті робить кілька паралельних запитів: баланси/ціни/історія).
+    pub const RATE_LIMIT_RPM: u32 = 60;
+    pub const RATE_LIMIT_BURST: u32 = 20;
+    /// AI-ендпоінти: 5 запитів/хв per-IP, сплеск 2. Живий користувач стільки
+    /// не пише; усе, що вище, — це вже качання нашого OPENAI_API_KEY.
+    pub const CHAT_RATE_LIMIT_RPM: u32 = 5;
+    pub const CHAT_RATE_LIMIT_BURST: u32 = 2;
 }
 
 impl Config {
@@ -136,6 +163,14 @@ impl Config {
                     .collect()
             })
             .unwrap_or_default();
+
+        // Число з env або дефолт (порожнє/некоректне значення → дефолт).
+        let num = |name: &str, default: u32| {
+            env::var(name)
+                .ok()
+                .and_then(|v| v.trim().parse::<u32>().ok())
+                .unwrap_or(default)
+        };
 
         Self {
             port,
@@ -161,6 +196,13 @@ impl Config {
                 .ok()
                 .filter(|k| !k.trim().is_empty()),
             allowed_origins,
+            rate_limit_rpm: num("RATE_LIMIT_RPM", defaults::RATE_LIMIT_RPM),
+            rate_limit_burst: num("RATE_LIMIT_BURST", defaults::RATE_LIMIT_BURST),
+            chat_rate_limit_rpm: num("CHAT_RATE_LIMIT_RPM", defaults::CHAT_RATE_LIMIT_RPM),
+            chat_rate_limit_burst: num("CHAT_RATE_LIMIT_BURST", defaults::CHAT_RATE_LIMIT_BURST),
+            trust_proxy_headers: env::var("TRUST_PROXY_HEADERS")
+                .map(|v| matches!(v.trim().to_ascii_lowercase().as_str(), "1" | "true" | "yes"))
+                .unwrap_or(false),
             rpc: RpcConfig::from_env(),
         }
     }
@@ -180,6 +222,11 @@ impl Default for Config {
             alchemy_api_key: None,
             trongrid_api_key: None,
             allowed_origins: Vec::new(),
+            rate_limit_rpm: defaults::RATE_LIMIT_RPM,
+            rate_limit_burst: defaults::RATE_LIMIT_BURST,
+            chat_rate_limit_rpm: defaults::CHAT_RATE_LIMIT_RPM,
+            chat_rate_limit_burst: defaults::CHAT_RATE_LIMIT_BURST,
+            trust_proxy_headers: false,
             rpc: RpcConfig::default(),
         }
     }

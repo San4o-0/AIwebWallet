@@ -239,6 +239,22 @@
     "medium": "Orta risk",
     "high": "Yüksek risk"
   },
+  "connections": {
+    "eyebrow": "İzinler",
+    "title": "Bağlı siteler",
+    "note": "Adresinizi yalnızca bu siteler görebilir. Diğerleri, cüzdan kilidi açıkken bile boş yanıt alır. Bağlanmak asla harcama izni vermez: her işlem yine de ayrı bir imza gerektirir.",
+    "listEyebrow": "Siteler ({{count}})",
+    "connectedAt": "Bağlanma tarihi: {{date}}",
+    "insecure": "TLS yok",
+    "disconnect": "Bağlantıyı kes",
+    "disconnectNamed": "{{origin}} bağlantısını kes",
+    "disconnectAll": "Tüm sitelerin bağlantısını kes",
+    "disconnectAllConfirm": "Tümünü kes",
+    "disconnectAllWarning": "Bağlı olan her sitenin ({{count}}) erişimi iptal edilecek. Yeniden bağlantı istemek zorunda kalacaklar.",
+    "disconnecting": "Bağlantı kesiliyor…",
+    "emptyTitle": "Bağlı site yok",
+    "emptyHint": "Bir dApp bağlanmak istediğinde ve siz onayladığınızda burada görünür — erişimini istediğiniz zaman iptal edebilirsiniz."
+  },
   "settings": {
     "eyebrow": "Ayarlar",
     "title": "Diğer",
@@ -261,6 +277,8 @@
     "sendActionHint": "EVM ağlarında transferler",
     "addressesAction": "Adresler ve QR kodları",
     "addressesActionHint": "Alım ve para yatırma",
+    "connectionsAction": "Bağlı siteler",
+    "connectionsActionHint": "Hangi dApp’ler adresinizi görüyor",
     "language": "Dil",
     "languageLabel": "Arayüz dili",
     "languageHint": "Varsayılan olarak tarayıcı dili kullanılır; elle yapılan seçim bu cihazda saklanır. Çevirisi olmayan diller şimdilik İngilizce gösterilir.",
@@ -318,11 +336,18 @@
     "invalidAmount": "Geçersiz tutar.",
     "tooManyDecimals": "Çok fazla ondalık basamak (en fazla {{max}}).",
     "amountNotPositive": "Tutar sıfırdan büyük olmalıdır.",
+    "chainIdMismatch": "İmza reddedildi: arka uç {{actual}} ağ kimliğini döndürdü, ancak {{chain}} ağının kimliği {{expected}}. İşlem İMZALANMADI — yanlış bir ağ kimliği, imzanızı başka bir zincirde geçerli kılardı. Arka uç adresini ve bağlantınızı kontrol edin.",
+    "chainNotEvm": "{{chain}} bir EVM ağı değil: bunun için EIP-1559 işlemi oluşturulamaz.",
+    "txParamsInvalid": "İmza reddedildi: arka uç makul olmayan işlem parametreleri (nonce, gas veya ücretler) döndürdü. İşlem İMZALANMADI.",
+    "feeTooHigh": "İmza reddedildi: arka uç makul olmayan derecede yüksek bir ücret döndürdü — {{gwei}} gwei, {{limit}} gwei güvenlik sınırının üzerinde. İşlem İMZALANMADI.",
+    "connectionsLoadFailed": "Bağlı siteler listesi yüklenemedi.",
+    "disconnectFailed": "Sitenin bağlantısı kesilemedi.",
     "api": {
       "txParamsFailed": "İşlem parametreleri alınamadı: {{detail}}",
       "txParamsUnavailable": "İşlem parametreleri alınamadı: arka uç kullanılamıyor ({{url}}). api-server'ı başlatıp tekrar deneyin.",
       "broadcastFailed": "İşlem yayınlanamadı: {{detail}}",
-      "broadcastUnavailable": "İşlem yayınlanamadı: arka uç kullanılamıyor ({{url}}). api-server'ı başlatıp tekrar deneyin."
+      "broadcastUnavailable": "İşlem yayınlanamadı: arka uç kullanılamıyor ({{url}}). api-server'ı başlatıp tekrar deneyin.",
+      "insecureBaseUrl": "İstek engellendi: bu sürüm arka uca şifrelenmemiş bir bağlantı üzerinden bağlanıyor ({{url}}). Açık kanalda bir saldırgan işlemin ağ kimliğini ve ücretlerini değiştirebilir, bu yüzden istekler devre dışı. Uzantıyı https adresiyle yeniden derleyin."
     }
   },
   "mock": {

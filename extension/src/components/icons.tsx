@@ -174,6 +174,25 @@ export function IconSparkle({ size, ...props }: IconProps) {
   );
 }
 
+/** Підключені сайти: глобус (origin dApp у списку дозволів). */
+export function IconGlobe({ size, ...props }: IconProps) {
+  return (
+    <svg {...base(size, props)}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M3.5 12h17M12 3.5c2.2 2.3 3.3 5.1 3.3 8.5s-1.1 6.2-3.3 8.5c-2.2-2.3-3.3-5.1-3.3-8.5s1.1-6.2 3.3-8.5Z" />
+    </svg>
+  );
+}
+
+/** Розрив звʼязку (відключити сайт). */
+export function IconUnlink({ size, ...props }: IconProps) {
+  return (
+    <svg {...base(size, props)}>
+      <path d="M9.5 14.5 7.4 16.6a3.6 3.6 0 0 1-5.1-5.1l2.1-2.1M14.5 9.5l2.1-2.1a3.6 3.6 0 0 1 5.1 5.1l-2.1 2.1M4 4l16 16" />
+    </svg>
+  );
+}
+
 export function IconGrid({ size, ...props }: IconProps) {
   return (
     <svg {...base(size, props)}>

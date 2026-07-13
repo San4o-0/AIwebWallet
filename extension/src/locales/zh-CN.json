@@ -238,6 +238,22 @@
     "medium": "中风险",
     "high": "高风险"
   },
+  "connections": {
+    "eyebrow": "权限",
+    "title": "已连接网站",
+    "note": "只有这些网站能看到你的地址。其他网站一律返回空结果，即使钱包已解锁。连接从不等于花费授权：每笔交易仍需单独签名。",
+    "listEyebrow": "网站（{{count}}）",
+    "connectedAt": "连接于 {{date}}",
+    "insecure": "无 TLS",
+    "disconnect": "断开",
+    "disconnectNamed": "断开 {{origin}}",
+    "disconnectAll": "断开所有网站",
+    "disconnectAllConfirm": "全部断开",
+    "disconnectAllWarning": "将撤销所有已连接网站（{{count}}）的访问权限，它们需要重新请求连接。",
+    "disconnecting": "正在断开…",
+    "emptyTitle": "暂无已连接网站",
+    "emptyHint": "当 dApp 请求连接并获得你的批准后，它会出现在这里——你可以随时撤销其访问权限。"
+  },
   "settings": {
     "eyebrow": "设置",
     "title": "更多",
@@ -260,6 +276,8 @@
     "sendActionHint": "在 EVM 网络上转账",
     "addressesAction": "地址与二维码",
     "addressesActionHint": "收款与充值",
+    "connectionsAction": "已连接网站",
+    "connectionsActionHint": "哪些 dApp 能看到你的地址",
     "language": "语言",
     "languageLabel": "界面语言",
     "languageHint": "默认跟随浏览器语言；手动选择将保存在本设备上。尚无翻译的语言暂以英文显示。",
@@ -317,11 +335,18 @@
     "invalidAmount": "金额无效。",
     "tooManyDecimals": "小数位数过多（最多 {{max}} 位）。",
     "amountNotPositive": "金额必须大于零。",
+    "chainIdMismatch": "已拒绝签名：后端返回的网络 id 为 {{actual}}，但 {{chain}} 应为 {{expected}}。交易未被签名——错误的网络 id 会让你的签名在另一条链上生效。请检查后端 URL 和网络连接。",
+    "chainNotEvm": "{{chain}} 不是 EVM 网络：无法为其构建 EIP-1559 交易。",
+    "txParamsInvalid": "已拒绝签名：后端返回了不合理的交易参数（nonce、gas 或手续费）。交易未被签名。",
+    "feeTooHigh": "已拒绝签名：后端返回的手续费高得离谱——{{gwei}} gwei，超过 {{limit}} gwei 的安全上限。交易未被签名。",
+    "connectionsLoadFailed": "无法加载已连接网站列表。",
+    "disconnectFailed": "断开该网站失败。",
     "api": {
       "txParamsFailed": "获取交易参数失败：{{detail}}",
       "txParamsUnavailable": "获取交易参数失败：后端不可用（{{url}}）。请启动 api-server 后重试。",
       "broadcastFailed": "广播交易失败：{{detail}}",
-      "broadcastUnavailable": "广播交易失败：后端不可用（{{url}}）。请启动 api-server 后重试。"
+      "broadcastUnavailable": "广播交易失败：后端不可用（{{url}}）。请启动 api-server 后重试。",
+      "insecureBaseUrl": "请求已被拦截：此构建通过未加密连接访问后端（{{url}}）。明文传输下，攻击者可以替换交易的网络 id 和手续费，因此请求已被禁用。请使用 https 地址重新构建扩展。"
     }
   },
   "mock": {

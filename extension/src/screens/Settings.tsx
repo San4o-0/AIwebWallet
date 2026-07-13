@@ -10,6 +10,7 @@ import {
   IconChevronDown,
   IconChevronRight,
   IconCopy,
+  IconGlobe,
   IconKey,
   IconLock,
   IconQr,
@@ -60,6 +61,12 @@ export default function Settings() {
       label: t('settings.addressesAction'),
       hint: t('settings.addressesActionHint'),
       screen: 'receive',
+    },
+    {
+      icon: IconGlobe,
+      label: t('settings.connectionsAction'),
+      hint: t('settings.connectionsActionHint'),
+      screen: 'connections',
     },
   ];
 

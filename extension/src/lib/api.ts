@@ -1,5 +1,14 @@
 /**
- * Типізований клієнт API бекенду (ТЗ §5): http://localhost:8080/v1.
+ * Типізований клієнт API бекенду (ТЗ §5).
+ *
+ * Базовий URL — BUILD-TIME env (`VITE_API_BASE_URL`, див. .env.example і
+ * wxt.config.ts), а не константа в коді. Дефолт для dev — localhost.
+ * ПРОД + не-https = помилка ЗБІРКИ (wxt.config.ts) і, як другий рубіж,
+ * відмова робити будь-який запит у рантаймі (assertTransportSecure нижче):
+ * по cleartext-каналу MITM підмінив би chain_id/nonce/комісії з /v1/tx/params.
+ *
+ * Бекенд НЕ у ланцюзі довіри підпису: усе, що з /v1/tx/params потрапляє в RLP,
+ * звіряється з локальними константами мережі (verifyTxParams, src/lib/evm.ts).
  *
  * Фінансові дані (баланси, історія, аналітика, чат) НЕ мають мок-fallback:
  * якщо бекенд недоступний — екран показує стан помилки/порожнечі, а не
@@ -30,12 +39,46 @@ import type {
 } from './api-types';
 import type { TokenBalance } from './api-types';
 import type { Chain } from './chains';
+import { verifyTxParams } from './evm';
 import { sharedLocale } from './i18n-bridge';
 import type { PendingSignRequest } from './messaging';
 import { mockExplainForRequest, mockRiskForRequest } from './mock-data';
 import { extractDelta, parseSseStream } from './sse';
 
-export const API_BASE_URL = 'http://localhost:8080/v1';
+/** Дефолт для локальної розробки (див. .env.example). */
+const DEFAULT_DEV_API_BASE_URL = 'http://localhost:8080/v1';
+
+/**
+ * Базовий URL бекенду з build-time env. Значення вшивається у бандл
+ * wxt.config.ts (`define`), тому воно вже провалідоване збіркою:
+ * у production-збірці не-https падає ЩЕ ДО того, як зʼявиться артефакт.
+ */
+export const API_BASE_URL: string = (
+  import.meta.env.VITE_API_BASE_URL ?? DEFAULT_DEV_API_BASE_URL
+).replace(/\/+$/, '');
+
+/**
+ * Другий рубіж (defense-in-depth): навіть якщо артефакт зібрано в обхід
+ * перевірки wxt.config.ts (патч бандла, ручний define, старий білд) —
+ * cleartext-транспорт у production не використовується взагалі: жоден запит
+ * не йде. Мовчазний фолбек на http означав би, що MITM може підмінити
+ * chain_id/комісії у /v1/tx/params, тож правильна поведінка — відмова.
+ */
+const INSECURE_TRANSPORT = import.meta.env.PROD && !API_BASE_URL.startsWith('https://');
+
+if (INSECURE_TRANSPORT) {
+  console.error(
+    `[argus] SECURITY: base URL API "${API_BASE_URL}" не https — усі запити до бекенду заблоковано. ` +
+      'Перезберіть розширення з VITE_API_BASE_URL=https://…',
+  );
+}
+
+/** Кидає i18n-ключ помилки, якщо транспорт небезпечний (прод + не-https). */
+function assertTransportSecure(): void {
+  if (INSECURE_TRANSPORT) {
+    throw new Error(`errors.api.insecureBaseUrl|${JSON.stringify({ url: API_BASE_URL })}`);
+  }
+}
 
 const REQUEST_TIMEOUT_MS = 3_000;
 
@@ -50,6 +93,7 @@ class ApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  assertTransportSecure();
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
     headers: { 'Content-Type': 'application/json', ...init?.headers },
@@ -102,6 +146,11 @@ async function withBackendRequired<T>(
     if (error instanceof ApiError) {
       throw new Error(`errors.api.${action}Failed|${JSON.stringify({ detail: error.message })}`);
     }
+    // Помилки безпеки (відмова в підписі через chain_id-mismatch, абсурдні
+    // комісії, cleartext-транспорт) — це НЕ «бекенд недоступний»: їх не можна
+    // маскувати під мережеву проблему, користувач має побачити справжню
+    // причину відмови. Такі помилки вже є i18n-ключами — пробрасуємо як є.
+    if (error instanceof Error && error.message.startsWith('errors.')) throw error;
     throw new Error(`errors.api.${action}Unavailable|${JSON.stringify({ url: API_BASE_URL })}`);
   }
 }
@@ -257,18 +306,27 @@ export function explainTx(req: ExplainRequest): Promise<ExplainResponse> {
 /**
  * GET /v1/tx/params — nonce, gas limit та EIP-1559 комісії для збірки
  * транзакції. БЕЗ мок-fallback: без реальних параметрів підписувати не можна.
+ *
+ * ЄДИНА точка входу цих даних у клієнт — тому саме тут стоїть перевірка
+ * довіри (verifyTxParams): chain_id звіряється з ЛОКАЛЬНОЮ константою мережі,
+ * комісії/gas/nonce — із санітарними межами. Компрометація або MITM бекенду
+ * НЕ конвертується у підпис (ані в чужій мережі, ані з захмарною комісією) —
+ * замість підпису піднімається помилка. Перевірка стоїть на рівні api-клієнта,
+ * а не в кожному викликачі, щоб її неможливо було забути додати в новому
+ * місці підпису.
  */
-export function fetchTxParams(
+export async function fetchTxParams(
   chain: Chain,
   from: string,
   isToken = false,
 ): Promise<TxParams> {
-  const params = new URLSearchParams({ chain, from });
-  if (isToken) params.set('token', '1');
-  return withBackendRequired(
-    () => request<TxParams>(`/tx/params?${params.toString()}`),
-    'txParams',
-  );
+  const query = new URLSearchParams({ chain, from });
+  if (isToken) query.set('token', '1');
+  return withBackendRequired(async () => {
+    const params = await request<TxParams>(`/tx/params?${query.toString()}`);
+    verifyTxParams(chain, params);
+    return params;
+  }, 'txParams');
 }
 
 /**
@@ -319,6 +377,7 @@ export async function* streamChat(
   req: ChatRequest,
   signal?: AbortSignal,
 ): AsyncGenerator<string, void, void> {
+  assertTransportSecure();
   // Активна локаль UI → поле lang (бекенд поки ігнорує його — TODO на боці
   // crates/api-server: враховувати lang у промпті чату).
   const payload: ChatRequest = { lang: sharedLocale(), ...req };

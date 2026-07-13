@@ -20,6 +20,7 @@ pub mod dto;
 pub mod handlers;
 pub mod indexer;
 pub mod pricing;
+pub mod ratelimit;
 pub mod risk;
 pub mod routes;
 pub mod simulation;

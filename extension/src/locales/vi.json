@@ -238,6 +238,22 @@
     "medium": "Rủi ro vừa",
     "high": "Rủi ro cao"
   },
+  "connections": {
+    "eyebrow": "Quyền truy cập",
+    "title": "Trang web đã kết nối",
+    "note": "Chỉ những trang này thấy được địa chỉ của bạn. Các trang khác nhận về kết quả rỗng, ngay cả khi ví đang mở khóa. Kết nối không bao giờ đồng nghĩa với quyền chi tiêu: mỗi giao dịch vẫn cần một chữ ký riêng.",
+    "listEyebrow": "Trang web ({{count}})",
+    "connectedAt": "Kết nối ngày {{date}}",
+    "insecure": "Không TLS",
+    "disconnect": "Ngắt kết nối",
+    "disconnectNamed": "Ngắt kết nối {{origin}}",
+    "disconnectAll": "Ngắt kết nối tất cả",
+    "disconnectAllConfirm": "Ngắt tất cả",
+    "disconnectAllWarning": "Quyền truy cập sẽ bị thu hồi với mọi trang đã kết nối ({{count}}). Chúng sẽ phải xin kết nối lại.",
+    "disconnecting": "Đang ngắt kết nối…",
+    "emptyTitle": "Chưa có trang nào kết nối",
+    "emptyHint": "Khi một dApp xin kết nối và bạn chấp thuận, nó sẽ xuất hiện ở đây — bạn có thể thu hồi quyền bất cứ lúc nào."
+  },
   "settings": {
     "eyebrow": "Cài đặt",
     "title": "Thêm",
@@ -260,6 +276,8 @@
     "sendActionHint": "Chuyển tiền trên các mạng EVM",
     "addressesAction": "Địa chỉ và mã QR",
     "addressesActionHint": "Nhận và nạp tiền",
+    "connectionsAction": "Trang web đã kết nối",
+    "connectionsActionHint": "Những dApp nào thấy địa chỉ của bạn",
     "language": "Ngôn ngữ",
     "languageLabel": "Ngôn ngữ giao diện",
     "languageHint": "Mặc định theo ngôn ngữ trình duyệt; lựa chọn thủ công được lưu trên thiết bị này. Các ngôn ngữ chưa có bản dịch tạm thời hiển thị bằng tiếng Anh.",
@@ -317,11 +335,18 @@
     "invalidAmount": "Số tiền không hợp lệ.",
     "tooManyDecimals": "Quá nhiều chữ số thập phân (tối đa {{max}}).",
     "amountNotPositive": "Số tiền phải lớn hơn 0.",
+    "chainIdMismatch": "Từ chối ký: backend trả về id mạng {{actual}}, trong khi {{chain}} là {{expected}}. Giao dịch KHÔNG được ký — id mạng sai sẽ khiến chữ ký của bạn có hiệu lực trên một chain khác. Hãy kiểm tra URL backend và kết nối.",
+    "chainNotEvm": "{{chain}} không phải mạng EVM: không thể dựng giao dịch EIP-1559 cho nó.",
+    "txParamsInvalid": "Từ chối ký: backend trả về tham số giao dịch bất hợp lý (nonce, gas hoặc phí). Giao dịch KHÔNG được ký.",
+    "feeTooHigh": "Từ chối ký: backend trả về mức phí cao bất thường — {{gwei}} gwei, vượt giới hạn an toàn {{limit}} gwei. Giao dịch KHÔNG được ký.",
+    "connectionsLoadFailed": "Không tải được danh sách trang đã kết nối.",
+    "disconnectFailed": "Không ngắt kết nối được trang này.",
     "api": {
       "txParamsFailed": "Không lấy được tham số giao dịch: {{detail}}",
       "txParamsUnavailable": "Không lấy được tham số giao dịch: backend không khả dụng ({{url}}). Hãy khởi động api-server và thử lại.",
       "broadcastFailed": "Không phát được giao dịch lên mạng: {{detail}}",
-      "broadcastUnavailable": "Không phát được giao dịch lên mạng: backend không khả dụng ({{url}}). Hãy khởi động api-server và thử lại."
+      "broadcastUnavailable": "Không phát được giao dịch lên mạng: backend không khả dụng ({{url}}). Hãy khởi động api-server và thử lại.",
+      "insecureBaseUrl": "Yêu cầu bị chặn: bản dựng này trỏ tới backend qua kết nối không mã hóa ({{url}}). Trên kênh không mã hóa, kẻ tấn công có thể thay id mạng và phí của giao dịch, nên các yêu cầu đã bị tắt. Hãy dựng lại tiện ích với địa chỉ https."
     }
   },
   "mock": {

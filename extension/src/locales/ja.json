@@ -238,6 +238,22 @@
     "medium": "中リスク",
     "high": "高リスク"
   },
+  "connections": {
+    "eyebrow": "権限",
+    "title": "接続中のサイト",
+    "note": "アドレスを見られるのはこれらのサイトだけです。それ以外は、ウォレットのロックが解除されていても空の応答を受け取ります。接続は送金の許可ではありません。取引ごとに個別の署名が必要です。",
+    "listEyebrow": "サイト（{{count}}）",
+    "connectedAt": "接続日: {{date}}",
+    "insecure": "TLSなし",
+    "disconnect": "切断",
+    "disconnectNamed": "{{origin}} を切断",
+    "disconnectAll": "すべてのサイトを切断",
+    "disconnectAllConfirm": "すべて切断",
+    "disconnectAllWarning": "接続中のすべてのサイト（{{count}}）のアクセスを取り消します。再度、接続を要求する必要があります。",
+    "disconnecting": "切断中…",
+    "emptyTitle": "接続中のサイトはありません",
+    "emptyHint": "dApp が接続を要求し、あなたが承認すると、ここに表示されます。アクセスはいつでも取り消せます。"
+  },
   "settings": {
     "eyebrow": "設定",
     "title": "その他",
@@ -260,6 +276,8 @@
     "sendActionHint": "EVM ネットワークでの送金",
     "addressesAction": "アドレスと QR コード",
     "addressesActionHint": "受け取りと入金",
+    "connectionsAction": "接続中のサイト",
+    "connectionsActionHint": "アドレスを見られる dApp",
     "language": "言語",
     "languageLabel": "インターフェースの言語",
     "languageHint": "初期設定ではブラウザの言語に従います。手動での選択はこのデバイスに保存されます。翻訳のない言語は当面英語で表示されます。",
@@ -317,11 +335,18 @@
     "invalidAmount": "金額が無効です。",
     "tooManyDecimals": "小数点以下の桁数が多すぎます（最大 {{max}} 桁）。",
     "amountNotPositive": "金額はゼロより大きい値を指定してください。",
+    "chainIdMismatch": "署名を拒否しました: バックエンドはネットワーク id {{actual}} を返しましたが、{{chain}} は {{expected}} です。取引は署名されていません。誤ったネットワーク id は、あなたの署名を別のチェーンで有効にしてしまいます。バックエンドの URL と接続を確認してください。",
+    "chainNotEvm": "{{chain}} は EVM ネットワークではありません: EIP-1559 取引を作成できません。",
+    "txParamsInvalid": "署名を拒否しました: バックエンドが不自然な取引パラメータ（nonce・gas・手数料）を返しました。取引は署名されていません。",
+    "feeTooHigh": "署名を拒否しました: バックエンドが異常に高い手数料（{{gwei}} gwei）を返しました。安全上限 {{limit}} gwei を超えています。取引は署名されていません。",
+    "connectionsLoadFailed": "接続中のサイト一覧を読み込めませんでした。",
+    "disconnectFailed": "サイトを切断できませんでした。",
     "api": {
       "txParamsFailed": "トランザクションパラメータを取得できませんでした：{{detail}}",
       "txParamsUnavailable": "トランザクションパラメータを取得できませんでした。バックエンドが利用できません（{{url}}）。api-server を起動して再試行してください。",
       "broadcastFailed": "トランザクションをブロードキャストできませんでした：{{detail}}",
-      "broadcastUnavailable": "トランザクションをブロードキャストできませんでした。バックエンドが利用できません（{{url}}）。api-server を起動して再試行してください。"
+      "broadcastUnavailable": "トランザクションをブロードキャストできませんでした。バックエンドが利用できません（{{url}}）。api-server を起動して再試行してください。",
+      "insecureBaseUrl": "リクエストをブロックしました: このビルドは暗号化されていない接続でバックエンド（{{url}}）を参照しています。平文では攻撃者が取引のネットワーク id や手数料を差し替えられるため、リクエストを無効化しました。https のアドレスで拡張機能を再ビルドしてください。"
     }
   },
   "mock": {

@@ -1,5 +1,6 @@
 //! AI Wallet API-сервер — точка входу.
 
+use std::net::SocketAddr;
 use std::sync::Arc;
 
 use tokio::signal;
@@ -43,9 +44,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let listener = tokio::net::TcpListener::bind(&addr).await?;
     info!("api-server слухає на http://{addr}");
 
-    axum::serve(listener, app)
-        .with_graceful_shutdown(shutdown_signal())
-        .await?;
+    // into_make_service_with_connect_info: без нього rate limiting не бачить
+    // IP клієнта і всі запити падають в одне спільне відро.
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<SocketAddr>(),
+    )
+    .with_graceful_shutdown(shutdown_signal())
+    .await?;
 
     info!("api-server зупинено");
     Ok(())

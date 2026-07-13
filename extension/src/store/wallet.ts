@@ -30,6 +30,8 @@ export type Screen =
   | 'receive'
   | 'chat'
   | 'settings'
+  /** Дозволи по origin: список підключених dApp + ревокація (з Settings). */
+  | 'connections'
   | 'approve';
 
 interface WalletStore {

@@ -14,6 +14,7 @@
     "typecheck": "tsc --noEmit",
     "check:locales": "node scripts/check-locales.mjs",
     "test:vault": "node scripts/test-vault-migration.mjs",
+    "test:security": "node scripts/test-security.mjs",
     "smoke:multivault": "node scripts/smoke-multivault.mjs",
     "postinstall": "wxt prepare"
   },

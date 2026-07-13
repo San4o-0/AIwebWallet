@@ -8,4 +8,6 @@ stats.html
 stats-*.json
 .env
 .env.*
+# Шаблон конфігурації збірки — навпаки, має бути в репозиторії.
+!.env.example
 web-ext.config.ts

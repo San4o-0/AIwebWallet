@@ -6,7 +6,7 @@
  *  - тип параметрів транзакції для WASM signEvmTransaction (усі числа —
  *    рядки, щоб не втрачати точність на межі JS ↔ Rust).
  */
-import type { Chain } from './chains';
+import { CHAINS, evmChainId, type Chain } from './chains';
 
 /** Відомий ERC-20 токен (MVP: стейблкоїни без індексера). */
 export interface Erc20Token {
@@ -83,6 +83,100 @@ export function parseAmountToBaseUnits(amount: string, decimals: number): bigint
   const base = BigInt(whole) * 10n ** BigInt(decimals) + BigInt(frac.padEnd(decimals, '0') || '0');
   if (base <= 0n) throw new Error('errors.amountNotPositive');
   return base;
+}
+
+// ---------------------------------------------------------------------------
+// Перевірка параметрів транзакції, отриманих із бекенду (GET /v1/tx/params)
+// ---------------------------------------------------------------------------
+
+/**
+ * Верхня санітарна межа max_fee_per_gas: 10 000 gwei (10^13 wei).
+ * Історичні піки газу в Ethereum — сотні gwei; 10 000 gwei лишає величезний
+ * запас для реальних сплесків, але відсікає абсурдні значення від
+ * скомпрометованого/підміненого бекенду (спалення балансу на комісії).
+ */
+export const MAX_FEE_PER_GAS_CEILING_WEI = 10_000n * 1_000_000_000n;
+
+/** Верхня санітарна межа gas limit: вище за будь-який реальний блок-ліміт EVM. */
+export const MAX_GAS_LIMIT = 60_000_000n;
+
+/** Десятковий/hex-рядок або число у bigint; null — не число. */
+function toBigInt(value: string | number): bigint | null {
+  try {
+    if (typeof value === 'number') {
+      return Number.isSafeInteger(value) && value >= 0 ? BigInt(value) : null;
+    }
+    const trimmed = value.trim();
+    if (!/^(0x[0-9a-fA-F]+|\d+)$/.test(trimmed)) return null;
+    return BigInt(trimmed);
+  } catch {
+    return null;
+  }
+}
+
+/** Мінімальна форма /v1/tx/params, від якої залежить підпис (див. api-types.TxParams). */
+export interface UntrustedTxParams {
+  chain_id: number;
+  nonce: number;
+  gas_limit_estimate: string;
+  fees: { standard: { max_fee_per_gas: string; max_priority_fee_per_gas: string } };
+}
+
+/**
+ * КРИТИЧНО ДЛЯ БЕЗПЕКИ. Бекенд — НЕ у ланцюзі довіри підпису: `chain_id`,
+ * `nonce` і комісії з GET /v1/tx/params потрапляють у RLP підписаної
+ * транзакції. Підмінений `chain_id` дав би валідний підпис у ЧУЖІЙ мережі
+ * (replay «того самого» переказу там, де в користувача є кошти), а захмарні
+ * комісії — спалення балансу на gas.
+ *
+ * Тому перед підписом параметри звіряються з ЛОКАЛЬНИМИ константами:
+ *  1. `chain_id` мусить точно збігтися з CHAINS[chain].evmChainIdHex (єдина
+ *     авторитетна копія — у розширенні, не в мережі);
+ *  2. комісії/gas — санітарні верхні межі + інваріант priority ≤ max;
+ *  3. nonce — невідʼємне ціле.
+ *
+ * Кидає Error з i18n-КЛЮЧЕМ (модуль бандлиться і в background, тож переклад
+ * робить попап через localizeError). Викликається у єдиній точці входу цих
+ * даних — fetchTxParams() у src/lib/api.ts, тобто захищає ОБИДВА шляхи
+ * підпису: Send.tsx (переказ користувача) і background.ts (eth_sendTransaction
+ * від dApp).
+ */
+export function verifyTxParams(chain: Chain, params: UntrustedTxParams): void {
+  const expected = evmChainId(chain);
+  if (expected === null) {
+    throw new Error(`errors.chainNotEvm|${JSON.stringify({ chain: CHAINS[chain].label })}`);
+  }
+  if (params.chain_id !== expected) {
+    throw new Error(
+      `errors.chainIdMismatch|${JSON.stringify({
+        chain: CHAINS[chain].label,
+        expected,
+        actual: params.chain_id,
+      })}`,
+    );
+  }
+
+  if (!Number.isSafeInteger(params.nonce) || params.nonce < 0) {
+    throw new Error('errors.txParamsInvalid');
+  }
+
+  const maxFee = toBigInt(params.fees.standard.max_fee_per_gas);
+  const priorityFee = toBigInt(params.fees.standard.max_priority_fee_per_gas);
+  const gasLimit = toBigInt(params.gas_limit_estimate);
+  if (maxFee === null || priorityFee === null || gasLimit === null) {
+    throw new Error('errors.txParamsInvalid');
+  }
+  if (priorityFee > maxFee) throw new Error('errors.txParamsInvalid');
+  if (gasLimit === 0n || gasLimit > MAX_GAS_LIMIT) throw new Error('errors.txParamsInvalid');
+  if (maxFee > MAX_FEE_PER_GAS_CEILING_WEI) {
+    // Показуємо gwei — це одиниця, якою користувач мислить комісію.
+    throw new Error(
+      `errors.feeTooHigh|${JSON.stringify({
+        gwei: (maxFee / 1_000_000_000n).toString(),
+        limit: (MAX_FEE_PER_GAS_CEILING_WEI / 1_000_000_000n).toString(),
+      })}`,
+    );
+  }
 }
 
 /**

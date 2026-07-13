@@ -239,6 +239,22 @@
     "medium": "Risiko sedang",
     "high": "Risiko tinggi"
   },
+  "connections": {
+    "eyebrow": "Izin",
+    "title": "Situs terhubung",
+    "note": "Hanya situs-situs ini yang dapat melihat alamat Anda. Selebihnya menerima jawaban kosong, bahkan saat dompet tidak terkunci. Menghubungkan tidak pernah berarti izin membelanjakan: setiap transaksi tetap memerlukan tanda tangan tersendiri.",
+    "listEyebrow": "Situs ({{count}})",
+    "connectedAt": "Terhubung pada {{date}}",
+    "insecure": "Tanpa TLS",
+    "disconnect": "Putuskan",
+    "disconnectNamed": "Putuskan {{origin}}",
+    "disconnectAll": "Putuskan semua situs",
+    "disconnectAllConfirm": "Putuskan semua",
+    "disconnectAllWarning": "Akses akan dicabut untuk setiap situs yang terhubung ({{count}}). Mereka harus meminta koneksi lagi.",
+    "disconnecting": "Memutuskan…",
+    "emptyTitle": "Belum ada situs terhubung",
+    "emptyHint": "Saat sebuah dApp meminta koneksi dan Anda menyetujuinya, situs itu akan muncul di sini — aksesnya bisa dicabut kapan saja."
+  },
   "settings": {
     "eyebrow": "Pengaturan",
     "title": "Lainnya",
@@ -261,6 +277,8 @@
     "sendActionHint": "Transfer di jaringan EVM",
     "addressesAction": "Alamat dan kode QR",
     "addressesActionHint": "Penerimaan dan pengisian saldo",
+    "connectionsAction": "Situs terhubung",
+    "connectionsActionHint": "dApp mana yang melihat alamat Anda",
     "language": "Bahasa",
     "languageLabel": "Bahasa antarmuka",
     "languageHint": "Secara default mengikuti bahasa peramban Anda; pilihan manual disimpan di perangkat ini. Bahasa tanpa terjemahan untuk sementara ditampilkan dalam bahasa Inggris.",
@@ -318,11 +336,18 @@
     "invalidAmount": "Jumlah tidak valid.",
     "tooManyDecimals": "Terlalu banyak angka desimal (maksimum {{max}}).",
     "amountNotPositive": "Jumlah harus lebih besar dari nol.",
+    "chainIdMismatch": "Penandatanganan ditolak: backend mengembalikan id jaringan {{actual}}, padahal {{chain}} adalah {{expected}}. Transaksi TIDAK ditandatangani — id jaringan yang salah akan membuat tanda tangan Anda sah di chain lain. Periksa URL backend dan koneksi Anda.",
+    "chainNotEvm": "{{chain}} bukan jaringan EVM: transaksi EIP-1559 tidak dapat dibuat untuknya.",
+    "txParamsInvalid": "Penandatanganan ditolak: backend mengembalikan parameter transaksi yang tidak masuk akal (nonce, gas, atau biaya). Transaksi TIDAK ditandatangani.",
+    "feeTooHigh": "Penandatanganan ditolak: backend mengembalikan biaya yang tidak masuk akal — {{gwei}} gwei, di atas batas aman {{limit}} gwei. Transaksi TIDAK ditandatangani.",
+    "connectionsLoadFailed": "Gagal memuat daftar situs terhubung.",
+    "disconnectFailed": "Gagal memutuskan situs.",
     "api": {
       "txParamsFailed": "Gagal mengambil parameter transaksi: {{detail}}",
       "txParamsUnavailable": "Gagal mengambil parameter transaksi: backend tidak tersedia ({{url}}). Jalankan api-server dan coba lagi.",
       "broadcastFailed": "Gagal menyiarkan transaksi: {{detail}}",
-      "broadcastUnavailable": "Gagal menyiarkan transaksi: backend tidak tersedia ({{url}}). Jalankan api-server dan coba lagi."
+      "broadcastUnavailable": "Gagal menyiarkan transaksi: backend tidak tersedia ({{url}}). Jalankan api-server dan coba lagi.",
+      "insecureBaseUrl": "Permintaan diblokir: build ini menunjuk ke backend melalui koneksi tanpa enkripsi ({{url}}). Pada saluran terbuka, penyerang dapat menukar id jaringan dan biaya transaksi, sehingga permintaan dinonaktifkan. Bangun ulang ekstensi dengan alamat https."
     }
   },
   "mock": {

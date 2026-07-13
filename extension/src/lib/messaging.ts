@@ -76,6 +76,12 @@ export enum MessageType {
   RestoreVaultPassword = 'aiwallet/restore-vault-password',
   /** Popup → background: показати seed-фразу (пароль перевіряється заново). */
   RevealSeedPhrase = 'aiwallet/reveal-seed-phrase',
+  /** Popup → background: список підключених сайтів (дозволи по origin). */
+  ListConnectedSites = 'aiwallet/list-connected-sites',
+  /** Popup → background: відключити (ревокувати) один origin. */
+  DisconnectSite = 'aiwallet/disconnect-site',
+  /** Popup → background: відключити всі origin. */
+  DisconnectAllSites = 'aiwallet/disconnect-all-sites',
 }
 
 // --- Мульти-гаманець: публічні метадані для UI --------------------------------
@@ -93,6 +99,24 @@ export interface WalletSummary {
 export interface WalletsState {
   wallets: WalletSummary[];
   activeId: string | null;
+}
+
+// --- Дозволи по origin: підключені сайти --------------------------------------
+
+/**
+ * Сайт, якому користувач явно дозволив доступ до адреси (через Approve на
+ * eth_requestAccounts). Тільки публічні дані. Сховище і правила — у
+ * src/lib/connections.ts; тип живе тут, бо це частина протоколу popup ⇄ background.
+ */
+export interface ConnectedSite {
+  /** Нормалізований origin: `https://app.uniswap.org`. */
+  origin: string;
+  /** Unix ms першого підключення. */
+  connectedAt: number;
+  /** Id гаманця, яким сайт підключено востаннє (null — невідомо). */
+  walletId: string | null;
+  /** EVM-адреса, яку востаннє віддали цьому сайту (null — невідомо). */
+  accountAddress: string | null;
 }
 
 /** Підтримувані методи EIP-1193 (MVP-мінімум, ТЗ F3.5). */
@@ -344,6 +368,21 @@ export interface BgRevealSeedPhrase {
   password: string;
 }
 
+// --- Підключені сайти (дозволи по origin; popup → background) ---------------
+
+export interface BgListConnectedSites {
+  type: MessageType.ListConnectedSites;
+}
+
+export interface BgDisconnectSite {
+  type: MessageType.DisconnectSite;
+  origin: string;
+}
+
+export interface BgDisconnectAllSites {
+  type: MessageType.DisconnectAllSites;
+}
+
 export type BackgroundMessage =
   | BgRpcRequest
   | BgGetSessionState
@@ -360,7 +399,10 @@ export type BackgroundMessage =
   | BgRenameWallet
   | BgRemoveWallet
   | BgRestoreVaultPassword
-  | BgRevealSeedPhrase;
+  | BgRevealSeedPhrase
+  | BgListConnectedSites
+  | BgDisconnectSite
+  | BgDisconnectAllSites;
 
 /** Стан сесії у service worker. */
 export interface SessionState {
@@ -403,6 +445,9 @@ export interface BackgroundResponseMap {
   [MessageType.RemoveWallet]: VaultResult<WalletsState>;
   [MessageType.RestoreVaultPassword]: RestoreVaultResult;
   [MessageType.RevealSeedPhrase]: VaultResult<string>;
+  [MessageType.ListConnectedSites]: VaultResult<ConnectedSite[]>;
+  [MessageType.DisconnectSite]: VaultResult<ConnectedSite[]>;
+  [MessageType.DisconnectAllSites]: VaultResult<ConnectedSite[]>;
 }
 
 const BACKGROUND_MESSAGE_TYPES: ReadonlySet<string> = new Set([
@@ -422,13 +467,27 @@ const BACKGROUND_MESSAGE_TYPES: ReadonlySet<string> = new Set([
   MessageType.RemoveWallet,
   MessageType.RestoreVaultPassword,
   MessageType.RevealSeedPhrase,
+  MessageType.ListConnectedSites,
+  MessageType.DisconnectSite,
+  MessageType.DisconnectAllSites,
 ]);
 
 /**
  * Типи повідомлень, що дозволені ЛИШЕ зі сторінок розширення (popup),
- * а не з content script — background перевіряє sender.url.
+ * а не з content script — background перевіряє sender.url (isTrustedSender).
+ *
+ * Правило: тут має бути ВСЕ, крім RpcRequest — єдиного типу, який містить
+ * dApp-контент і навмисно приходить із content script. Зокрема:
+ *  - GetSessionState віддає адресу/акаунти/стан локу (не дає це витягти
+ *    в обхід моделі дозволів по origin);
+ *  - GetPendingRequests віддає чергу запитів на підпис (origin + params
+ *    інших dApp);
+ *  - Disconnect* — ревокація дозволів, яку сайт не має права робити за
+ *    користувача.
  */
 export const PRIVILEGED_MESSAGE_TYPES: ReadonlySet<string> = new Set([
+  MessageType.GetSessionState,
+  MessageType.GetPendingRequests,
   MessageType.LockSession,
   MessageType.ResolveApproval,
   MessageType.VaultCreate,
@@ -442,6 +501,9 @@ export const PRIVILEGED_MESSAGE_TYPES: ReadonlySet<string> = new Set([
   MessageType.RemoveWallet,
   MessageType.RestoreVaultPassword,
   MessageType.RevealSeedPhrase,
+  MessageType.ListConnectedSites,
+  MessageType.DisconnectSite,
+  MessageType.DisconnectAllSites,
 ]);
 
 export function isBackgroundMessage(value: unknown): value is BackgroundMessage {

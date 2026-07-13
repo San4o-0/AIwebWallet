@@ -23,6 +23,7 @@ import { i18n, localizeError } from '../i18n';
 import type { Chain } from './chains';
 import {
   MessageType,
+  type ConnectedSite,
   type PublicAccount,
   type RestoreErrorCode,
   type VaultResult,
@@ -32,7 +33,13 @@ import { sendToBackground } from './runtime';
 import { hasAnyVault, listVaultRecords, nextDefaultWalletName } from './vault-storage';
 import { loadWalletCoreWasm, toWasmError } from '../wasm';
 
-export type { PublicAccount, RestoreErrorCode, WalletsState, WalletSummary } from './messaging';
+export type {
+  ConnectedSite,
+  PublicAccount,
+  RestoreErrorCode,
+  WalletsState,
+  WalletSummary,
+} from './messaging';
 
 /**
  * Типізована помилка відновлення пароля seed-фразою: UI розрізняє коди
@@ -99,6 +106,15 @@ export interface WalletCore {
    * Повертає фразу одним рядком; UI зобов'язаний затерти її зі стейту.
    */
   revealSeedPhrase(password: string): Promise<string>;
+  /**
+   * Сайти, яким користувач дозволив доступ до адреси (модель дозволів по
+   * origin). Непідключений сайт отримує від eth_accounts порожній масив.
+   */
+  listConnectedSites(): Promise<ConnectedSite[]>;
+  /** Відкликати доступ одного сайту (він знову бачитиме [] у eth_accounts). */
+  disconnectSite(origin: string): Promise<ConnectedSite[]>;
+  /** Відкликати доступ усіх сайтів. */
+  disconnectAllSites(): Promise<ConnectedSite[]>;
   /** Дериває наступний акаунт з тієї ж seed-фрази (F1.4). */
   deriveAccount(index: number, name: string): Promise<PublicAccount>;
   /** Підписати транзакцію; повертає серіалізовану підписану транзакцію. */
@@ -221,6 +237,18 @@ class WasmWalletCore implements WalletCore {
 
   async removeWallet(walletId: string): Promise<WalletsState> {
     return unwrap(await sendToBackground({ type: MessageType.RemoveWallet, walletId }));
+  }
+
+  async listConnectedSites(): Promise<ConnectedSite[]> {
+    return unwrap(await sendToBackground({ type: MessageType.ListConnectedSites }));
+  }
+
+  async disconnectSite(origin: string): Promise<ConnectedSite[]> {
+    return unwrap(await sendToBackground({ type: MessageType.DisconnectSite, origin }));
+  }
+
+  async disconnectAllSites(): Promise<ConnectedSite[]> {
+    return unwrap(await sendToBackground({ type: MessageType.DisconnectAllSites }));
   }
 
   async deriveAccount(index: number, name: string): Promise<PublicAccount> {

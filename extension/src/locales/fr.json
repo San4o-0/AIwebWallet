@@ -239,6 +239,22 @@
     "medium": "Risque moyen",
     "high": "Risque élevé"
   },
+  "connections": {
+    "eyebrow": "Autorisations",
+    "title": "Sites connectés",
+    "note": "Seuls ces sites peuvent voir votre adresse. Tous les autres reçoivent une réponse vide, même lorsque le portefeuille est déverrouillé. Se connecter ne donne jamais le droit de dépenser : chaque transaction exige une signature distincte.",
+    "listEyebrow": "Sites ({{count}})",
+    "connectedAt": "Connecté le {{date}}",
+    "insecure": "Sans TLS",
+    "disconnect": "Déconnecter",
+    "disconnectNamed": "Déconnecter {{origin}}",
+    "disconnectAll": "Déconnecter tous les sites",
+    "disconnectAllConfirm": "Tout déconnecter",
+    "disconnectAllWarning": "L’accès sera révoqué pour chaque site connecté ({{count}}). Ils devront redemander la connexion.",
+    "disconnecting": "Déconnexion…",
+    "emptyTitle": "Aucun site connecté",
+    "emptyHint": "Lorsqu’une dApp demandera à se connecter et que vous l’approuverez, elle apparaîtra ici — vous pourrez révoquer son accès à tout moment."
+  },
   "settings": {
     "eyebrow": "Paramètres",
     "title": "Plus",
@@ -261,6 +277,8 @@
     "sendActionHint": "Transferts sur les réseaux EVM",
     "addressesAction": "Adresses et codes QR",
     "addressesActionHint": "Réception et approvisionnement",
+    "connectionsAction": "Sites connectés",
+    "connectionsActionHint": "Quelles dApps voient votre adresse",
     "language": "Langue",
     "languageLabel": "Langue de l'interface",
     "languageHint": "Par défaut, la langue du navigateur est utilisée ; un choix manuel est enregistré sur cet appareil. Les langues sans traduction s'affichent en anglais pour l'instant.",
@@ -318,11 +336,18 @@
     "invalidAmount": "Montant invalide.",
     "tooManyDecimals": "Trop de décimales (maximum {{max}}).",
     "amountNotPositive": "Le montant doit être supérieur à zéro.",
+    "chainIdMismatch": "Signature refusée : le backend a renvoyé l’id de réseau {{actual}}, alors que {{chain}} vaut {{expected}}. La transaction n’a PAS été signée : un id de réseau erroné rendrait votre signature valide sur une autre chaîne. Vérifiez l’URL du backend et votre connexion.",
+    "chainNotEvm": "{{chain}} n’est pas un réseau EVM : impossible d’y construire une transaction EIP-1559.",
+    "txParamsInvalid": "Signature refusée : le backend a renvoyé des paramètres de transaction invraisemblables (nonce, gas ou frais). La transaction n’a PAS été signée.",
+    "feeTooHigh": "Signature refusée : le backend a renvoyé des frais invraisemblables — {{gwei}} gwei, au-delà de la limite de sécurité de {{limit}} gwei. La transaction n’a PAS été signée.",
+    "connectionsLoadFailed": "Impossible de charger la liste des sites connectés.",
+    "disconnectFailed": "Impossible de déconnecter le site.",
     "api": {
       "txParamsFailed": "Impossible de récupérer les paramètres de la transaction : {{detail}}",
       "txParamsUnavailable": "Impossible de récupérer les paramètres de la transaction : le backend est indisponible ({{url}}). Démarrez l'api-server et réessayez.",
       "broadcastFailed": "Impossible de diffuser la transaction : {{detail}}",
-      "broadcastUnavailable": "Impossible de diffuser la transaction : le backend est indisponible ({{url}}). Démarrez l'api-server et réessayez."
+      "broadcastUnavailable": "Impossible de diffuser la transaction : le backend est indisponible ({{url}}). Démarrez l'api-server et réessayez.",
+      "insecureBaseUrl": "Requête bloquée : cette build pointe vers le backend via une connexion non chiffrée ({{url}}). En clair, un attaquant peut modifier l’id de réseau et les frais d’une transaction ; les requêtes sont donc désactivées. Recompilez l’extension avec une adresse https."
     }
   },
   "mock": {

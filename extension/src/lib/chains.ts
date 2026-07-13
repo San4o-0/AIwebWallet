@@ -23,6 +23,22 @@ export const CHAIN_IDS = Object.keys(CHAINS) as Chain[];
 export type ChainKind = (typeof CHAINS)[Chain]['kind'];
 
 /**
+ * ЛОКАЛЬНА (не з мережі) числова константа EIP-155 chain id мережі:
+ * `evmChainIdHex` реєстру → number. null для не-EVM мереж.
+ *
+ * Це джерело правди для перевірки `chain_id`, що приходить із бекенду
+ * (GET /v1/tx/params) ПЕРЕД підписом: підписаний RLP містить chain_id, тож
+ * підміна цього поля (MITM/компрометація бекенду) дала б валідний підпис у
+ * ЧУЖІЙ мережі (replay). Див. verifyTxParams() у src/lib/evm.ts.
+ */
+export function evmChainId(chain: Chain): number | null {
+  const hex = CHAINS[chain].evmChainIdHex;
+  if (hex === null) return null;
+  const value = Number.parseInt(hex, 16);
+  return Number.isSafeInteger(value) && value > 0 ? value : null;
+}
+
+/**
  * Базові URL блок-експлорерів для сторінки транзакції (за hash). Виносимо
  * окремо від CHAINS, щоб не роздувати `as const`-реєстр; використовується у
  * детальному перегляді транзакції (кнопка «Переглянути в експлорері»).

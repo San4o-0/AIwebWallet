@@ -13,6 +13,13 @@ import { defineBackground } from 'wxt/utils/define-background';
 import { broadcastTx, fetchTxParams } from '@/src/lib/api';
 import { CHAINS, type Chain } from '@/src/lib/chains';
 import {
+  addConnectedSite,
+  isOriginConnected,
+  listConnectedSites,
+  removeAllConnectedSites,
+  removeConnectedSite,
+} from '@/src/lib/connections';
+import {
   decodePersonalSignMessage,
   type Eip1559TxParams,
   type SignedEvmTx,
@@ -23,6 +30,7 @@ import {
   RPC_ERRORS,
   isBackgroundMessage,
   type BackgroundMessage,
+  type BgDisconnectSite,
   type BgRemoveWallet,
   type BgRenameWallet,
   type BgResolveApproval,
@@ -35,6 +43,7 @@ import {
   type BgVaultSignMessage,
   type BgVaultSignTransaction,
   type BgVaultUnlock,
+  type ConnectedSite,
   type Json,
   type PendingSignRequest,
   type PublicAccount,
@@ -556,6 +565,12 @@ export default defineBackground(() => {
    */
   async function sendDappTransaction(request: PendingSignRequest): Promise<RpcOutcome> {
     if (session.address === null) return { ok: false, error: RPC_ERRORS.unauthorized };
+    // Дозвіл по origin перевіряється ще на вході (handleRpcRequest), але
+    // повторюємо тут: між постановкою в чергу і схваленням користувач міг
+    // відкликати доступ на екрані «Підключені сайти».
+    if (!(await isOriginConnected(request.origin))) {
+      return { ok: false, error: RPC_ERRORS.unauthorized };
+    }
     const rawTx = request.params[0];
     if (typeof rawTx !== 'object' || rawTx === null || Array.isArray(rawTx)) {
       return { ok: false, error: { code: -32602, message: 'Invalid transaction parameters.' } };
@@ -565,6 +580,10 @@ export default defineBackground(() => {
     const hasData = data !== undefined && data !== '0x';
 
     try {
+      // fetchTxParams звіряє chain_id із ЛОКАЛЬНОЮ константою мережі і
+      // санітарними межами комісій (verifyTxParams, src/lib/evm.ts) — тобто
+      // кидає помилку ЗАМІСТЬ того, щоб дати підписати транзакцію з підміненим
+      // chain_id (валідний підпис у чужій мережі) чи захмарною комісією.
       const params = await fetchTxParams(DAPP_CHAIN, session.address, hasData);
       const txParams: Eip1559TxParams = {
         chain_id: String(params.chain_id),
@@ -596,11 +615,26 @@ export default defineBackground(() => {
   async function approvedOutcome(request: PendingSignRequest): Promise<RpcOutcome> {
     if (!session.unlocked) return { ok: false, error: RPC_ERRORS.unauthorized };
     switch (request.method) {
-      case 'eth_requestAccounts':
-        return { ok: true, result: session.address !== null ? [session.address] : [] };
+      case 'eth_requestAccounts': {
+        if (session.address === null) return { ok: false, error: RPC_ERRORS.unauthorized };
+        // ЄДИНЕ місце, де origin отримує дозвіл: явний Approve користувача.
+        // Далі eth_accounts віддаватиме цьому сайту адресу без діалогу, а
+        // користувач бачить сайт у Settings → «Підключені сайти» і може
+        // відкликати доступ.
+        await addConnectedSite(request.origin, {
+          walletId: session.walletId,
+          accountAddress: session.address,
+        });
+        return { ok: true, result: [session.address] };
+      }
       case 'eth_sendTransaction':
         return sendDappTransaction(request);
       case 'personal_sign': {
+        // Підпис лише для підключеного origin (доступ міг бути відкликаний,
+        // поки запит стояв у черзі).
+        if (!(await isOriginConnected(request.origin))) {
+          return { ok: false, error: RPC_ERRORS.unauthorized };
+        }
         // params: [message, address] (EIP-1193); message — hex або plain text.
         const message = typeof request.params[0] === 'string' ? request.params[0] : '';
         const signed = await signMessageWithSession(DAPP_CHAIN, message, 0);
@@ -616,32 +650,91 @@ export default defineBackground(() => {
 
   // -------------------------------------------------------------------------
   // Обробка RPC-запитів від dApp (через content script).
+  //
+  // МОДЕЛЬ ДОЗВОЛІВ ПО ORIGIN (src/lib/connections.ts). Раніше eth_accounts
+  // віддавав адресу БУДЬ-ЯКОМУ сайту з відкритої вкладки — деанонімізація і
+  // матеріал для таргетованого фішингу. Тепер:
+  //
+  //   eth_chainId          — публічний (не розкриває адресу);
+  //   eth_accounts         — [] для непідключеного origin (як у MetaMask);
+  //                          адреса — лише підключеним І лише коли розблоковано;
+  //   eth_requestAccounts  — підключений + розблоковано → адреса без діалогу;
+  //                          інакше → Approve, і схвалення записує origin;
+  //   eth_sendTransaction  \ непідключений origin → 4100 Unauthorized:
+  //   personal_sign        / dApp зобов'язаний спершу викликати eth_requestAccounts.
   // -------------------------------------------------------------------------
   async function handleRpcRequest(message: BgRpcRequest): Promise<RpcOutcome> {
     touchAutoLock();
     const { method, params } = message.payload;
 
-    switch (method) {
-      case 'eth_chainId':
-        return { ok: true, result: DAPP_CHAIN_ID_HEX };
+    // eth_chainId не розкриває адресу і викликається dApp'ами постійно —
+    // відповідаємо без звернення до сховища дозволів.
+    if (method === 'eth_chainId') return { ok: true, result: DAPP_CHAIN_ID_HEX };
 
+    const connected = await isOriginConnected(message.origin);
+
+    switch (method) {
       case 'eth_accounts': {
-        const accounts: Json = session.unlocked && session.address !== null ? [session.address] : [];
+        // Стан локу НЕ повинен бути каналом витоку: непідключений сайт отримує
+        // [] незалежно від того, розблоковано гаманець чи ні (і навпаки —
+        // відповідь не дає йому здогадатися, чи існує гаманець узагалі).
+        const address = session.address;
+        const accounts: Json = connected && session.unlocked && address !== null ? [address] : [];
         return { ok: true, result: accounts };
       }
 
-      case 'eth_requestAccounts':
+      case 'eth_requestAccounts': {
+        // Повторне підключення вже схваленого сайту не смикає користувача
+        // діалогом (поведінка MetaMask).
+        if (connected && session.unlocked && session.address !== null) {
+          return { ok: true, result: [session.address] };
+        }
+        return queueApproval(pendingRequest(message.origin, method, params));
+      }
+
       case 'eth_sendTransaction':
       case 'personal_sign': {
-        const request: PendingSignRequest = {
-          id: crypto.randomUUID(),
-          origin: message.origin,
-          method,
-          params,
-          createdAt: Date.now(),
-        };
-        return queueApproval(request);
+        if (!connected) return { ok: false, error: RPC_ERRORS.unauthorized };
+        return queueApproval(pendingRequest(message.origin, method, params));
       }
+    }
+  }
+
+  function pendingRequest(
+    origin: string,
+    method: PendingSignRequest['method'],
+    params: readonly Json[],
+  ): PendingSignRequest {
+    return { id: crypto.randomUUID(), origin, method, params, createdAt: Date.now() };
+  }
+
+  // -------------------------------------------------------------------------
+  // Підключені сайти: список і ревокація (привілейовані, лише з попапа).
+  // -------------------------------------------------------------------------
+
+  async function connectedSites(): Promise<VaultResult<ConnectedSite[]>> {
+    try {
+      return { ok: true, value: await listConnectedSites() };
+    } catch (error) {
+      return vaultError(error);
+    }
+  }
+
+  async function disconnectSite(message: BgDisconnectSite): Promise<VaultResult<ConnectedSite[]>> {
+    try {
+      await removeConnectedSite(message.origin);
+      return { ok: true, value: await listConnectedSites() };
+    } catch (error) {
+      return vaultError(error);
+    }
+  }
+
+  async function disconnectAllSites(): Promise<VaultResult<ConnectedSite[]>> {
+    try {
+      await removeAllConnectedSites();
+      return { ok: true, value: await listConnectedSites() };
+    } catch (error) {
+      return vaultError(error);
     }
   }
 
@@ -694,6 +787,12 @@ export default defineBackground(() => {
         return restoreVaultPassword(message);
       case MessageType.RevealSeedPhrase:
         return revealSeedPhrase(message);
+      case MessageType.ListConnectedSites:
+        return connectedSites();
+      case MessageType.DisconnectSite:
+        return disconnectSite(message);
+      case MessageType.DisconnectAllSites:
+        return disconnectAllSites();
     }
   }
 

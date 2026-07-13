@@ -239,6 +239,22 @@
     "medium": "Risco médio",
     "high": "Risco alto"
   },
+  "connections": {
+    "eyebrow": "Permissões",
+    "title": "Sites conectados",
+    "note": "Apenas estes sites podem ver o seu endereço. Todos os outros recebem uma resposta vazia, mesmo com a carteira desbloqueada. Conectar nunca dá direito de gastar: cada transação continua a exigir uma assinatura separada.",
+    "listEyebrow": "Sites ({{count}})",
+    "connectedAt": "Conectado em {{date}}",
+    "insecure": "Sem TLS",
+    "disconnect": "Desconectar",
+    "disconnectNamed": "Desconectar {{origin}}",
+    "disconnectAll": "Desconectar todos os sites",
+    "disconnectAllConfirm": "Desconectar todos",
+    "disconnectAllWarning": "O acesso será revogado para todos os sites conectados ({{count}}). Eles terão de pedir a conexão novamente.",
+    "disconnecting": "Desconectando…",
+    "emptyTitle": "Nenhum site conectado",
+    "emptyHint": "Quando um dApp pedir para conectar e você aprovar, ele aparecerá aqui — e você pode revogar o acesso a qualquer momento."
+  },
   "settings": {
     "eyebrow": "Definições",
     "title": "Mais",
@@ -261,6 +277,8 @@
     "sendActionHint": "Transferências nas redes EVM",
     "addressesAction": "Endereços e códigos QR",
     "addressesActionHint": "Receber e depositar",
+    "connectionsAction": "Sites conectados",
+    "connectionsActionHint": "Quais dApps veem o seu endereço",
     "language": "Idioma",
     "languageLabel": "Idioma da interface",
     "languageHint": "Por predefinição, é usado o idioma do navegador; a escolha manual fica guardada neste dispositivo. Os idiomas sem tradução são mostrados em inglês por enquanto.",
@@ -318,11 +336,18 @@
     "invalidAmount": "Montante inválido.",
     "tooManyDecimals": "Demasiadas casas decimais (máximo {{max}}).",
     "amountNotPositive": "O montante deve ser maior que zero.",
+    "chainIdMismatch": "Assinatura recusada: o backend devolveu o id de rede {{actual}}, mas {{chain}} é {{expected}}. A transação NÃO foi assinada: um id de rede incorreto tornaria a sua assinatura válida noutra chain. Verifique o URL do backend e a sua ligação.",
+    "chainNotEvm": "{{chain}} não é uma rede EVM: não é possível montar uma transação EIP-1559.",
+    "txParamsInvalid": "Assinatura recusada: o backend devolveu parâmetros de transação implausíveis (nonce, gas ou taxas). A transação NÃO foi assinada.",
+    "feeTooHigh": "Assinatura recusada: o backend devolveu uma taxa implausivelmente alta — {{gwei}} gwei, acima do limite de segurança de {{limit}} gwei. A transação NÃO foi assinada.",
+    "connectionsLoadFailed": "Não foi possível carregar a lista de sites conectados.",
+    "disconnectFailed": "Não foi possível desconectar o site.",
     "api": {
       "txParamsFailed": "Não foi possível obter os parâmetros da transação: {{detail}}",
       "txParamsUnavailable": "Não foi possível obter os parâmetros da transação: o backend está indisponível ({{url}}). Inicie o api-server e tente novamente.",
       "broadcastFailed": "Não foi possível transmitir a transação: {{detail}}",
-      "broadcastUnavailable": "Não foi possível transmitir a transação: o backend está indisponível ({{url}}). Inicie o api-server e tente novamente."
+      "broadcastUnavailable": "Não foi possível transmitir a transação: o backend está indisponível ({{url}}). Inicie o api-server e tente novamente.",
+      "insecureBaseUrl": "Pedido bloqueado: esta build aponta para o backend por uma ligação não encriptada ({{url}}). Em texto simples um atacante pode trocar o id de rede e as taxas de uma transação, por isso os pedidos estão desativados. Reconstrua a extensão com um endereço https."
     }
   },
   "mock": {

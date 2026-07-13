@@ -238,6 +238,22 @@
     "medium": "중간 위험",
     "high": "높은 위험"
   },
+  "connections": {
+    "eyebrow": "권한",
+    "title": "연결된 사이트",
+    "note": "이 사이트들만 주소를 볼 수 있습니다. 나머지는 지갑이 잠금 해제된 상태에서도 빈 응답을 받습니다. 연결은 지출 권한이 아닙니다. 모든 거래에는 별도의 서명이 필요합니다.",
+    "listEyebrow": "사이트 ({{count}})",
+    "connectedAt": "연결일: {{date}}",
+    "insecure": "TLS 없음",
+    "disconnect": "연결 해제",
+    "disconnectNamed": "{{origin}} 연결 해제",
+    "disconnectAll": "모든 사이트 연결 해제",
+    "disconnectAllConfirm": "모두 해제",
+    "disconnectAllWarning": "연결된 모든 사이트({{count}})의 접근 권한이 취소됩니다. 다시 연결을 요청해야 합니다.",
+    "disconnecting": "연결 해제 중…",
+    "emptyTitle": "연결된 사이트 없음",
+    "emptyHint": "dApp이 연결을 요청하고 승인하면 여기에 표시됩니다. 접근 권한은 언제든 취소할 수 있습니다."
+  },
   "settings": {
     "eyebrow": "설정",
     "title": "더보기",
@@ -260,6 +276,8 @@
     "sendActionHint": "EVM 네트워크에서의 이체",
     "addressesAction": "주소 및 QR 코드",
     "addressesActionHint": "수신 및 입금",
+    "connectionsAction": "연결된 사이트",
+    "connectionsActionHint": "어떤 dApp이 주소를 볼 수 있는지",
     "language": "언어",
     "languageLabel": "인터페이스 언어",
     "languageHint": "기본값은 브라우저 언어입니다. 직접 선택한 언어는 이 기기에 저장됩니다. 번역이 없는 언어는 당분간 영어로 표시됩니다.",
@@ -317,11 +335,18 @@
     "invalidAmount": "금액이 올바르지 않습니다.",
     "tooManyDecimals": "소수 자릿수가 너무 많습니다(최대 {{max}}자리).",
     "amountNotPositive": "금액은 0보다 커야 합니다.",
+    "chainIdMismatch": "서명 거부: 백엔드가 네트워크 id {{actual}}을(를) 반환했지만 {{chain}}은(는) {{expected}}입니다. 거래는 서명되지 않았습니다. 잘못된 네트워크 id는 서명을 다른 체인에서 유효하게 만듭니다. 백엔드 URL과 연결을 확인하세요.",
+    "chainNotEvm": "{{chain}}은(는) EVM 네트워크가 아닙니다: EIP-1559 거래를 만들 수 없습니다.",
+    "txParamsInvalid": "서명 거부: 백엔드가 비정상적인 거래 파라미터(nonce, gas 또는 수수료)를 반환했습니다. 거래는 서명되지 않았습니다.",
+    "feeTooHigh": "서명 거부: 백엔드가 비정상적으로 높은 수수료 {{gwei}} gwei를 반환했습니다. 안전 한도 {{limit}} gwei를 초과합니다. 거래는 서명되지 않았습니다.",
+    "connectionsLoadFailed": "연결된 사이트 목록을 불러오지 못했습니다.",
+    "disconnectFailed": "사이트 연결을 해제하지 못했습니다.",
     "api": {
       "txParamsFailed": "트랜잭션 파라미터를 가져오지 못했습니다: {{detail}}",
       "txParamsUnavailable": "트랜잭션 파라미터를 가져오지 못했습니다. 백엔드를 사용할 수 없습니다({{url}}). api-server를 시작한 후 다시 시도해 주십시오.",
       "broadcastFailed": "트랜잭션을 브로드캐스트하지 못했습니다: {{detail}}",
-      "broadcastUnavailable": "트랜잭션을 브로드캐스트하지 못했습니다. 백엔드를 사용할 수 없습니다({{url}}). api-server를 시작한 후 다시 시도해 주십시오."
+      "broadcastUnavailable": "트랜잭션을 브로드캐스트하지 못했습니다. 백엔드를 사용할 수 없습니다({{url}}). api-server를 시작한 후 다시 시도해 주십시오.",
+      "insecureBaseUrl": "요청이 차단되었습니다: 이 빌드는 암호화되지 않은 연결로 백엔드({{url}})를 가리킵니다. 평문 통신에서는 공격자가 거래의 네트워크 id와 수수료를 바꿔치기할 수 있으므로 요청을 비활성화했습니다. https 주소로 확장 프로그램을 다시 빌드하세요."
     }
   },
   "mock": {

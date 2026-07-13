@@ -14,6 +14,7 @@ import { Spinner } from '@/src/components/ui';
 import Activity from '@/src/screens/Activity';
 import Approve from '@/src/screens/Approve';
 import Chat from '@/src/screens/Chat';
+import ConnectedSites from '@/src/screens/ConnectedSites';
 import Home from '@/src/screens/Home';
 import Onboarding from '@/src/screens/Onboarding';
 import Receive from '@/src/screens/Receive';
@@ -30,6 +31,14 @@ const TABS: { screen: Screen; labelKey: string; icon: ComponentType<IconProps> }
   { screen: 'chat', labelKey: 'nav.chat', icon: IconChat },
   { screen: 'settings', labelKey: 'nav.more', icon: IconMore },
 ];
+
+/**
+ * Підекрани, що відкриваються з вкладки і не мають власної кнопки в навігації:
+ * вкладка-батько лишається підсвіченою (напр. «Ще» → «Підключені сайти»).
+ */
+const PARENT_TAB: Partial<Record<Screen, Screen>> = {
+  connections: 'settings',
+};
 
 /** Окреме вікно підтвердження підпису відкривається з ?view=approve. */
 const isApproveView =
@@ -78,6 +87,8 @@ export default function App() {
         return <Chat />;
       case 'settings':
         return <Settings />;
+      case 'connections':
+        return <ConnectedSites />;
       case 'approve':
         return <Approve />;
       case 'home':
@@ -98,7 +109,7 @@ export default function App() {
         className="fixed inset-x-0 bottom-0 z-20 grid h-14 grid-cols-5 border-t border-hairline bg-bg/95 backdrop-blur-sm"
       >
         {TABS.map((tab) => {
-          const active = screen === tab.screen;
+          const active = screen === tab.screen || PARENT_TAB[screen] === tab.screen;
           const Icon = tab.icon;
           return (
             <button
