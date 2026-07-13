@@ -231,7 +231,42 @@
     "sign": "签名",
     "noRequestTitle": "没有签名请求",
     "noRequestHint": "当 dApp 请求您签名时会打开此界面。目前没有需要审查的内容。",
-    "close": "关闭"
+    "close": "关闭",
+    "factsEyebrow": "你正在签署的内容",
+    "action": {
+      "native": "转账",
+      "tokenTransfer": "代币转账",
+      "tokenApprove": "代币授权",
+      "contractCall": "合约调用",
+      "deploy": "部署合约",
+      "signMessage": "消息"
+    },
+    "amountLabel": "金额",
+    "allowanceLabel": "支出上限",
+    "recipientLabel": "收款地址",
+    "spenderLabel": "被授权方",
+    "contractLabel": "合约",
+    "tokenContractLabel": "代币合约",
+    "networkLabel": "网络",
+    "feeLabel": "最高网络费",
+    "feeLoading": "正在获取手续费…",
+    "feeFormula": "{{gas}} gas × {{gwei}} gwei",
+    "feeBlocked": "在手续费未知之前，签名被阻止：{{detail}}",
+    "unlimited": "无限额 {{symbol}}",
+    "unlimitedWarning": "在你撤销授权之前，被授权方可以随时、无上限地把这个代币从你的钱包转走。",
+    "unknownToken": "该代币不在 Argus 名册中：无法核实其符号和小数位，因此金额以原始单位显示。",
+    "unknownTokenShort": "代币",
+    "unknownSelector": "未知函数 {{selector}}",
+    "plusNative": "另外随调用发送 {{amount}} {{symbol}}",
+    "deployWarning": "没有收款地址：这笔交易将部署一个新合约。",
+    "messageLabel": "消息",
+    "messageHexNote": "该消息不是有效文本 — 已按原始字节显示。",
+    "signerLabel": "签名地址",
+    "shareAddressLabel": "网站将看到的地址",
+    "connectHint": "网站会看到这个地址及其余额。没有单独的签名，它无法转移资金。",
+    "aiAdvisory": "AI 评估仅供参考。请依据上面的事实做决定。",
+    "signing": "正在签名…",
+    "invalidTxParams": "该网站发来的交易 Argus 无法解析，签名已被阻止。"
   },
   "risk": {
     "low": "低风险",
@@ -290,7 +325,16 @@
     "revealSeedShow": "显示助记词",
     "revealSeedHide": "隐藏助记词",
     "lock": "锁定钱包",
-    "footer": "Argus {{version}} · {{networks}} 个网络 · 非托管"
+    "footer": "Argus {{version}} · {{networks}} 个网络 · 非托管",
+    "privacy": "隐私与数据",
+    "dataSharing": "数据传输",
+    "dataSharingHint": "公开地址和交易详情会发送至 Argus 后端。关闭后——钱包离线运行：没有余额、历史、分析和转账。",
+    "aiFeatures": "AI 功能",
+    "aiFeaturesHint": "交易详情和对话内容会发送给 AI 提供商。关闭后——解释由本地规则生成，对话功能不可用。",
+    "aiRequiresData": "需要先开启数据传输。",
+    "reviewConsent": "我们发送哪些数据",
+    "reviewConsentHint": "查看披露说明并更改您的选择。",
+    "privacyPolicy": "隐私政策"
   },
   "wallets": {
     "defaultName": "钱包 {{number}}",
@@ -347,6 +391,13 @@
       "broadcastFailed": "广播交易失败：{{detail}}",
       "broadcastUnavailable": "广播交易失败：后端不可用（{{url}}）。请启动 api-server 后重试。",
       "insecureBaseUrl": "请求已被拦截：此构建通过未加密连接访问后端（{{url}}）。明文传输下，攻击者可以替换交易的网络 id 和手续费，因此请求已被禁用。请使用 https 地址重新构建扩展。"
+    },
+    "approvalGone": "该请求已不在队列中：它已被处理或撤回。",
+    "approvalFailed": "请求未能完成。",
+    "feeSnapshotMissing": "签名被阻止：屏幕上显示的手续费没有传给签名方。请重新打开该请求。",
+    "consent": {
+      "networkDenied": "数据传输已关闭——钱包正在离线运行。请在“更多 → 隐私与数据”中开启。",
+      "aiDisabled": "AI 功能已关闭。请在“更多 → 隐私与数据”中开启。"
     }
   },
   "mock": {
@@ -378,5 +429,37 @@
       "chainId": "这是一个获取网络标识符的服务性请求。"
     },
     "chatAnswer": "最近 30 天您共支出约 $14.62 手续费：Ethereum 上 $11.20，Bitcoin 上 $2.10，Polygon 上 $0.90，Solana 上 $0.42。最贵的一笔是针对 Uniswap 的授权交易（$4.80）。小提示：在 Ethereum 上，夜间（UTC）的手续费通常低 30–50%。\n\n_（这是模拟回答：/v1/chat 后端不可用。）_"
+  },
+  "consent": {
+    "eyebrowFirstRun": "第 1 步 · 隐私",
+    "eyebrowUpdate": "政策更新",
+    "title": "我们发送哪些数据",
+    "intro": "Argus 是非托管钱包：您的密钥绝不会离开本设备。但为了显示余额并解释交易，它必须与我们的服务器通信。以下是发送的具体内容以及接收方。",
+    "updateNote": "我们更改了 Argus 发送的内容或接收方。请在继续之前查看本披露说明。",
+    "localTitle": "绝不会离开您的设备",
+    "localItems": "您的恢复助记词、私钥和密码。还有您已连接的网站列表和界面语言。没有账户，无需注册，也不需要电子邮箱地址。",
+    "backendTitle": "发送至 Argus 后端",
+    "backendAddresses": "您的公开钱包地址——用于从公链读取余额、交易历史和网络费统计。",
+    "backendTx": "未签名交易的详情——用于在您签名之前模拟交易、评估风险并用通俗语言进行解释。",
+    "backendSigned": "已签名的交易——用于将其广播到网络。已签名的交易不包含私钥。",
+    "backendIp": "您的 IP 地址——您访问的任何服务器都能看到它。仅用于限流，保存在内存中，绝不会与您的地址关联。",
+    "thirdPartyTitle": "由我们的后端转发给第三方",
+    "thirdPartyAi": "AI 提供商（OpenAI 或 Groq）——交易详情和您的对话消息内容。仅在您启用下方的 AI 功能时才会发送。",
+    "thirdPartyRpc": "区块链节点和区块浏览器——您的公开地址和您已签名的交易。没有它们就无法读取区块链。",
+    "thirdPartyPrices": "CoinGecko——仅币种标识符（“ethereum”、“bitcoin”）。不含地址，不含个人数据。",
+    "aiTitle": "AI 功能（可选）",
+    "aiHint": "交易的 AI 解释和助手对话会将交易详情和您的消息发送给 AI 提供商。这是唯一会离开我们自有基础设施、发送给第三方模型的数据。",
+    "aiToggle": "启用 AI 功能",
+    "aiToggleHint": "默认关闭。关闭 AI 后，交易解释将来自本地的规则模板，对话功能不可用，其他一切——余额、转账、历史、分析、风险提示——完全照常运作。您可以随时在“更多 → 隐私与数据”中更改此设置。",
+    "policyLink": "阅读完整隐私政策",
+    "accept": "同意并继续",
+    "decline": "不发送数据并继续",
+    "declineHint": "离线模式：您可以创建或导入钱包、查看自己的地址并备份恢复助记词。在您于“更多 → 隐私与数据”中开启数据传输之前，余额、历史、分析和转账将无法使用。",
+    "offlineTitle": "网络功能已关闭",
+    "offlineHint": "您选择了不向 Argus 后端发送数据。余额、历史、分析和转账都需要传输您的公开地址。",
+    "offlineEnable": "开启数据传输",
+    "aiOffTitle": "AI 功能已关闭",
+    "aiOffHint": "对话会将您的消息、AI 解释会将交易详情发送给 AI 提供商。此功能默认关闭——尚未发送任何内容。",
+    "aiOffEnable": "开启 AI 功能"
   }
 }

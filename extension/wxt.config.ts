@@ -137,12 +137,42 @@ export default defineConfig({
       },
       // Явний ID для Firefox (about:debugging приймає і без нього, але для
       // підпису/оновлень addons.mozilla.org ID обов'язковий).
+      //
+      // data_collection_permissions — ХАРД-БЛОКЕР AMO: з 3 листопада 2025
+      // нові розширення НЕ ПІДПИСУЮТЬСЯ без цього ключа. Категорії — закритий
+      // енум Mozilla (extensionworkshop.com/documentation/develop/
+      // firefox-builtin-data-consent/).
+      //
+      //  required: ['financialAndPaymentInfo'] — «credit card numbers,
+      //    TRANSACTIONS, credit ratings, financial statements, or payment
+      //    history». Публічні адреси, баланси й деталі транзакцій, які йдуть
+      //    на наш бекенд (баланси/історія/аналітика/ризик/трансляція), — це
+      //    саме воно. Required, бо без цього гаманець не показує ані балансу,
+      //    ані історії: «users must accept this data collection to use the
+      //    extension; they cannot opt out».
+      //
+      //  optional: ['personalCommunications'] — «emails, text or CHAT
+      //    MESSAGES, social media posts…». Зміст AI-чату (і деталі транзакцій
+      //    для AI-пояснень) іде AI-провайдеру (OpenAI/Groq) ЛИШЕ якщо
+      //    користувач сам увімкнув AI-функції. Дефолт — вимкнено (opt-in),
+      //    гейт — src/lib/consent.ts + src/lib/api.ts.
+      //
+      //  `none` декларувати не можна (дані таки передаються).
+      //  `technicalAndInteraction` НЕ декларуємо свідомо: за визначенням
+      //  Mozilla це «device and browser info, extension usage and settings
+      //  data, crash and error reports» — телеметрія, якої в Argus немає
+      //  (docs/PRIVACY.md §4). IP-адреса використовується лише для
+      //  rate-limiting у пам'яті і не є usage-телеметрією.
       ...(browser === 'firefox'
         ? {
             browser_specific_settings: {
               gecko: {
                 id: 'ai-wallet@aiwallet.dev',
                 strict_min_version: '115.0',
+                data_collection_permissions: {
+                  required: ['financialAndPaymentInfo'],
+                  optional: ['personalCommunications'],
+                },
               },
             },
           }

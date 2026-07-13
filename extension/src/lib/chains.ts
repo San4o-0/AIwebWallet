@@ -20,6 +20,14 @@ export type Chain = keyof typeof CHAINS;
 
 export const CHAIN_IDS = Object.keys(CHAINS) as Chain[];
 
+/**
+ * Мережа, якою обслуговуються dApp-запити EIP-1193 (eth_chainId → 0x1).
+ * Одна константа на background (підпис) і на екран Approve (показ фактів і
+ * комісії) — щоб показане користувачу і підписане НЕ могли розійтися мережею.
+ * TODO: wallet_switchEthereumChain.
+ */
+export const DAPP_CHAIN: Chain = 'ethereum';
+
 export type ChainKind = (typeof CHAINS)[Chain]['kind'];
 
 /**

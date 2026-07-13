@@ -232,7 +232,42 @@
     "sign": "İmzala",
     "noRequestTitle": "İmza isteği yok",
     "noRequestHint": "Bu ekran, bir dApp imzalamanızı istediğinde açılır. Şu anda incelenecek bir şey yok.",
-    "close": "Kapat"
+    "close": "Kapat",
+    "factsEyebrow": "Neyi imzalıyorsunuz",
+    "action": {
+      "native": "Gönderim",
+      "tokenTransfer": "Token transferi",
+      "tokenApprove": "Token onayı",
+      "contractCall": "Sözleşme çağrısı",
+      "deploy": "Sözleşme dağıtımı",
+      "signMessage": "Mesaj"
+    },
+    "amountLabel": "Tutar",
+    "allowanceLabel": "Harcama limiti",
+    "recipientLabel": "Alıcı",
+    "spenderLabel": "Harcama yetkilisi",
+    "contractLabel": "Sözleşme",
+    "tokenContractLabel": "Token sözleşmesi",
+    "networkLabel": "Ağ",
+    "feeLabel": "Azami ağ ücreti",
+    "feeLoading": "Ücret alınıyor…",
+    "feeFormula": "{{gas}} gas × {{gwei}} gwei",
+    "feeBlocked": "Ücret bilinmeden imzalama engellidir: {{detail}}",
+    "unlimited": "Limitsiz {{symbol}}",
+    "unlimitedWarning": "Yetki verilen taraf, siz onayı iptal edene kadar bu tokeni cüzdanınızdan istediği zaman ve sınırsız biçimde çıkarabilir.",
+    "unknownToken": "Bu token Argus kaydında yok: sembolü ve ondalık basamakları doğrulanamıyor, bu yüzden tutar ham birimlerle gösteriliyor.",
+    "unknownTokenShort": "token",
+    "unknownSelector": "Bilinmeyen fonksiyon {{selector}}",
+    "plusNative": "Ayrıca çağrıyla birlikte {{amount}} {{symbol}} gönderiliyor",
+    "deployWarning": "Alıcı yok: bu işlem yeni bir sözleşme dağıtıyor.",
+    "messageLabel": "Mesaj",
+    "messageHexNote": "Mesaj geçerli bir metin değil — ham baytlar gösteriliyor.",
+    "signerLabel": "İmzalayan adres",
+    "shareAddressLabel": "Sitenin göreceği adres",
+    "connectHint": "Site bu adresi ve bakiyelerini görecek. Ayrı bir imza olmadan para hareket ettiremez.",
+    "aiAdvisory": "Yapay zekâ değerlendirmesi yardımcıdır. Kararınızı yukarıdaki verilere göre verin.",
+    "signing": "İmzalanıyor…",
+    "invalidTxParams": "Site, Argus’un okuyamadığı bir işlem gönderdi. İmzalama engellendi."
   },
   "risk": {
     "low": "Düşük risk",
@@ -291,7 +326,16 @@
     "revealSeedShow": "İfadeyi göster",
     "revealSeedHide": "İfadeyi gizle",
     "lock": "Cüzdanı kilitle",
-    "footer": "Argus {{version}} · {{networks}} ağ · non-custodial"
+    "footer": "Argus {{version}} · {{networks}} ağ · non-custodial",
+    "privacy": "Gizlilik ve veriler",
+    "dataSharing": "Veri gönderimi",
+    "dataSharingHint": "Herkese açık adresler ve işlem ayrıntıları Argus arka ucuna gider. Kapalı — cüzdan çevrimdışı çalışır: bakiye, geçmiş, analiz ve gönderme yok.",
+    "aiFeatures": "AI özellikleri",
+    "aiFeaturesHint": "İşlem ayrıntıları ve sohbet içeriği bir AI sağlayıcısına gider. Kapalı — açıklamalar yerel ve kural tabanlıdır, sohbet kullanılamaz.",
+    "aiRequiresData": "Veri gönderiminin açık olmasını gerektirir.",
+    "reviewConsent": "Hangi verileri gönderiyoruz",
+    "reviewConsentHint": "Açıklamayı inceleyin ve seçimlerinizi değiştirin.",
+    "privacyPolicy": "Gizlilik politikası"
   },
   "wallets": {
     "defaultName": "Cüzdan {{number}}",
@@ -348,6 +392,13 @@
       "broadcastFailed": "İşlem yayınlanamadı: {{detail}}",
       "broadcastUnavailable": "İşlem yayınlanamadı: arka uç kullanılamıyor ({{url}}). api-server'ı başlatıp tekrar deneyin.",
       "insecureBaseUrl": "İstek engellendi: bu sürüm arka uca şifrelenmemiş bir bağlantı üzerinden bağlanıyor ({{url}}). Açık kanalda bir saldırgan işlemin ağ kimliğini ve ücretlerini değiştirebilir, bu yüzden istekler devre dışı. Uzantıyı https adresiyle yeniden derleyin."
+    },
+    "approvalGone": "Bu istek artık kuyrukta değil: çoktan sonuçlandı ya da geri çekildi.",
+    "approvalFailed": "İstek tamamlanamadı.",
+    "feeSnapshotMissing": "İmzalama engellendi: ekranda gösterilen ücret imzalayana ulaşmadı. İsteği yeniden açın.",
+    "consent": {
+      "networkDenied": "Veri gönderimi kapalı — cüzdan çevrimdışı çalışıyor. Diğer → Gizlilik ve veriler bölümünden açın.",
+      "aiDisabled": "AI özellikleri kapalı. Diğer → Gizlilik ve veriler bölümünden açın."
     }
   },
   "mock": {
@@ -379,5 +430,37 @@
       "chainId": "Ağ tanımlayıcısı için bir hizmet isteği."
     },
     "chatAnswer": "Son 30 günde ücretlere yaklaşık $14.62 harcadınız: Ethereum'da $11.20, Bitcoin'de $2.10, Polygon'da $0.90 ve Solana'da $0.42. En pahalısı Uniswap için bir approve işlemiydi ($4.80). İpucu: Ethereum'da gece (UTC) ücretler genellikle %30–50 daha düşüktür. \n\n_(Bu örnek bir yanıttır: /v1/chat arka ucu kullanılamıyor.)_"
+  },
+  "consent": {
+    "eyebrowFirstRun": "Adım 1 · Gizlilik",
+    "eyebrowUpdate": "Politika güncellemesi",
+    "title": "Hangi verileri gönderiyoruz",
+    "intro": "Argus non-custodial'dır: anahtarlarınız bu cihazdan asla çıkmaz. Bakiyeleri göstermek ve işlemleri açıklamak için sunucumuzla iletişim kurmak zorundadır. Tam olarak neyin, kime gönderildiği aşağıda.",
+    "updateNote": "Argus'un ne gönderdiğini veya bunu kimin aldığını değiştirdik. Devam etmeden önce lütfen bu açıklamayı inceleyin.",
+    "localTitle": "Cihazınızdan asla çıkmaz",
+    "localItems": "Kurtarma ifadeniz, özel anahtarlarınız ve şifreniz. Ayrıca bağlandığınız sitelerin listesi ve arayüz diliniz. Hesap yok, kayıt yok, e-posta adresi yok.",
+    "backendTitle": "Argus arka ucuna gönderilir",
+    "backendAddresses": "Herkese açık cüzdan adresleriniz — herkese açık blok zincirlerinden bakiyeleri, işlem geçmişini ve ücret istatistiklerini okumak için.",
+    "backendTx": "İmzalanmamış işlemlerin ayrıntıları — siz imzalamadan önce onları simüle etmek, riskini değerlendirmek ve sade bir dille açıklamak için.",
+    "backendSigned": "İmzalanmış işlemler — ağa yayınlamak için. İmzalanmış bir işlem hiçbir özel anahtar içermez.",
+    "backendIp": "IP adresiniz — bağlandığınız her sunucu tarafından görülür. Yalnızca hız sınırlama için kullanılır, bellekte tutulur, adreslerinizle asla ilişkilendirilmez.",
+    "thirdPartyTitle": "Arka ucumuz tarafından üçüncü taraflara aktarılır",
+    "thirdPartyAi": "AI sağlayıcısı (OpenAI veya Groq) — işlem ayrıntıları ve sohbet mesajlarınızın içeriği. Yalnızca aşağıdaki AI özelliklerini açarsanız.",
+    "thirdPartyRpc": "Blok zinciri düğümleri ve gezginler — herkese açık adresleriniz ve imzalanmış işlemleriniz. Bunlar olmadan bir blok zincirini okumak imkânsızdır.",
+    "thirdPartyPrices": "CoinGecko — yalnızca coin tanımlayıcıları (\"ethereum\", \"bitcoin\"). Adres yok, kişisel veri yok.",
+    "aiTitle": "AI özellikleri (isteğe bağlı)",
+    "aiHint": "İşlemlerin AI açıklamaları ve asistan sohbeti, işlem ayrıntılarını ve mesajlarınızı bir AI sağlayıcısına gönderir. Kendi altyapımızdan çıkıp üçüncü taraf bir modele giden tek veri budur.",
+    "aiToggle": "AI özelliklerini aç",
+    "aiToggleHint": "Varsayılan olarak kapalı. AI kapalıyken işlem açıklamaları yerel, kural tabanlı şablonlardan gelir, sohbet kullanılamaz ve diğer her şey — bakiyeler, gönderme, geçmiş, analiz, risk uyarıları — tamamen aynı şekilde çalışır. Bunu istediğiniz zaman Diğer → Gizlilik ve veriler bölümünden değiştirebilirsiniz.",
+    "policyLink": "Gizlilik politikasının tamamını okuyun",
+    "accept": "Kabul et ve devam et",
+    "decline": "Veri göndermeden devam et",
+    "declineHint": "Çevrimdışı mod: cüzdan oluşturabilir veya içe aktarabilir, adreslerinizi görebilir ve kurtarma ifadenizi yedekleyebilirsiniz. Bakiyeler, geçmiş, analiz ve gönderme, Diğer → Gizlilik ve veriler bölümünden veri gönderimini açana kadar kullanılamaz.",
+    "offlineTitle": "Ağ özellikleri kapalı",
+    "offlineHint": "Argus arka ucuna veri göndermemeyi seçtiniz. Bakiyeler, geçmiş, analiz ve gönderme için herkese açık adreslerinizin iletilmesi gerekir.",
+    "offlineEnable": "Veri gönderimini aç",
+    "aiOffTitle": "AI özellikleri kapalı",
+    "aiOffHint": "Sohbet mesajlarınızı, AI açıklamaları da işlem ayrıntılarını bir AI sağlayıcısına gönderir. Bu, varsayılan olarak kapalıdır — hiçbir şey gönderilmedi.",
+    "aiOffEnable": "AI özelliklerini aç"
   }
 }

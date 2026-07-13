@@ -10,6 +10,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 
 import { ChainIcon } from '@/src/components/chain-icons';
+import { NetworkOffNote, useNetworkAllowed } from '@/src/components/consent';
 import {
   IconChevronDown,
   IconLock,
@@ -30,6 +31,10 @@ export default function Home() {
   const account = useWalletStore((s) => s.account);
   const lock = useWalletStore((s) => s.lock);
   const setScreen = useWalletStore((s) => s.setScreen);
+  // Офлайн-режим (немає згоди на передачу даних): адреси на бекенд не йдуть,
+  // тож запит навіть не ставиться в чергу — і замість цифр показуємо «—»,
+  // а не «$0.00»: нуль був би брехнею про баланс.
+  const networkAllowed = useNetworkAllowed();
 
   const { data: portfolio, isLoading, isError, refetch } = useQuery({
     queryKey: ['portfolio', account?.addresses.evm],
@@ -42,7 +47,7 @@ export default function Home() {
           tron: account !== null && account.addresses.tron !== '' ? [account.addresses.tron] : [],
         },
       }),
-    enabled: account !== null,
+    enabled: account !== null && networkAllowed,
   });
 
   const byChain = new Map<Chain, TokenBalance[]>();
@@ -68,21 +73,23 @@ export default function Home() {
 
       {/* Підпис дизайну: серифна сума + латунна hairline + eyebrow */}
       <section aria-label={t('home.totalBalance')}>
-        {isLoading ? (
+        {isLoading && networkAllowed ? (
           <div className="skeleton h-12 w-48" />
         ) : (
           <p
             key={portfolio?.updatedAt}
             className="figures-oldstyle animate-rise font-display text-[40px] font-semibold leading-none tracking-tight text-ink"
           >
-            {formatUsd(portfolio?.totalUsd ?? 0)}
+            {networkAllowed ? formatUsd(portfolio?.totalUsd ?? 0) : '—'}
           </p>
         )}
         <div className="mt-4 h-px w-full bg-accent/60" aria-hidden />
         <Eyebrow className="mt-2">{t('home.totalBalance')}</Eyebrow>
       </section>
 
-      {isError && (
+      {!networkAllowed && <NetworkOffNote />}
+
+      {networkAllowed && isError && (
         <ErrorNote onRetry={() => void refetch()}>
           {t('home.backendDownBalances')}
         </ErrorNote>
@@ -125,10 +132,12 @@ export default function Home() {
                   <ChainIcon chain={chain} size={20} className="shrink-0" />
                   <span className="text-sm text-ink">{CHAINS[chain].label}</span>
                 </div>
-                {isLoading ? (
+                {isLoading && networkAllowed ? (
                   <span className="skeleton h-3.5 w-14" />
                 ) : (
-                  <span className="text-sm tabular-nums text-muted">{formatUsd(chainUsd)}</span>
+                  <span className="text-sm tabular-nums text-muted">
+                    {networkAllowed ? formatUsd(chainUsd) : '—'}
+                  </span>
                 )}
               </div>
             );
@@ -138,17 +147,22 @@ export default function Home() {
 
       <section>
         <Eyebrow className="mb-2.5">{t('home.assets')}</Eyebrow>
-        {isLoading && (
+        {/* Офлайн-режим: активів не показуємо взагалі — причину вже пояснив
+            NetworkOffNote вище, «порожньо» тут було б неправдою. */}
+        {!networkAllowed && (
+          <EmptyState title={t('consent.offlineTitle')} hint={t('consent.offlineHint')} />
+        )}
+        {networkAllowed && isLoading && (
           <div className="flex flex-col gap-2">
             <div className="skeleton h-14 w-full" />
             <div className="skeleton h-14 w-full" />
             <div className="skeleton h-14 w-full" />
           </div>
         )}
-        {!isLoading && (portfolio?.tokens?.length ?? 0) === 0 && (
+        {networkAllowed && !isLoading && (portfolio?.tokens?.length ?? 0) === 0 && (
           <EmptyState title={t('home.noAssetsTitle')} hint={t('home.noAssetsHint')} />
         )}
-        {!isLoading && (portfolio?.tokens?.length ?? 0) > 0 && (
+        {networkAllowed && !isLoading && (portfolio?.tokens?.length ?? 0) > 0 && (
           <Card className="stagger-rise p-0">
             {(portfolio?.tokens ?? []).map((token, index) => (
               <div

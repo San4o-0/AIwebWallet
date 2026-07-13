@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { NetworkOffNote, useNetworkAllowed } from '@/src/components/consent';
 import { IconActivity, IconGrid } from '@/src/components/icons';
 import { Card, EmptyState, ErrorNote, ScreenHeader } from '@/src/components/ui';
 import Analytics from '@/src/screens/Analytics';
@@ -22,13 +23,15 @@ type ActivityView = 'history' | 'analytics';
 export default function Activity() {
   const { t } = useTranslation();
   const account = useWalletStore((s) => s.account);
+  const networkAllowed = useNetworkAllowed();
   const [view, setView] = useState<ActivityView>('history');
   const [selectedTx, setSelectedTx] = useState<HistoryEntry | null>(null);
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['history', account?.addresses.evm],
     queryFn: () => fetchHistory(account?.addresses.evm ?? ''),
-    enabled: account !== null && view === 'history',
+    // Історія читається за адресою — в офлайн-режимі запит не ставиться.
+    enabled: account !== null && view === 'history' && networkAllowed,
   });
 
   const items = data?.items ?? [];
@@ -73,7 +76,9 @@ export default function Activity() {
 
       {view === 'history' && (
         <>
-      {isLoading && (
+      {!networkAllowed && <NetworkOffNote />}
+
+      {networkAllowed && isLoading && (
         <div className="flex flex-col gap-2">
           <div className="skeleton h-20 w-full" />
           <div className="skeleton h-20 w-full" />
@@ -81,11 +86,11 @@ export default function Activity() {
         </div>
       )}
 
-      {isError && (
+      {networkAllowed && isError && (
         <ErrorNote onRetry={() => void refetch()}>{t('activity.backendDown')}</ErrorNote>
       )}
 
-      {!isLoading && !isError && items.length === 0 && (
+      {networkAllowed && !isLoading && !isError && items.length === 0 && (
         <EmptyState
           icon={<IconActivity size={22} />}
           title={t('activity.emptyTitle')}

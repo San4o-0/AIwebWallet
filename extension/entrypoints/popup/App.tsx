@@ -10,11 +10,13 @@ import {
   IconQr,
   type IconProps,
 } from '@/src/components/icons';
+import { useDataConsent } from '@/src/components/consent';
 import { Spinner } from '@/src/components/ui';
 import Activity from '@/src/screens/Activity';
 import Approve from '@/src/screens/Approve';
 import Chat from '@/src/screens/Chat';
 import ConnectedSites from '@/src/screens/ConnectedSites';
+import DataConsent from '@/src/screens/DataConsent';
 import Home from '@/src/screens/Home';
 import Onboarding from '@/src/screens/Onboarding';
 import Receive from '@/src/screens/Receive';
@@ -46,25 +48,44 @@ const isApproveView =
 
 export default function App() {
   const { t } = useTranslation();
-  const { hasWallet, unlocked, screen, setScreen, initialize, addingWallet, restoringPassword } =
-    useWalletStore();
+  const {
+    hasWallet,
+    unlocked,
+    screen,
+    setScreen,
+    initialize,
+    addingWallet,
+    restoringPassword,
+    consentReview,
+  } = useWalletStore();
+  const { consent, loading: consentLoading } = useDataConsent();
 
   useEffect(() => {
     void initialize();
   }, [initialize]);
 
-  // Вікно підтвердження підпису — окремий потік, без навігації.
-  // TODO: вимагати розблокування перед показом запиту.
-  if (isApproveView) {
-    return <Approve />;
-  }
-
-  if (hasWallet === null) {
+  // ГЕЙТ ЗГОДИ — перед УСІМ, включно з вікном підпису: жоден екран, здатний
+  // піти в мережу, не рендериться, доки рішення не прочитане зі storage і не
+  // прийняте. (Другий, справжній рубіж — у src/lib/api.ts: навіть якщо якийсь
+  // екран пройде повз, запит не стартує.)
+  if (consentLoading || hasWallet === null) {
     return (
       <div className="flex flex-1 items-center justify-center">
         <Spinner />
       </div>
     );
+  }
+  if (consent === null) {
+    // Гаманця немає — це перший крок онбордингу; гаманець є — одноразовий
+    // екран після оновлення політики (CONSENT_VERSION зробив стару згоду
+    // недійсною).
+    return <DataConsent mode={hasWallet ? 'update' : 'firstRun'} current={null} />;
+  }
+
+  // Вікно підтвердження підпису — окремий потік, без навігації.
+  // TODO: вимагати розблокування перед показом запиту.
+  if (isApproveView) {
+    return <Approve />;
   }
 
   if (!hasWallet) return <Onboarding />;
@@ -74,6 +95,8 @@ export default function App() {
   // «Забули пароль?»: повноекранний степер відновлення seed-фразою
   // (без нижньої навігації, як онбординг у режимі додавання).
   if (!unlocked) return restoringPassword ? <RestoreWallet /> : <Unlock />;
+  // Перегляд/зміна рішення про передачу даних («Ще → Приватність і дані»).
+  if (consentReview) return <DataConsent mode="review" current={consent} />;
 
   const renderScreen = () => {
     switch (screen) {

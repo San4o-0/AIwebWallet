@@ -160,6 +160,20 @@ export const RPC_ERRORS = {
   unsupportedMethod: { code: 4200, message: 'Method not supported.' },
   disconnected: { code: 4900, message: 'Provider is disconnected.' },
   internal: { code: -32603, message: 'Internal error.' },
+  /**
+   * -32005 «limit exceeded» (EIP-1474). Сайт не має права заганяти користувача
+   * у чергу вікон підтвердження: кожен pending-запит відкриває окреме вікно,
+   * тож без ліміту це і DoS, і — гірше — тиск на «клікни, аби зникло».
+   */
+  tooManyRequests: {
+    code: -32005,
+    message: 'Too many pending requests from this site. Resolve the open ones first.',
+  },
+  /** Той самий запит уже висить у черзі — друге вікно нічого не додає. */
+  duplicateRequest: {
+    code: -32005,
+    message: 'An identical request from this site is already awaiting approval.',
+  },
 } as const satisfies Record<string, RpcError>;
 
 /** Результат RPC-запиту: discriminated union успіх/помилка. */
@@ -331,10 +345,52 @@ export interface BgGetPendingRequests {
   type: MessageType.GetPendingRequests;
 }
 
+/**
+ * Комісії, ПОКАЗАНІ користувачу на екрані Approve (снапшот).
+ *
+ * ЧОМУ ЦЕ У ПРОТОКОЛІ: раніше background тягнув GET /v1/tx/params уже ПІСЛЯ
+ * схвалення — користувач бачив AI-текст і бейдж ризику, але не бачив комісії,
+ * якою підписував (blind signing). Тепер попап отримує параметри ДО показу,
+ * малює їх у фактах і повертає ті самі значення разом із рішенням; background
+ * підписує САМЕ ЦИМИ числами і НЕ бере комісії з мережі повторно.
+ *
+ * Свіжим у момент підпису береться лише `nonce` — він механічний (користувач
+ * ним не оперує), а протухлий nonce означав би відхилення транзакції нодою.
+ * `chainId` і комісії — тільки зі снапшота; background перевіряє їх тими
+ * самими правилами, що й дані з бекенду (verifyTxParams).
+ */
+export interface FeeSnapshot {
+  /** EIP-155 chain id, показаний користувачу. */
+  chainId: number;
+  /** Десятковий рядок (одиниці газу). */
+  gasLimit: string;
+  /** Wei, десятковий рядок. */
+  maxFeePerGas: string;
+  /** Wei, десятковий рядок. */
+  maxPriorityFeePerGas: string;
+}
+
 export interface BgResolveApproval {
   type: MessageType.ResolveApproval;
   requestId: string;
   approved: boolean;
+  /**
+   * Обовʼязковий для схваленого eth_sendTransaction: без снапшота background
+   * ВІДМОВЛЯЄ в підписі (див. FeeSnapshot) — підписати щось, чого користувач
+   * не бачив, неможливо навіть помилково.
+   */
+  fee?: FeeSnapshot;
+}
+
+/**
+ * Відповідь на ResolveApproval. Помилка ВИКОНАННЯ схваленого запиту (підпис/
+ * broadcast впав) повертається у попап i18n-ключем і НЕ закриває вікно: інакше
+ * користувач бачив би, як вікно зникло, і не знав, чи пішла транзакція.
+ * Запит при цьому лишається в черзі — рішення можна повторити або відхилити.
+ */
+export interface ResolveApprovalResult {
+  ok: boolean;
+  error?: string;
 }
 
 // --- Мульти-гаманець (popup → background) ----------------------------------
@@ -433,7 +489,7 @@ export interface BackgroundResponseMap {
   [MessageType.GetSessionState]: SessionState;
   [MessageType.LockSession]: SessionState;
   [MessageType.GetPendingRequests]: PendingSignRequest[];
-  [MessageType.ResolveApproval]: { ok: boolean };
+  [MessageType.ResolveApproval]: ResolveApprovalResult;
   [MessageType.VaultCreate]: VaultResult<PublicAccount>;
   [MessageType.VaultUnlock]: VaultResult<PublicAccount[]>;
   [MessageType.VaultDeriveAccount]: VaultResult<PublicAccount>;

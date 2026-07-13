@@ -232,7 +232,42 @@
     "sign": "Signer",
     "noRequestTitle": "Aucune demande de signature",
     "noRequestHint": "Cet écran s'ouvre lorsqu'une dApp vous demande de signer. Il n'y a rien à examiner pour le moment.",
-    "close": "Fermer"
+    "close": "Fermer",
+    "factsEyebrow": "Ce que vous signez",
+    "action": {
+      "native": "Envoi",
+      "tokenTransfer": "Transfert de jeton",
+      "tokenApprove": "Autorisation de jeton",
+      "contractCall": "Appel de contrat",
+      "deploy": "Déploiement de contrat",
+      "signMessage": "Message"
+    },
+    "amountLabel": "Montant",
+    "allowanceLabel": "Plafond de dépense",
+    "recipientLabel": "Destinataire",
+    "spenderLabel": "Bénéficiaire de l’autorisation",
+    "contractLabel": "Contrat",
+    "tokenContractLabel": "Contrat du jeton",
+    "networkLabel": "Réseau",
+    "feeLabel": "Frais de réseau max.",
+    "feeLoading": "Récupération des frais…",
+    "feeFormula": "{{gas}} gas × {{gwei}} gwei",
+    "feeBlocked": "La signature est bloquée tant que les frais sont inconnus : {{detail}}",
+    "unlimited": "{{symbol}} sans limite",
+    "unlimitedWarning": "Le bénéficiaire pourra sortir ce jeton de votre portefeuille à tout moment et sans limite, jusqu’à ce que vous révoquiez l’autorisation.",
+    "unknownToken": "Ce jeton ne figure pas au registre d’Argus : son symbole et ses décimales ne peuvent pas être vérifiés, le montant est donc affiché en unités brutes.",
+    "unknownTokenShort": "jetons",
+    "unknownSelector": "Fonction inconnue {{selector}}",
+    "plusNative": "Plus {{amount}} {{symbol}} envoyés avec l’appel",
+    "deployWarning": "Aucun destinataire : cette transaction déploie un nouveau contrat.",
+    "messageLabel": "Message",
+    "messageHexNote": "Le message n’est pas un texte valide — les octets bruts sont affichés.",
+    "signerLabel": "Adresse signataire",
+    "shareAddressLabel": "Adresse que le site verra",
+    "connectHint": "Le site verra cette adresse et ses soldes. Il ne pourra pas déplacer de fonds sans une signature distincte.",
+    "aiAdvisory": "L’analyse IA est indicative. Décidez d’après les faits ci-dessus.",
+    "signing": "Signature…",
+    "invalidTxParams": "Le site a envoyé une transaction qu’Argus ne peut pas lire. La signature est bloquée."
   },
   "risk": {
     "low": "Risque faible",
@@ -291,7 +326,16 @@
     "revealSeedShow": "Afficher la phrase",
     "revealSeedHide": "Masquer la phrase",
     "lock": "Verrouiller le portefeuille",
-    "footer": "Argus {{version}} · {{networks}} réseaux · non-custodial"
+    "footer": "Argus {{version}} · {{networks}} réseaux · non-custodial",
+    "privacy": "Confidentialité et données",
+    "dataSharing": "Transmission des données",
+    "dataSharingHint": "Les adresses publiques et les détails des transactions sont envoyés au backend d’Argus. Désactivée : le portefeuille fonctionne hors ligne — pas de soldes, d’historique, d’analyses ni d’envois.",
+    "aiFeatures": "Fonctions IA",
+    "aiFeaturesHint": "Les détails des transactions et le contenu du chat sont envoyés à un fournisseur d’IA. Désactivées : les explications sont locales et basées sur des règles, le chat est indisponible.",
+    "aiRequiresData": "Nécessite que la transmission des données soit activée.",
+    "reviewConsent": "Quelles données nous envoyons",
+    "reviewConsentHint": "Consultez ces informations et modifiez vos choix.",
+    "privacyPolicy": "Politique de confidentialité"
   },
   "wallets": {
     "defaultName": "Portefeuille {{number}}",
@@ -348,6 +392,13 @@
       "broadcastFailed": "Impossible de diffuser la transaction : {{detail}}",
       "broadcastUnavailable": "Impossible de diffuser la transaction : le backend est indisponible ({{url}}). Démarrez l'api-server et réessayez.",
       "insecureBaseUrl": "Requête bloquée : cette build pointe vers le backend via une connexion non chiffrée ({{url}}). En clair, un attaquant peut modifier l’id de réseau et les frais d’une transaction ; les requêtes sont donc désactivées. Recompilez l’extension avec une adresse https."
+    },
+    "approvalGone": "Cette demande n’est plus dans la file : elle a déjà été traitée ou retirée.",
+    "approvalFailed": "Impossible d’exécuter la demande.",
+    "feeSnapshotMissing": "Signature bloquée : les frais affichés à l’écran ne sont pas parvenus au signataire. Rouvrez la demande.",
+    "consent": {
+      "networkDenied": "La transmission des données est désactivée — le portefeuille fonctionne hors ligne. Activez-la dans Plus → Confidentialité et données.",
+      "aiDisabled": "Les fonctions IA sont désactivées. Activez-les dans Plus → Confidentialité et données."
     }
   },
   "mock": {
@@ -379,5 +430,37 @@
       "chainId": "Requête de service pour l'identifiant du réseau."
     },
     "chatAnswer": "Au cours des 30 derniers jours, vous avez dépensé environ $14.62 en frais : $11.20 sur Ethereum, $2.10 sur Bitcoin, $0.90 sur Polygon et $0.42 sur Solana. La plus coûteuse a été une transaction approve pour Uniswap ($4.80). Astuce : sur Ethereum, les frais sont généralement 30–50 % plus bas la nuit (UTC). \n\n_(Ceci est une réponse fictive : le backend /v1/chat est indisponible.)_"
+  },
+  "consent": {
+    "eyebrowFirstRun": "Étape 1 · Confidentialité",
+    "eyebrowUpdate": "Mise à jour de la politique",
+    "title": "Quelles données nous envoyons",
+    "intro": "Argus est non-custodial : vos clés ne quittent jamais cet appareil. Pour afficher les soldes et expliquer les transactions, il doit communiquer avec notre serveur. Voici exactement ce qui est envoyé, et à qui.",
+    "updateNote": "Nous avons modifié ce qu’Argus envoie ou qui le reçoit. Veuillez consulter ces informations avant de continuer.",
+    "localTitle": "Ne quitte jamais votre appareil",
+    "localItems": "Votre phrase de récupération, vos clés privées et votre mot de passe. Également la liste des sites que vous avez connectés et la langue de votre interface. Il n’y a ni compte, ni inscription, ni adresse e-mail.",
+    "backendTitle": "Envoyé au backend d’Argus",
+    "backendAddresses": "Vos adresses publiques de portefeuille — pour lire les soldes, l’historique des transactions et les statistiques de frais sur les blockchains publiques.",
+    "backendTx": "Les détails des transactions non signées — pour les simuler, évaluer leur risque et vous les expliquer en langage clair avant que vous ne signiez.",
+    "backendSigned": "Les transactions signées — pour les diffuser sur le réseau. Une transaction signée ne contient aucune clé privée.",
+    "backendIp": "Votre adresse IP — visible par tout serveur que vous contactez. Utilisée uniquement pour limiter le débit des requêtes, conservée en mémoire, jamais associée à vos adresses.",
+    "thirdPartyTitle": "Transmis par notre backend",
+    "thirdPartyAi": "Fournisseur d’IA (OpenAI ou Groq) — les détails des transactions et le contenu de vos messages du chat. Uniquement si vous activez les fonctions IA ci-dessous.",
+    "thirdPartyRpc": "Nœuds et explorateurs de blockchain — vos adresses publiques et vos transactions signées. Sans eux, il est impossible de lire une blockchain.",
+    "thirdPartyPrices": "CoinGecko — uniquement les identifiants des monnaies (« ethereum », « bitcoin »). Aucune adresse, aucune donnée personnelle.",
+    "aiTitle": "Fonctions IA (facultatives)",
+    "aiHint": "Les explications de transactions par IA et le chat de l’assistant envoient les détails des transactions et vos messages à un fournisseur d’IA. Ce sont les seules données qui quittent notre propre infrastructure pour un modèle tiers.",
+    "aiToggle": "Activer les fonctions IA",
+    "aiToggleHint": "Désactivées par défaut. Avec l’IA désactivée, les explications des transactions proviennent de modèles de texte locaux basés sur des règles, le chat est indisponible, et tout le reste — soldes, envois, historique, analyses, avertissements de risque — fonctionne exactement de la même manière. Vous pouvez modifier ce choix à tout moment dans Plus → Confidentialité et données.",
+    "policyLink": "Lire la politique de confidentialité complète",
+    "accept": "Accepter et continuer",
+    "decline": "Continuer sans envoyer de données",
+    "declineHint": "Mode hors ligne : vous pouvez créer ou importer un portefeuille, voir vos adresses et sauvegarder votre phrase de récupération. Les soldes, l’historique, les analyses et les envois resteront indisponibles tant que vous n’aurez pas activé la transmission des données dans Plus → Confidentialité et données.",
+    "offlineTitle": "Les fonctions réseau sont désactivées",
+    "offlineHint": "Vous avez choisi de ne pas envoyer de données au backend d’Argus. Les soldes, l’historique, les analyses et les envois nécessitent la transmission de vos adresses publiques.",
+    "offlineEnable": "Activer la transmission des données",
+    "aiOffTitle": "Les fonctions IA sont désactivées",
+    "aiOffHint": "Le chat envoie vos messages, et les explications par IA envoient les détails des transactions, à un fournisseur d’IA. C’est désactivé par défaut — rien n’a été envoyé.",
+    "aiOffEnable": "Activer les fonctions IA"
   }
 }

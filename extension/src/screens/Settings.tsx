@@ -17,8 +17,9 @@ import {
   IconSend,
   IconShield,
 } from '@/src/components/icons';
+import { useDataConsent } from '@/src/components/consent';
 import { SelectMenu, type SelectOption } from '@/src/components/SelectMenu';
-import { Button, Card, Eyebrow, Field, ScreenHeader } from '@/src/components/ui';
+import { Button, Card, Eyebrow, Field, ScreenHeader, Toggle } from '@/src/components/ui';
 import {
   LOCALE_NATIVE_NAMES,
   SUPPORTED_LOCALES,
@@ -27,6 +28,7 @@ import {
   type Locale,
 } from '@/src/i18n';
 import { CHAIN_IDS } from '@/src/lib/chains';
+import { PRIVACY_POLICY_URL, setAiEnabled, setNetworkEnabled } from '@/src/lib/consent';
 import { shortenAddress } from '@/src/lib/format';
 import { MAX_WALLETS } from '@/src/lib/vault-storage';
 import { walletCore, type WalletSummary } from '@/src/lib/wallet-core';
@@ -129,6 +131,8 @@ export default function Settings() {
       </section>
 
       <LanguageSection />
+
+      <PrivacySection />
 
       <section>
         <Eyebrow className="mb-2.5">{t('settings.security')}</Eyebrow>
@@ -262,6 +266,71 @@ function SeedRevealRows() {
         </div>
       )}
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Секція «Приватність і дані»: обидва рішення зі згоди (src/lib/consent.ts) —
+// передача даних на бекенд і AI-функції — лишаються оборотними в будь-який
+// момент. Вимкнення передачі даних НЕ ламає гаманець: він переходить в
+// офлайн-режим (адреси, seed-фраза, керування гаманцями працюють).
+// ---------------------------------------------------------------------------
+
+function PrivacySection() {
+  const { t } = useTranslation();
+  const { consent } = useDataConsent();
+  const openConsentReview = useWalletStore((s) => s.openConsentReview);
+
+  const network = consent?.network === true;
+  const ai = network && consent?.ai === true;
+
+  return (
+    <section>
+      <Eyebrow className="mb-2.5">{t('settings.privacy')}</Eyebrow>
+      <Card className="p-0">
+        <Toggle
+          label={t('settings.dataSharing')}
+          hint={t('settings.dataSharingHint')}
+          checked={network}
+          onChange={(next) => void setNetworkEnabled(next)}
+        />
+        <div className="border-t border-hairline">
+          {/* AI без передачі даних неможливий: чат і пояснення йдуть ЧЕРЕЗ наш
+              бекенд, тож тумблер неактивний, поки вимкнено передачу даних. */}
+          <Toggle
+            label={t('settings.aiFeatures')}
+            hint={network ? t('settings.aiFeaturesHint') : t('settings.aiRequiresData')}
+            checked={ai}
+            disabled={!network}
+            onChange={(next) => void setAiEnabled(next)}
+          />
+        </div>
+        <button
+          type="button"
+          onClick={openConsentReview}
+          className="flex w-full items-center gap-3 border-t border-hairline px-4 py-3 text-start transition-colors hover:bg-raised/60"
+        >
+          <IconShield size={17} className="shrink-0 text-muted" />
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-medium text-ink">{t('settings.reviewConsent')}</span>
+            <span className="mt-0.5 block text-xs text-muted">
+              {t('settings.reviewConsentHint')}
+            </span>
+          </span>
+          <IconChevronRight size={16} className="shrink-0 text-muted rtl:-scale-x-100" />
+        </button>
+        <a
+          href={PRIVACY_POLICY_URL}
+          target="_blank"
+          rel="noreferrer noopener"
+          className="flex w-full items-center gap-3 border-t border-hairline px-4 py-3 text-start transition-colors hover:bg-raised/60"
+        >
+          <IconGlobe size={17} className="shrink-0 text-muted" />
+          <span className="flex-1 text-sm font-medium text-ink">{t('settings.privacyPolicy')}</span>
+          <IconChevronRight size={16} className="shrink-0 text-muted rtl:-scale-x-100" />
+        </a>
+      </Card>
+    </section>
   );
 }
 

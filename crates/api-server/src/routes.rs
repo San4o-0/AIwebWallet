@@ -137,21 +137,28 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         .route("/chat", post(handlers::chat::chat))
         .layer(from_fn_with_state(ai_limiter, rate_limit));
 
+    // ПРИВАТНІСТЬ (Chrome Web Store, код Purple Copper): усе, що приймає ДАНІ
+    // КОРИСТУВАЧА (адреси гаманця), — виключно POST з тілом JSON. Query-рядок
+    // і заголовки осідають у логах серверів, проксі й CDN навіть по HTTPS.
+    // GET лишається тільки там, де параметри — публічні довідники:
+    // /prices?ids= (ідентифікатори монет), /fees?chain= (мережа), /health.
     let v1 = Router::new()
         .route("/balances", post(handlers::balances::balances))
-        .route("/history", get(handlers::history::history))
+        .route("/history", post(handlers::history::history))
         .route("/fees", get(handlers::fees::fees))
-        .route("/tx/params", get(handlers::tx_params::tx_params))
+        .route("/tx/params", post(handlers::tx_params::tx_params))
         .route("/tx/decode", post(handlers::tx::decode))
         .route("/tx/simulate", post(handlers::tx::simulate))
         .route("/tx/risk", post(handlers::tx::risk))
         .route("/tx/broadcast", post(handlers::tx::broadcast))
-        .route("/analytics/fees", get(handlers::analytics::fees))
-        .route("/analytics/summary", get(handlers::analytics::summary))
+        .route("/analytics/fees", post(handlers::analytics::fees))
+        .route("/analytics/summary", post(handlers::analytics::summary))
         .route("/prices", get(handlers::prices::prices))
         .route("/health", get(handlers::health::health))
         .merge(ai_routes)
         // Глобальний ліміт — на все /v1/*, включно з AI-роутами вище.
+        // Мідлвар навішано на РОУТЕР (за шляхом), а не на конкретний метод,
+        // тож зміна GET→POST його покриття не змінює.
         .layer(from_fn_with_state(global_limiter, rate_limit));
 
     Router::new()

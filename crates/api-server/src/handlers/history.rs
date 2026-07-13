@@ -1,21 +1,22 @@
-//! GET /v1/history — історія транзакцій (F3.6, F4.4).
+//! POST /v1/history — історія транзакцій (F3.6, F4.4).
+//!
+//! Адреса гаманця приймається ТІЛЬКИ в тілі JSON: query-параметри й заголовки
+//! осідають у логах серверів/проксі/CDN навіть по HTTPS, а адреса — це дані
+//! користувача (політика Chrome Web Store, код Purple Copper).
 //!
 //! Реальні дані для Bitcoin (mempool.space) і Solana (getSignaturesForAddress)
 //! через chain-adapters. EVM — через індексер Etherscan API v2
 //! (`crate::indexer`, потрібен ETHERSCAN_API_KEY; без ключа — порожній
 //! список із полем `note`, graceful degradation).
 
-use axum::{
-    extract::{Query, State},
-    Json,
-};
+use axum::{extract::State, Json};
 use std::sync::Arc;
 use std::time::Duration;
 
 use chain_adapters::{Address, ChainId, TransactionRecord, TxStatus};
 
 use crate::chains::{format_base_units, native_coingecko_id};
-use crate::dto::{HistoryItem, HistoryQuery, HistoryResponse, TxCategory};
+use crate::dto::{HistoryItem, HistoryRequest, HistoryResponse, TxCategory};
 use crate::handlers::ApiError;
 use crate::indexer;
 use crate::state::AppState;
@@ -24,7 +25,7 @@ const HISTORY_TIMEOUT: Duration = Duration::from_secs(10);
 
 pub async fn history(
     State(state): State<Arc<AppState>>,
-    Query(q): Query<HistoryQuery>,
+    Json(q): Json<HistoryRequest>,
 ) -> Result<Json<HistoryResponse>, ApiError> {
     let chain: ChainId = q
         .chain
@@ -75,7 +76,7 @@ pub async fn history(
 async fn evm_history(
     state: &AppState,
     chain: ChainId,
-    q: &HistoryQuery,
+    q: &HistoryRequest,
 ) -> Result<HistoryResponse, ApiError> {
     // Валідація адреси тим самим механізмом, що й для інших мереж.
     let address = Address::new(chain, q.address.clone()).map_err(ApiError::from)?;

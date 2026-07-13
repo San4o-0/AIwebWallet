@@ -1,4 +1,8 @@
-//! GET /v1/analytics/* — РЕАЛЬНА аналітика витрат і комісій (F6.1, F6.2).
+//! POST /v1/analytics/* — РЕАЛЬНА аналітика витрат і комісій (F6.1, F6.2).
+//!
+//! Адреса гаманця приймається ТІЛЬКИ в тілі JSON (див. handlers/history.rs):
+//! дані користувача не мають потрапляти в query-рядок чи заголовки, бо ті
+//! осідають у логах інфраструктури навіть по HTTPS.
 //!
 //! Агрегація з реальної історії: BTC/Solana — через chain-adapters,
 //! EVM — через індексер Etherscan v2 (якщо задано ETHERSCAN_API_KEY;
@@ -12,10 +16,7 @@
 //! Зібрана історія кешується в пам'яті (TTL 60 с), щоб два ендпоінти й
 //! повторні запити не палили rate limit Etherscan / публічних нод.
 
-use axum::{
-    extract::{Query, State},
-    Json,
-};
+use axum::{extract::State, Json};
 use std::collections::{BTreeMap, HashMap};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -26,7 +27,7 @@ use chain_adapters::{Address, ChainId};
 
 use crate::chains::{native_coingecko_id, token_coingecko_id, EVM_CHAINS};
 use crate::dto::{
-    AnalyticsQuery, CategorySummary, ChainFees, FeePoint, FeesResponse, HistoryItem,
+    AnalyticsRequest, CategorySummary, ChainFees, FeePoint, FeesResponse, HistoryItem,
     SummaryResponse, TxCategory,
 };
 use crate::handlers::history::record_to_item;
@@ -75,7 +76,7 @@ impl AnalyticsCache {
 
 pub async fn fees(
     State(state): State<Arc<AppState>>,
-    Query(q): Query<AnalyticsQuery>,
+    Json(q): Json<AnalyticsRequest>,
 ) -> Result<Json<FeesResponse>, ApiError> {
     let period = q.period.unwrap_or_else(|| "30d".to_string());
     let seconds = period_seconds(&period)
@@ -89,7 +90,7 @@ pub async fn fees(
 
 pub async fn summary(
     State(state): State<Arc<AppState>>,
-    Query(q): Query<AnalyticsQuery>,
+    Json(q): Json<AnalyticsRequest>,
 ) -> Result<Json<SummaryResponse>, ApiError> {
     let period = q.period.unwrap_or_else(|| "30d".to_string());
     let seconds = period_seconds(&period)

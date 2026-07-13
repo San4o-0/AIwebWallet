@@ -231,7 +231,42 @@
     "sign": "Ký",
     "noRequestTitle": "Không có yêu cầu chữ ký",
     "noRequestHint": "Màn hình này mở ra khi một dApp yêu cầu bạn ký. Hiện không có gì để xem xét.",
-    "close": "Đóng"
+    "close": "Đóng",
+    "factsEyebrow": "Bạn đang ký gì",
+    "action": {
+      "native": "Gửi",
+      "tokenTransfer": "Chuyển token",
+      "tokenApprove": "Phê duyệt token",
+      "contractCall": "Gọi hợp đồng",
+      "deploy": "Triển khai hợp đồng",
+      "signMessage": "Tin nhắn"
+    },
+    "amountLabel": "Số tiền",
+    "allowanceLabel": "Hạn mức chi tiêu",
+    "recipientLabel": "Người nhận",
+    "spenderLabel": "Bên được phép chi",
+    "contractLabel": "Hợp đồng",
+    "tokenContractLabel": "Hợp đồng token",
+    "networkLabel": "Mạng",
+    "feeLabel": "Phí mạng tối đa",
+    "feeLoading": "Đang lấy phí…",
+    "feeFormula": "{{gas}} gas × {{gwei}} gwei",
+    "feeBlocked": "Việc ký bị chặn cho đến khi biết phí: {{detail}}",
+    "unlimited": "{{symbol}} không giới hạn",
+    "unlimitedWarning": "Bên được phê duyệt có thể rút token này khỏi ví của bạn bất cứ lúc nào và không giới hạn, cho đến khi bạn thu hồi phê duyệt.",
+    "unknownToken": "Token này không có trong danh mục của Argus: không thể xác minh ký hiệu và số thập phân, nên số tiền hiển thị ở đơn vị thô.",
+    "unknownTokenShort": "token",
+    "unknownSelector": "Hàm không xác định {{selector}}",
+    "plusNative": "Ngoài ra, {{amount}} {{symbol}} được gửi kèm lời gọi",
+    "deployWarning": "Không có người nhận: giao dịch này triển khai một hợp đồng mới.",
+    "messageLabel": "Tin nhắn",
+    "messageHexNote": "Tin nhắn không phải văn bản hợp lệ — hiển thị các byte thô.",
+    "signerLabel": "Địa chỉ ký",
+    "shareAddressLabel": "Địa chỉ mà trang web sẽ thấy",
+    "connectHint": "Trang web sẽ thấy địa chỉ này và số dư của nó. Nó không thể chuyển tiền nếu không có chữ ký riêng.",
+    "aiAdvisory": "Đánh giá của AI chỉ mang tính tham khảo. Hãy quyết định dựa trên dữ liệu ở trên.",
+    "signing": "Đang ký…",
+    "invalidTxParams": "Trang web đã gửi một giao dịch mà Argus không đọc được. Việc ký bị chặn."
   },
   "risk": {
     "low": "Rủi ro thấp",
@@ -290,7 +325,16 @@
     "revealSeedShow": "Hiện cụm từ",
     "revealSeedHide": "Ẩn cụm từ",
     "lock": "Khóa ví",
-    "footer": "Argus {{version}} · {{networks}} mạng lưới · phi lưu ký"
+    "footer": "Argus {{version}} · {{networks}} mạng lưới · phi lưu ký",
+    "privacy": "Quyền riêng tư và dữ liệu",
+    "dataSharing": "Truyền dữ liệu",
+    "dataSharingHint": "Địa chỉ công khai và chi tiết giao dịch được gửi đến backend của Argus. Tắt — ví chạy ngoại tuyến: không có số dư, lịch sử, phân tích hay gửi tiền.",
+    "aiFeatures": "Tính năng AI",
+    "aiFeaturesHint": "Chi tiết giao dịch và nội dung trò chuyện được gửi đến một nhà cung cấp AI. Tắt — phần giải thích là cục bộ, dựa trên quy tắc, và trò chuyện không khả dụng.",
+    "aiRequiresData": "Cần bật truyền dữ liệu.",
+    "reviewConsent": "Dữ liệu chúng tôi gửi đi",
+    "reviewConsentHint": "Xem lại thông báo và thay đổi lựa chọn của bạn.",
+    "privacyPolicy": "Chính sách quyền riêng tư"
   },
   "wallets": {
     "defaultName": "Ví {{number}}",
@@ -347,6 +391,13 @@
       "broadcastFailed": "Không phát được giao dịch lên mạng: {{detail}}",
       "broadcastUnavailable": "Không phát được giao dịch lên mạng: backend không khả dụng ({{url}}). Hãy khởi động api-server và thử lại.",
       "insecureBaseUrl": "Yêu cầu bị chặn: bản dựng này trỏ tới backend qua kết nối không mã hóa ({{url}}). Trên kênh không mã hóa, kẻ tấn công có thể thay id mạng và phí của giao dịch, nên các yêu cầu đã bị tắt. Hãy dựng lại tiện ích với địa chỉ https."
+    },
+    "approvalGone": "Yêu cầu này không còn trong hàng đợi: nó đã được xử lý hoặc bị thu hồi.",
+    "approvalFailed": "Không thể hoàn tất yêu cầu.",
+    "feeSnapshotMissing": "Việc ký bị chặn: mức phí hiển thị trên màn hình không đến được bên ký. Hãy mở lại yêu cầu.",
+    "consent": {
+      "networkDenied": "Truyền dữ liệu đang tắt — ví đang chạy ngoại tuyến. Hãy bật tại Thêm → Quyền riêng tư và dữ liệu.",
+      "aiDisabled": "Các tính năng AI đang tắt. Hãy bật tại Thêm → Quyền riêng tư và dữ liệu."
     }
   },
   "mock": {
@@ -378,5 +429,37 @@
       "chainId": "Yêu cầu dịch vụ để lấy mã định danh mạng lưới."
     },
     "chatAnswer": "Trong 30 ngày qua, bạn đã chi khoảng $14.62 cho phí giao dịch: $11.20 trên Ethereum, $2.10 trên Bitcoin, $0.90 trên Polygon và $0.42 trên Solana. Đắt nhất là giao dịch approve cho Uniswap ($4.80). Mẹo: trên Ethereum, phí vào ban đêm (UTC) thường thấp hơn 30–50%.\n\n_(Đây là câu trả lời mô phỏng: backend /v1/chat không khả dụng.)_"
+  },
+  "consent": {
+    "eyebrowFirstRun": "Bước 1 · Quyền riêng tư",
+    "eyebrowUpdate": "Cập nhật chính sách",
+    "title": "Dữ liệu chúng tôi gửi đi",
+    "intro": "Argus là ví phi lưu ký: khóa của bạn không bao giờ rời khỏi thiết bị này. Nhưng để hiển thị số dư và giải thích giao dịch, ví phải liên lạc với máy chủ của chúng tôi. Dưới đây là chính xác những gì được gửi đi và gửi cho ai.",
+    "updateNote": "Chúng tôi đã thay đổi những gì Argus gửi đi hoặc bên nào nhận dữ liệu đó. Vui lòng xem lại thông báo này trước khi tiếp tục.",
+    "localTitle": "Không bao giờ rời khỏi thiết bị của bạn",
+    "localItems": "Cụm từ khôi phục, khóa riêng tư và mật khẩu của bạn. Cả danh sách các trang web bạn đã kết nối và ngôn ngữ giao diện. Không có tài khoản, không đăng ký và không cần địa chỉ email.",
+    "backendTitle": "Được gửi đến backend của Argus",
+    "backendAddresses": "Các địa chỉ ví công khai của bạn — để đọc số dư, lịch sử giao dịch và thống kê phí từ các blockchain công khai.",
+    "backendTx": "Chi tiết của các giao dịch chưa ký — để mô phỏng, đánh giá rủi ro và giải thích chúng bằng ngôn ngữ dễ hiểu trước khi bạn ký.",
+    "backendSigned": "Các giao dịch đã ký — để phát chúng lên mạng lưới. Một giao dịch đã ký không chứa khóa riêng tư.",
+    "backendIp": "Địa chỉ IP của bạn — mọi máy chủ bạn kết nối tới đều thấy được. Chỉ dùng để giới hạn tần suất truy cập, được giữ trong bộ nhớ và không bao giờ liên kết với các địa chỉ của bạn.",
+    "thirdPartyTitle": "Được backend của chúng tôi chuyển tiếp cho bên thứ ba",
+    "thirdPartyAi": "Nhà cung cấp AI (OpenAI hoặc Groq) — chi tiết giao dịch và nội dung tin nhắn trò chuyện của bạn. Chỉ khi bạn bật các tính năng AI bên dưới.",
+    "thirdPartyRpc": "Các node blockchain và trình khám phá — địa chỉ công khai và các giao dịch đã ký của bạn. Không có chúng thì không thể đọc được blockchain.",
+    "thirdPartyPrices": "CoinGecko — chỉ các mã định danh đồng coin (“ethereum”, “bitcoin”). Không có địa chỉ, không có dữ liệu cá nhân.",
+    "aiTitle": "Tính năng AI (tùy chọn)",
+    "aiHint": "Phần giải thích giao dịch bằng AI và trò chuyện với trợ lý sẽ gửi chi tiết giao dịch và tin nhắn của bạn đến một nhà cung cấp AI. Đây là dữ liệu duy nhất rời khỏi hạ tầng của chính chúng tôi để đến với một mô hình của bên thứ ba.",
+    "aiToggle": "Bật các tính năng AI",
+    "aiToggleHint": "Mặc định là tắt. Khi AI tắt, phần giải thích giao dịch được tạo từ các mẫu cục bộ dựa trên quy tắc, trò chuyện không khả dụng, còn mọi thứ khác — số dư, gửi tiền, lịch sử, phân tích, cảnh báo rủi ro — vẫn hoạt động y như cũ. Bạn có thể thay đổi điều này bất cứ lúc nào tại Thêm → Quyền riêng tư và dữ liệu.",
+    "policyLink": "Đọc toàn văn chính sách quyền riêng tư",
+    "accept": "Đồng ý và tiếp tục",
+    "decline": "Tiếp tục mà không gửi dữ liệu",
+    "declineHint": "Chế độ ngoại tuyến: bạn có thể tạo hoặc nhập ví, xem các địa chỉ của mình và sao lưu cụm từ khôi phục. Số dư, lịch sử, phân tích và gửi tiền sẽ không khả dụng cho đến khi bạn bật truyền dữ liệu tại Thêm → Quyền riêng tư và dữ liệu.",
+    "offlineTitle": "Các tính năng mạng đang tắt",
+    "offlineHint": "Bạn đã chọn không gửi dữ liệu đến backend của Argus. Số dư, lịch sử, phân tích và gửi tiền đều cần truyền đi các địa chỉ công khai của bạn.",
+    "offlineEnable": "Bật truyền dữ liệu",
+    "aiOffTitle": "Các tính năng AI đang tắt",
+    "aiOffHint": "Trò chuyện sẽ gửi tin nhắn của bạn, còn phần giải thích bằng AI sẽ gửi chi tiết giao dịch, đến một nhà cung cấp AI. Tính năng này mặc định tắt — chưa có gì được gửi đi.",
+    "aiOffEnable": "Bật các tính năng AI"
   }
 }

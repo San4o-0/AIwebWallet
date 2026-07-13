@@ -13,6 +13,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ChainIcon } from '@/src/components/chain-icons';
+import { NetworkOffNote, useNetworkAllowed } from '@/src/components/consent';
 import { IconCheck, IconChevronLeft } from '@/src/components/icons';
 import { SelectMenu, type SelectOption } from '@/src/components/SelectMenu';
 import { TokenIcon } from '@/src/components/token-icons';
@@ -38,6 +39,10 @@ export default function Send() {
   const { t } = useTranslation();
   const account = useWalletStore((s) => s.account);
   const setScreen = useWalletStore((s) => s.setScreen);
+  // Надсилання неможливе офлайн: nonce/комісії беруться з /v1/tx/params, а
+  // підписана транзакція транслюється через /v1/tx/broadcast. Показуємо це
+  // ДО заповнення форми, а не помилкою після підпису.
+  const networkAllowed = useNetworkAllowed();
   const [chain, setChain] = useState<Chain>('ethereum');
   const [asset, setAsset] = useState<string>(NATIVE_ASSET);
   const [recipient, setRecipient] = useState('');
@@ -64,7 +69,7 @@ export default function Send() {
           tron: account !== null && account.addresses.tron !== '' ? [account.addresses.tron] : [],
         },
       }),
-    enabled: account !== null,
+    enabled: account !== null && networkAllowed,
   });
 
   // Доступний баланс обраного активу (нативний / токен) у поточній мережі.
@@ -177,6 +182,29 @@ export default function Send() {
     }
   };
 
+  const backButton = (
+    <button
+      type="button"
+      onClick={() => setScreen('home')}
+      className="-ms-2 flex w-fit items-center gap-0.5 rounded-lg px-2 py-1.5 text-sm text-muted transition-colors hover:bg-raised hover:text-ink"
+    >
+      <IconChevronLeft size={16} className="rtl:-scale-x-100" />
+      {t('nav.home')}
+    </button>
+  );
+
+  // Офлайн-режим: форми немає взагалі — інакше користувач заповнив би адресу й
+  // суму, щоб отримати помилку аж на кроці підпису.
+  if (!networkAllowed) {
+    return (
+      <div className="screen-in flex min-h-full flex-col gap-5 p-5 pb-24">
+        {backButton}
+        <ScreenHeader eyebrow={t('send.eyebrow')} title={t('send.title')} />
+        <NetworkOffNote />
+      </div>
+    );
+  }
+
   return (
     <form
       className="screen-in flex min-h-full flex-col gap-5 p-5 pb-24"
@@ -185,14 +213,7 @@ export default function Send() {
         void submit();
       }}
     >
-      <button
-        type="button"
-        onClick={() => setScreen('home')}
-        className="-ms-2 flex w-fit items-center gap-0.5 rounded-lg px-2 py-1.5 text-sm text-muted transition-colors hover:bg-raised hover:text-ink"
-      >
-        <IconChevronLeft size={16} className="rtl:-scale-x-100" />
-        {t('nav.home')}
-      </button>
+      {backButton}
 
       <ScreenHeader eyebrow={t('send.eyebrow')} title={t('send.title')} />
 

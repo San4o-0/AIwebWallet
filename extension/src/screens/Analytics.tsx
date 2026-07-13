@@ -18,6 +18,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { NetworkOffNote, useNetworkAllowed } from '@/src/components/consent';
 import { Card, EmptyState, ErrorNote, Eyebrow } from '@/src/components/ui';
 import { fetchAnalyticsSummary, fetchFeeAnalytics } from '@/src/lib/api';
 import type { AnalyticsPeriod, FeePoint, TxCategory } from '@/src/lib/api-types';
@@ -53,6 +54,7 @@ const AMBER_RAMP = ['#ecb166', '#d89a44', '#c38323', '#a97015', '#8e5d11'];
 export default function Analytics() {
   const { t } = useTranslation();
   const account = useWalletStore((s) => s.account);
+  const networkAllowed = useNetworkAllowed();
   const [period, setPeriod] = useState<AnalyticsPeriod>('30d');
   const address = account?.addresses.evm ?? '';
 
@@ -60,13 +62,13 @@ export default function Analytics() {
   const fees = useQuery({
     queryKey: ['analytics-fees', address, period],
     queryFn: () => fetchFeeAnalytics(address, period),
-    enabled: account !== null,
+    enabled: account !== null && networkAllowed,
     placeholderData: keepPreviousData,
   });
   const summary = useQuery({
     queryKey: ['analytics-summary', address, period],
     queryFn: () => fetchAnalyticsSummary(address, period),
-    enabled: account !== null,
+    enabled: account !== null && networkAllowed,
     placeholderData: keepPreviousData,
   });
 
@@ -106,7 +108,9 @@ export default function Analytics() {
         })}
       </div>
 
-      {isError && (
+      {!networkAllowed && <NetworkOffNote />}
+
+      {networkAllowed && isError && (
         <ErrorNote
           onRetry={() => {
             void fees.refetch();
@@ -117,7 +121,7 @@ export default function Analytics() {
         </ErrorNote>
       )}
 
-      {isLoading && (
+      {networkAllowed && isLoading && (
         <div className="flex flex-col gap-2">
           <div className="skeleton h-20 w-full" />
           <div className="skeleton h-36 w-full" />
@@ -125,14 +129,14 @@ export default function Analytics() {
         </div>
       )}
 
-      {!isLoading && !isError && !hasAnyData && (
+      {networkAllowed && !isLoading && !isError && !hasAnyData && (
         <>
           <EmptyState title={t('analytics.emptyTitle')} hint={t('analytics.emptyHint')} />
           {note !== undefined && <ServiceNote note={note} />}
         </>
       )}
 
-      {!isLoading && !isError && hasAnyData && (
+      {networkAllowed && !isLoading && !isError && hasAnyData && (
         <div className={`flex flex-col gap-5 ${refreshing ? 'opacity-60' : ''}`}>
           {/* Stat-плитки: hero-число mono — плитки, не графіки */}
           <div className="grid grid-cols-2 gap-3">

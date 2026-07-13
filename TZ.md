@@ -160,18 +160,27 @@
 ## 5. API бекенду (основні ендпоінти)
 
 ```
-POST /v1/balances            { addresses: {evm[], solana[], bitcoin[]} } → портфель
-GET  /v1/history?address=&chain=&cursor=                                → історія + описи
+POST /v1/balances            { addresses: {evm[], solana[], bitcoin[], tron[]} } → портфель
+POST /v1/history             { address, chain?, cursor?, limit? }       → історія + описи
+POST /v1/tx/params           { chain, from, token? }                    → nonce, gas, комісії, chain_id
 POST /v1/tx/decode           { chain, raw_tx | tx_request }             → структурований розбір
 POST /v1/tx/simulate         { chain, tx_request, signer }              → зміни балансів
 POST /v1/tx/risk             { chain, tx_request, dapp_origin }         → {level, reasons[]}
 POST /v1/tx/explain          { decoded, simulation, risk, lang }        → людське пояснення
 POST /v1/tx/broadcast        { chain, signed_tx }                       → tx_hash
 POST /v1/chat                { messages[], addresses[] } (SSE stream)   → відповідь AI
-GET  /v1/analytics/fees?address=&period=                                → витрати на комісії
-GET  /v1/analytics/summary?address=&period=                             → дашборд
+POST /v1/analytics/fees      { address, period }                        → витрати на комісії
+POST /v1/analytics/summary   { address, period }                        → дашборд
+GET  /v1/fees?chain=                                                    → оцінка комісій мережі
 GET  /v1/prices?ids=                                                    → ціни
+GET  /v1/health                                                         → статус сервісу
 ```
+
+**Дані користувача — тільки в тілі POST.** Політика Chrome Web Store (код відхилення **Purple Copper**) забороняє передавати дані користувача в query-параметрах і HTTP-заголовках навіть по HTTPS: вони осідають у логах серверів, зворотних проксі й CDN, тобто дані витікають за межі шифрованого каналу. Адреса гаманця — це дані користувача, тож усі ендпоінти, що її приймають (`/history`, `/analytics/*`, `/tx/params`, `/balances`), — виключно `POST` з тілом JSON.
+
+`GET` лишається **тільки** там, де параметр не є даними користувача і є публічним довідником: `/prices?ids=` (ідентифікатори монет CoinGecko), `/fees?chain=` (назва мережі), `/health` (без параметрів). Ці запити нічого не розкривають про власника гаманця, а GET дає HTTP-кешування.
+
+Жодних адрес чи іншого користувацького контексту в заголовках запитів — розширення шле лише `Content-Type` і `Accept`.
 
 Аутентифікація MVP: анонімна сесія, прив'язана до підпису повідомлення адресою (Sign-In-with-Ethereum-подібно) — без email/паролів на бекенді.
 

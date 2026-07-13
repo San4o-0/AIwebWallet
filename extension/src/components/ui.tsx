@@ -263,6 +263,55 @@ export function ErrorNote({
   );
 }
 
+/**
+ * Перемикач (Налаштування → «Приватність і дані»): підпис + пояснення ліворуч,
+ * трек праворуч. role="switch" + aria-checked — стан читає скрінрідер, а не
+ * лише колір. Увімкнено — бурштиновий трек (акцент палітри), вимкнено —
+ * hairline: жодна зі сторін не «яскравіша за замовчуванням».
+ */
+export function Toggle({
+  label,
+  hint,
+  checked,
+  disabled = false,
+  onChange,
+}: {
+  label: string;
+  hint?: string;
+  checked: boolean;
+  disabled?: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <div className={`flex items-start gap-3 px-4 py-3 ${disabled ? 'opacity-60' : ''}`}>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-medium text-ink">{label}</span>
+        {hint !== undefined && (
+          <span className="mt-0.5 block text-xs leading-relaxed text-muted">{hint}</span>
+        )}
+      </span>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        aria-label={label}
+        disabled={disabled}
+        onClick={() => onChange(!checked)}
+        className={`relative mt-0.5 h-5 w-9 shrink-0 rounded-full border transition-colors duration-100 disabled:cursor-not-allowed ${
+          checked ? 'border-accent bg-accent/80' : 'border-hairline bg-raised'
+        }`}
+      >
+        <span
+          className={`absolute top-1/2 size-3.5 -translate-y-1/2 rounded-full transition-[inset-inline-start,background-color] duration-100 ${
+            checked ? 'start-[18px] bg-bg' : 'start-[2px] bg-muted'
+          }`}
+          aria-hidden
+        />
+      </button>
+    </div>
+  );
+}
+
 /** Квадратна іконка-кнопка (шапки екранів). */
 export function IconButton({
   label,

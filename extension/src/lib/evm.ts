@@ -2,7 +2,11 @@
  * EVM-хелпери для збірки EIP-1559 транзакцій у розширенні:
  *  - реєстр відомих ERC-20 токенів (дзеркало crates/api-server/src/chains.rs);
  *  - точний парсинг десяткових сум у базові одиниці (bigint, без float);
- *  - декодування повідомлень personal_sign (hex від dApp → байти);
+ *  - ДЕКОДУВАННЯ ЗАПИТУ dApp (readDappTx/decodeTxIntent): що саме підписує
+ *    користувач — сума, СПРАВЖНІЙ отримувач (для ERC-20 — з calldata, а не
+ *    адреса контракту), spender і безлімітність approve. Це основа екрана
+ *    Approve: рішення ухвалюється за фактами, а не за AI-текстом;
+ *  - декодування повідомлень personal_sign (hex від dApp → байти/текст);
  *  - тип параметрів транзакції для WASM signEvmTransaction (усі числа —
  *    рядки, щоб не втрачати точність на межі JS ↔ Rust).
  */
@@ -100,18 +104,29 @@ export const MAX_FEE_PER_GAS_CEILING_WEI = 10_000n * 1_000_000_000n;
 /** Верхня санітарна межа gas limit: вище за будь-який реальний блок-ліміт EVM. */
 export const MAX_GAS_LIMIT = 60_000_000n;
 
-/** Десятковий/hex-рядок або число у bigint; null — не число. */
-function toBigInt(value: string | number): bigint | null {
+/**
+ * EIP-1474 quantity → bigint: dApp шле числа hex-рядком (`0x5208`), бекенд —
+ * десятковим (`21000`). Приймаємо обидва, все інше (порожнє, від'ємне, сміття,
+ * `undefined`) — null: краще відмовитись показувати/підписувати, ніж мовчки
+ * підставити нуль.
+ */
+export function parseQuantity(value: string | number | null | undefined): bigint | null {
   try {
     if (typeof value === 'number') {
       return Number.isSafeInteger(value) && value >= 0 ? BigInt(value) : null;
     }
+    if (typeof value !== 'string') return null;
     const trimmed = value.trim();
     if (!/^(0x[0-9a-fA-F]+|\d+)$/.test(trimmed)) return null;
     return BigInt(trimmed);
   } catch {
     return null;
   }
+}
+
+/** Десятковий/hex-рядок або число у bigint; null — не число. */
+function toBigInt(value: string | number): bigint | null {
+  return parseQuantity(value);
 }
 
 /** Мінімальна форма /v1/tx/params, від якої залежить підпис (див. api-types.TxParams). */
@@ -196,4 +211,298 @@ export function decodePersonalSignMessage(message: string): Uint8Array {
     }
   }
   return new TextEncoder().encode(message);
+}
+
+/** Результат декодування повідомлення personal_sign для показу користувачу. */
+export interface DecodedSignMessage {
+  /** Текст повідомлення (UTF-8) або сирий hex, якщо це не текст. */
+  text: string;
+  /** true — валідний друкований UTF-8 (показуємо як текст). */
+  isText: boolean;
+}
+
+/**
+ * Hex-повідомлення dApp → людський текст для екрана підпису. Показувати сирий
+ * hex там, де є нормальний UTF-8, означає підписувати наосліп; показувати
+ * «текст» там, де є керівні символи (спроба сховати частину повідомлення за
+ * межами видимого рядка) — гірше, ніж чесний hex. Тому: суворий UTF-8
+ * (fatal) + заборона керівних символів, інакше — hex як є.
+ */
+export function decodePersonalSignText(message: string): DecodedSignMessage {
+  const raw = message.trim();
+  const bytes = decodePersonalSignMessage(raw);
+  try {
+    const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+    // \n \r \t — легітимні в підписуваних повідомленнях (SIWE тощо).
+    const hasControlChars = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/.test(text);
+    if (text.length > 0 && !hasControlChars) return { text, isText: true };
+  } catch {
+    /* не валідний UTF-8 — показуємо hex */
+  }
+  return { text: raw, isText: false };
+}
+
+// ---------------------------------------------------------------------------
+// Декодування запиту транзакції від dApp (екран Approve)
+//
+// ЧОМУ ЦЕ ТУТ, А НЕ НА БЕКЕНДІ: факти, за якими користувач ухвалює рішення
+// (кому, скільки, який дозвіл), мають бути виведені з ТИХ САМИХ байтів, що
+// підуть у підпис, і локально — інакше показане на екрані не зобов'язує
+// підписане. Бекенд дає ризик і пояснення; факти рахує гаманець.
+// ---------------------------------------------------------------------------
+
+/** ERC-20 `transfer(address,uint256)`. */
+export const ERC20_TRANSFER_SELECTOR = '0xa9059cbb';
+/** ERC-20 `approve(address,uint256)`. */
+export const ERC20_APPROVE_SELECTOR = '0x095ea7b3';
+
+/**
+ * Поріг «безлімітного» дозволу: 2^255. Класична «нескінченність» — uint256-max
+ * (2^256−1), але dApp'и шлють і інші величезні константи (uint128-max тощо).
+ * Будь-яке значення ≥ 2^255 не може бути витрачене реальним обігом токена
+ * (усі емісії на порядки менші), тож це безліміт де-факто — і саме так його
+ * треба показувати користувачу, а не «115792089237316195423570985008687907853…».
+ */
+export const UNLIMITED_APPROVAL_THRESHOLD = 2n ** 255n;
+
+/** Токен реєстру KNOWN_ERC20 за адресою контракту (регістронезалежно). */
+export function findKnownErc20(chain: Chain, address: string): Erc20Token | null {
+  const needle = address.trim().toLowerCase();
+  return (KNOWN_ERC20[chain] ?? []).find((token) => token.address.toLowerCase() === needle) ?? null;
+}
+
+/** 32-байтове слово ABI → EVM-адреса; null, якщо старші 12 байтів не нульові. */
+function wordToAddress(word: string): string | null {
+  if (!/^0{24}[0-9a-f]{40}$/.test(word)) return null;
+  return `0x${word.slice(24)}`;
+}
+
+/** Аргументи ABI-виклику з calldata; null — інший селектор або обрізані дані. */
+function calldataWords(data: string, selector: string, count: number): string[] | null {
+  const raw = data.trim().toLowerCase();
+  if (!/^0x[0-9a-f]*$/.test(raw)) return null;
+  if (!raw.startsWith(selector)) return null;
+  const body = raw.slice(selector.length);
+  // Хвіст понад очікувані аргументи ігноруємо (динамічні дані/сміття), але
+  // ОБРІЗАНІ дані — ні: з них не можна чесно вивести суму чи отримувача.
+  if (body.length < count * 64) return null;
+  return Array.from({ length: count }, (_, i) => body.slice(i * 64, (i + 1) * 64));
+}
+
+export interface Erc20Transfer {
+  /** СПРАВЖНІЙ отримувач токенів (із calldata, не адреса контракту). */
+  recipient: string;
+  /** Сума у базових одиницях токена. */
+  amount: bigint;
+}
+
+/** Парсинг calldata ERC-20 `transfer`; null — це не transfer. */
+export function parseErc20Transfer(data: string): Erc20Transfer | null {
+  const words = calldataWords(data, ERC20_TRANSFER_SELECTOR, 2);
+  if (words === null) return null;
+  const [recipientWord, amountWord] = words;
+  if (recipientWord === undefined || amountWord === undefined) return null;
+  const recipient = wordToAddress(recipientWord);
+  if (recipient === null) return null;
+  return { recipient, amount: BigInt(`0x${amountWord}`) };
+}
+
+export interface Erc20Approval {
+  /** Кому дається право витрачати токен із гаманця. */
+  spender: string;
+  amount: bigint;
+  /** Дозвіл фактично без обмеження (≥ 2^255). */
+  unlimited: boolean;
+}
+
+/** Парсинг calldata ERC-20 `approve`; null — це не approve. */
+export function parseErc20Approve(data: string): Erc20Approval | null {
+  const words = calldataWords(data, ERC20_APPROVE_SELECTOR, 2);
+  if (words === null) return null;
+  const [spenderWord, amountWord] = words;
+  if (spenderWord === undefined || amountWord === undefined) return null;
+  const spender = wordToAddress(spenderWord);
+  if (spender === null) return null;
+  const amount = BigInt(`0x${amountWord}`);
+  return { spender, amount, unlimited: amount >= UNLIMITED_APPROVAL_THRESHOLD };
+}
+
+/** Обʼєкт транзакції від dApp (`params[0]` у eth_sendTransaction). */
+export interface DappTx {
+  from: string | null;
+  to: string | null;
+  /** Wei, hex або десятковий рядок; null — відсутнє (= 0). */
+  value: string | null;
+  data: string | null;
+  /** gas limit від dApp; null — беремо оцінку бекенду. */
+  gas: string | null;
+}
+
+/** Витягує обʼєкт транзакції з params запиту; null — параметри непридатні. */
+export function readDappTx(params: readonly unknown[]): DappTx | null {
+  const raw = params[0];
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return null;
+  const tx = raw as Record<string, unknown>;
+  const field = (key: string): string | null => {
+    const value = tx[key];
+    return typeof value === 'string' && value.length > 0 ? value : null;
+  };
+  return {
+    from: field('from'),
+    to: field('to'),
+    value: field('value'),
+    // Деякі dApp'и шлють calldata під ключем `input` (як у JSON-RPC-відповідях).
+    data: field('data') ?? field('input'),
+    gas: field('gas'),
+  };
+}
+
+/** Що НАСПРАВДІ робить транзакція (для показу фактів на екрані підпису). */
+export type TxIntentKind =
+  /** Переказ нативної монети. */
+  | 'native'
+  /** ERC-20 transfer: гроші йдуть НЕ на `to` (контракт), а на адресу з calldata. */
+  | 'erc20-transfer'
+  /** ERC-20 approve: право витрачати токен, можливо безлімітне. */
+  | 'erc20-approve'
+  /** Виклик контракту з невідомим селектором. */
+  | 'contract-call'
+  /** Деплой контракту (`to` відсутній). */
+  | 'contract-deploy';
+
+export interface TxIntent {
+  kind: TxIntentKind;
+  /**
+   * Сторона, яку показуємо користувачу: отримувач переказу (для ERC-20 — з
+   * calldata!), spender дозволу або контракт виклику. null — деплой.
+   */
+  counterparty: string | null;
+  /** Контракт, до якого йде виклик (null для нативного переказу/деплою). */
+  contract: string | null;
+  /** Сума у базових одиницях активу (wei для нативної, base units токена). */
+  amount: bigint;
+  /** Десяткові знаки активу; null — токен НЕ з реєстру (суму видно лише «сирою»). */
+  decimals: number | null;
+  /** Тикер активу; null — токен не з реєстру. */
+  symbol: string | null;
+  /** Безлімітний approve. */
+  unlimited: boolean;
+  /** 4-байтовий селектор виклику (для невідомих функцій). */
+  selector: string | null;
+  /** Нативна монета, що йде разом із викликом (wei) — може бути ≠ 0 і в ERC-20. */
+  nativeValue: bigint;
+}
+
+/**
+ * Розбирає запит dApp у факти для екрана підпису. НІКОЛИ не кидає: невідомий
+ * виклик — це теж чесний факт («виклик контракту, селектор 0x…»), а не привід
+ * показати сирий JSON і сподіватись на AI-текст.
+ */
+export function decodeTxIntent(chain: Chain, tx: DappTx): TxIntent {
+  const nativeSymbol = CHAINS[chain].symbol;
+  const nativeValue = parseQuantity(tx.value) ?? 0n;
+  const to = tx.to !== null && isEvmAddress(tx.to) ? tx.to.trim().toLowerCase() : null;
+  const data = tx.data !== null && tx.data.trim().length > 2 ? tx.data.trim() : null;
+
+  const native: TxIntent = {
+    kind: 'native',
+    counterparty: to,
+    contract: null,
+    amount: nativeValue,
+    decimals: 18,
+    symbol: nativeSymbol,
+    unlimited: false,
+    selector: null,
+    nativeValue,
+  };
+
+  if (to === null) {
+    return { ...native, kind: 'contract-deploy', counterparty: null, selector: data?.slice(0, 10) ?? null };
+  }
+  if (data === null) return native;
+
+  const token = findKnownErc20(chain, to);
+
+  const transfer = parseErc20Transfer(data);
+  if (transfer !== null) {
+    return {
+      kind: 'erc20-transfer',
+      counterparty: transfer.recipient,
+      contract: to,
+      amount: transfer.amount,
+      decimals: token?.decimals ?? null,
+      symbol: token?.symbol ?? null,
+      unlimited: false,
+      selector: ERC20_TRANSFER_SELECTOR,
+      nativeValue,
+    };
+  }
+
+  const approval = parseErc20Approve(data);
+  if (approval !== null) {
+    return {
+      kind: 'erc20-approve',
+      counterparty: approval.spender,
+      contract: to,
+      amount: approval.amount,
+      decimals: token?.decimals ?? null,
+      symbol: token?.symbol ?? null,
+      unlimited: approval.unlimited,
+      selector: ERC20_APPROVE_SELECTOR,
+      nativeValue,
+    };
+  }
+
+  return {
+    kind: 'contract-call',
+    counterparty: to,
+    contract: to,
+    amount: nativeValue,
+    decimals: 18,
+    symbol: nativeSymbol,
+    unlimited: false,
+    selector: data.slice(0, 10),
+    nativeValue,
+  };
+}
+
+/**
+ * Базові одиниці → людський рядок (BigInt, без float). Ненульова, але надто
+ * дрібна сума НЕ округлюється до «0» — показується як «<0.000001», інакше
+ * екран брехав би про суму переказу.
+ */
+export function formatUnits(value: bigint, decimals: number, maxFractionDigits = 6): string {
+  if (decimals <= 0) return value.toString();
+  const negative = value < 0n;
+  const abs = negative ? -value : value;
+  const base = 10n ** BigInt(decimals);
+  const whole = abs / base;
+  const digits = Math.min(maxFractionDigits, decimals);
+  const fraction = (abs % base)
+    .toString()
+    .padStart(decimals, '0')
+    .slice(0, digits)
+    .replace(/0+$/, '');
+  const sign = negative ? '-' : '';
+  if (whole === 0n && fraction === '' && abs > 0n && digits > 0) {
+    return `${sign}<0.${'0'.repeat(digits - 1)}1`;
+  }
+  return fraction.length > 0 ? `${sign}${whole.toString()}.${fraction}` : `${sign}${whole.toString()}`;
+}
+
+/** Базові одиниці → number (ТІЛЬКИ для приблизної оцінки в USD, не для підпису). */
+export function unitsToNumber(value: bigint, decimals: number): number {
+  return Number(value) / 10 ** decimals;
+}
+
+/**
+ * Стеля комісії транзакції: gas_limit × max_fee_per_gas (wei). Саме цю суму
+ * користувач у гіршому випадку заплатить — тож саме її показуємо ДО підпису.
+ * null — параметри непридатні (не число).
+ */
+export function maxFeeWei(gasLimit: string, maxFeePerGas: string): bigint | null {
+  const gas = parseQuantity(gasLimit);
+  const price = parseQuantity(maxFeePerGas);
+  if (gas === null || price === null) return null;
+  return gas * price;
 }

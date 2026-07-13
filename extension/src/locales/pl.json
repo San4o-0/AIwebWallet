@@ -234,7 +234,42 @@
     "sign": "Podpisz",
     "noRequestTitle": "Brak żądania podpisu",
     "noRequestHint": "Ten ekran otwiera się, gdy dApp prosi o podpis. W tej chwili nie ma nic do sprawdzenia.",
-    "close": "Zamknij"
+    "close": "Zamknij",
+    "factsEyebrow": "Co podpisujesz",
+    "action": {
+      "native": "Wysyłka",
+      "tokenTransfer": "Transfer tokena",
+      "tokenApprove": "Zgoda na token",
+      "contractCall": "Wywołanie kontraktu",
+      "deploy": "Wdrożenie kontraktu",
+      "signMessage": "Wiadomość"
+    },
+    "amountLabel": "Kwota",
+    "allowanceLabel": "Limit wydatków",
+    "recipientLabel": "Odbiorca",
+    "spenderLabel": "Uprawniony do wydawania",
+    "contractLabel": "Kontrakt",
+    "tokenContractLabel": "Kontrakt tokena",
+    "networkLabel": "Sieć",
+    "feeLabel": "Maksymalna opłata sieciowa",
+    "feeLoading": "Pobieranie opłaty…",
+    "feeFormula": "{{gas}} gas × {{gwei}} gwei",
+    "feeBlocked": "Podpis jest zablokowany, dopóki opłata nie jest znana: {{detail}}",
+    "unlimited": "{{symbol}} bez limitu",
+    "unlimitedWarning": "Uprawniony będzie mógł w każdej chwili i bez ograniczeń wyprowadzić ten token z Twojego portfela, dopóki nie cofniesz zgody.",
+    "unknownToken": "Tego tokena nie ma w rejestrze Argus: nie można zweryfikować jego symbolu ani liczby miejsc dziesiętnych, więc kwotę pokazano w jednostkach surowych.",
+    "unknownTokenShort": "tokenów",
+    "unknownSelector": "Nieznana funkcja {{selector}}",
+    "plusNative": "Dodatkowo z wywołaniem wysyłane jest {{amount}} {{symbol}}",
+    "deployWarning": "Brak odbiorcy: ta transakcja wdraża nowy kontrakt.",
+    "messageLabel": "Wiadomość",
+    "messageHexNote": "Wiadomość nie jest poprawnym tekstem — pokazano surowe bajty.",
+    "signerLabel": "Adres podpisujący",
+    "shareAddressLabel": "Adres, który zobaczy strona",
+    "connectHint": "Strona zobaczy ten adres i jego salda. Bez osobnego podpisu nie przeniesie środków.",
+    "aiAdvisory": "Ocena AI jest pomocnicza. Decyduj na podstawie faktów powyżej.",
+    "signing": "Podpisywanie…",
+    "invalidTxParams": "Strona wysłała transakcję, której Argus nie potrafi odczytać. Podpis jest zablokowany."
   },
   "risk": {
     "low": "Niskie ryzyko",
@@ -293,7 +328,16 @@
     "revealSeedShow": "Pokaż frazę",
     "revealSeedHide": "Ukryj frazę",
     "lock": "Zablokuj portfel",
-    "footer": "Argus {{version}} · {{networks}} sieci · non-custodial"
+    "footer": "Argus {{version}} · {{networks}} sieci · non-custodial",
+    "privacy": "Prywatność i dane",
+    "dataSharing": "Przesyłanie danych",
+    "dataSharingHint": "Publiczne adresy i szczegóły transakcji trafiają do backendu Argusa. Wyłączone: portfel działa offline — bez sald, historii, analityki i wysyłania.",
+    "aiFeatures": "Funkcje AI",
+    "aiFeaturesHint": "Szczegóły transakcji i treść czatu trafiają do dostawcy AI. Wyłączone: wyjaśnienia są lokalne i oparte na regułach, czat jest niedostępny.",
+    "aiRequiresData": "Wymaga włączonego przesyłania danych.",
+    "reviewConsent": "Jakie dane wysyłamy",
+    "reviewConsentHint": "Przejrzyj tę informację i zmień swoje wybory.",
+    "privacyPolicy": "Polityka prywatności"
   },
   "wallets": {
     "defaultName": "Portfel {{number}}",
@@ -350,6 +394,13 @@
       "broadcastFailed": "Nie udało się rozgłosić transakcji: {{detail}}",
       "broadcastUnavailable": "Nie udało się rozgłosić transakcji: backend jest niedostępny ({{url}}). Uruchom api-server i spróbuj ponownie.",
       "insecureBaseUrl": "Żądanie zablokowane: ta kompilacja łączy się z backendem przez nieszyfrowane połączenie ({{url}}). W otwartym kanale atakujący może podmienić id sieci i opłaty transakcji, dlatego żądania są wyłączone. Zbuduj rozszerzenie ponownie z adresem https."
+    },
+    "approvalGone": "Tego żądania nie ma już w kolejce: zostało rozstrzygnięte lub wycofane.",
+    "approvalFailed": "Nie udało się wykonać żądania.",
+    "feeSnapshotMissing": "Podpis zablokowany: opłata pokazana na ekranie nie dotarła do podpisującego. Otwórz żądanie ponownie.",
+    "consent": {
+      "networkDenied": "Przesyłanie danych jest wyłączone — portfel działa offline. Włącz je w Więcej → Prywatność i dane.",
+      "aiDisabled": "Funkcje AI są wyłączone. Włącz je w Więcej → Prywatność i dane."
     }
   },
   "mock": {
@@ -381,5 +432,37 @@
       "chainId": "Techniczne żądanie identyfikatora sieci."
     },
     "chatAnswer": "W ciągu ostatnich 30 dni wydano około $14.62 na opłaty: $11.20 w Ethereum, $2.10 w Bitcoin, $0.90 w Polygon i $0.42 w Solana. Najdroższa była transakcja approve dla Uniswap ($4.80). Wskazówka: w Ethereum opłaty nocą (UTC) są zwykle o 30–50% niższe. \n\n_(To odpowiedź testowa: backend /v1/chat jest niedostępny.)_"
+  },
+  "consent": {
+    "eyebrowFirstRun": "Krok 1 · Prywatność",
+    "eyebrowUpdate": "Aktualizacja polityki",
+    "title": "Jakie dane wysyłamy",
+    "intro": "Argus jest non-custodial: Twoje klucze nigdy nie opuszczają tego urządzenia. Aby pokazywać salda i wyjaśniać transakcje, musi łączyć się z naszym serwerem. Poniżej dokładnie to, co jest wysyłane i do kogo.",
+    "updateNote": "Zmieniliśmy to, co Argus wysyła, lub to, kto te dane otrzymuje. Zapoznaj się z tą informacją, zanim przejdziesz dalej.",
+    "localTitle": "Nigdy nie opuszcza Twojego urządzenia",
+    "localItems": "Twoja fraza odzyskiwania, klucze prywatne i hasło. Także lista witryn, z którymi masz połączenie, oraz język interfejsu. Nie ma konta, rejestracji ani adresu e-mail.",
+    "backendTitle": "Wysyłane do backendu Argusa",
+    "backendAddresses": "Twoje publiczne adresy portfela — aby odczytać salda, historię transakcji i statystyki opłat z publicznych blockchainów.",
+    "backendTx": "Szczegóły niepodpisanych transakcji — aby je zasymulować, ocenić ich ryzyko i wyjaśnić prostym językiem, zanim je podpiszesz.",
+    "backendSigned": "Podpisane transakcje — aby rozgłosić je w sieci. Podpisana transakcja nie zawiera klucza prywatnego.",
+    "backendIp": "Twój adres IP — widoczny dla każdego serwera, z którym się łączysz. Używany wyłącznie do ograniczania liczby żądań, przechowywany w pamięci, nigdy nie powiązany z Twoimi adresami.",
+    "thirdPartyTitle": "Przekazywane dalej przez nasz backend",
+    "thirdPartyAi": "Dostawca AI (OpenAI lub Groq) — szczegóły transakcji i treść Twoich wiadomości na czacie. Tylko jeśli włączysz funkcje AI poniżej.",
+    "thirdPartyRpc": "Węzły i eksploratory blockchaina — Twoje publiczne adresy i Twoje podpisane transakcje. Bez nich odczytanie blockchaina jest niemożliwe.",
+    "thirdPartyPrices": "CoinGecko — wyłącznie identyfikatory monet („ethereum”, „bitcoin”). Bez adresów i bez danych osobowych.",
+    "aiTitle": "Funkcje AI (opcjonalne)",
+    "aiHint": "Wyjaśnienia transakcji generowane przez AI oraz czat asystenta wysyłają szczegóły transakcji i Twoje wiadomości do dostawcy AI. To jedyne dane, które opuszczają naszą własną infrastrukturę i trafiają do modelu firmy trzeciej.",
+    "aiToggle": "Włącz funkcje AI",
+    "aiToggleHint": "Domyślnie wyłączone. Przy wyłączonym AI wyjaśnienia transakcji pochodzą z lokalnych szablonów opartych na regułach, czat jest niedostępny, a wszystko inne — salda, wysyłanie, historia, analityka, ostrzeżenia o ryzyku — działa dokładnie tak samo. Możesz to zmienić w dowolnej chwili w Więcej → Prywatność i dane.",
+    "policyLink": "Przeczytaj pełną politykę prywatności",
+    "accept": "Akceptuję i kontynuuję",
+    "decline": "Kontynuuj bez wysyłania danych",
+    "declineHint": "Tryb offline: możesz utworzyć lub zaimportować portfel, zobaczyć swoje adresy i zapisać kopię frazy odzyskiwania. Salda, historia, analityka i wysyłanie pozostaną niedostępne, dopóki nie włączysz przesyłania danych w Więcej → Prywatność i dane.",
+    "offlineTitle": "Funkcje sieciowe są wyłączone",
+    "offlineHint": "Wybrano opcję niewysyłania danych do backendu Argusa. Salda, historia, analityka i wysyłanie wymagają przesłania Twoich publicznych adresów.",
+    "offlineEnable": "Włącz przesyłanie danych",
+    "aiOffTitle": "Funkcje AI są wyłączone",
+    "aiOffHint": "Czat wysyła Twoje wiadomości, a wyjaśnienia AI wysyłają szczegóły transakcji do dostawcy AI. Jest to domyślnie wyłączone — nic nie zostało wysłane.",
+    "aiOffEnable": "Włącz funkcje AI"
   }
 }

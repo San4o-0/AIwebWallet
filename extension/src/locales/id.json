@@ -232,7 +232,42 @@
     "sign": "Tanda tangani",
     "noRequestTitle": "Tidak ada permintaan tanda tangan",
     "noRequestHint": "Layar ini terbuka saat sebuah dApp meminta Anda menandatangani. Saat ini tidak ada yang perlu ditinjau.",
-    "close": "Tutup"
+    "close": "Tutup",
+    "factsEyebrow": "Yang Anda tanda tangani",
+    "action": {
+      "native": "Kirim",
+      "tokenTransfer": "Transfer token",
+      "tokenApprove": "Persetujuan token",
+      "contractCall": "Panggilan kontrak",
+      "deploy": "Penerapan kontrak",
+      "signMessage": "Pesan"
+    },
+    "amountLabel": "Jumlah",
+    "allowanceLabel": "Batas pembelanjaan",
+    "recipientLabel": "Penerima",
+    "spenderLabel": "Pihak yang diberi izin",
+    "contractLabel": "Kontrak",
+    "tokenContractLabel": "Kontrak token",
+    "networkLabel": "Jaringan",
+    "feeLabel": "Biaya jaringan maksimum",
+    "feeLoading": "Mengambil biaya…",
+    "feeFormula": "{{gas}} gas × {{gwei}} gwei",
+    "feeBlocked": "Penandatanganan diblokir sampai biayanya diketahui: {{detail}}",
+    "unlimited": "{{symbol}} tanpa batas",
+    "unlimitedWarning": "Pihak yang diberi izin dapat menarik token ini dari dompet Anda kapan saja dan tanpa batas, sampai Anda mencabut persetujuan.",
+    "unknownToken": "Token ini tidak ada di daftar Argus: simbol dan desimalnya tidak dapat diverifikasi, jadi jumlahnya ditampilkan dalam satuan mentah.",
+    "unknownTokenShort": "token",
+    "unknownSelector": "Fungsi tidak dikenal {{selector}}",
+    "plusNative": "Ditambah {{amount}} {{symbol}} dikirim bersama panggilan ini",
+    "deployWarning": "Tidak ada penerima: transaksi ini menerapkan kontrak baru.",
+    "messageLabel": "Pesan",
+    "messageHexNote": "Pesan bukan teks yang valid — byte mentah ditampilkan apa adanya.",
+    "signerLabel": "Alamat penanda tangan",
+    "shareAddressLabel": "Alamat yang akan dilihat situs",
+    "connectHint": "Situs akan melihat alamat ini dan saldonya. Situs tidak dapat memindahkan dana tanpa tanda tangan terpisah.",
+    "aiAdvisory": "Penilaian AI bersifat membantu. Putuskan berdasarkan fakta di atas.",
+    "signing": "Menandatangani…",
+    "invalidTxParams": "Situs mengirim transaksi yang tidak dapat dibaca Argus. Penandatanganan diblokir."
   },
   "risk": {
     "low": "Risiko rendah",
@@ -291,7 +326,16 @@
     "revealSeedShow": "Tampilkan frasa",
     "revealSeedHide": "Sembunyikan frasa",
     "lock": "Kunci dompet",
-    "footer": "Argus {{version}} · {{networks}} jaringan · non-kustodial"
+    "footer": "Argus {{version}} · {{networks}} jaringan · non-kustodial",
+    "privacy": "Privasi dan data",
+    "dataSharing": "Transmisi data",
+    "dataSharingHint": "Alamat publik dan rincian transaksi dikirim ke backend Argus. Nonaktif — dompet berjalan offline: tanpa saldo, riwayat, analitik, atau pengiriman.",
+    "aiFeatures": "Fitur AI",
+    "aiFeaturesHint": "Rincian transaksi dan isi chat dikirim ke penyedia AI. Nonaktif — penjelasan bersifat lokal dan berbasis aturan, chat tidak tersedia.",
+    "aiRequiresData": "Memerlukan transmisi data dalam keadaan aktif.",
+    "reviewConsent": "Data yang kami kirim",
+    "reviewConsentHint": "Tinjau pengungkapan dan ubah pilihan Anda.",
+    "privacyPolicy": "Kebijakan privasi"
   },
   "wallets": {
     "defaultName": "Dompet {{number}}",
@@ -348,6 +392,13 @@
       "broadcastFailed": "Gagal menyiarkan transaksi: {{detail}}",
       "broadcastUnavailable": "Gagal menyiarkan transaksi: backend tidak tersedia ({{url}}). Jalankan api-server dan coba lagi.",
       "insecureBaseUrl": "Permintaan diblokir: build ini menunjuk ke backend melalui koneksi tanpa enkripsi ({{url}}). Pada saluran terbuka, penyerang dapat menukar id jaringan dan biaya transaksi, sehingga permintaan dinonaktifkan. Bangun ulang ekstensi dengan alamat https."
+    },
+    "approvalGone": "Permintaan ini tidak lagi ada di antrean: sudah diputuskan atau ditarik.",
+    "approvalFailed": "Permintaan tidak dapat diselesaikan.",
+    "feeSnapshotMissing": "Penandatanganan diblokir: biaya yang ditampilkan di layar tidak sampai ke penanda tangan. Buka kembali permintaannya.",
+    "consent": {
+      "networkDenied": "Transmisi data nonaktif — dompet berjalan offline. Aktifkan di Lainnya → Privasi dan data.",
+      "aiDisabled": "Fitur AI nonaktif. Aktifkan di Lainnya → Privasi dan data."
     }
   },
   "mock": {
@@ -379,5 +430,37 @@
       "chainId": "Permintaan layanan untuk pengidentifikasi jaringan."
     },
     "chatAnswer": "Selama 30 hari terakhir Anda menghabiskan sekitar $14.62 untuk biaya: $11.20 di Ethereum, $2.10 di Bitcoin, $0.90 di Polygon, dan $0.42 di Solana. Yang termahal adalah transaksi approve untuk Uniswap ($4.80). Kiat: di Ethereum, biaya pada malam hari (UTC) biasanya 30–50% lebih rendah. \n\n_(Ini jawaban tiruan: backend /v1/chat tidak tersedia.)_"
+  },
+  "consent": {
+    "eyebrowFirstRun": "Langkah 1 · Privasi",
+    "eyebrowUpdate": "Pembaruan kebijakan",
+    "title": "Data yang kami kirim",
+    "intro": "Argus bersifat non-kustodial: kunci Anda tidak pernah meninggalkan perangkat ini. Namun, untuk menampilkan saldo dan menjelaskan transaksi, Argus harus berkomunikasi dengan server kami. Berikut adalah rincian persis apa yang dikirim dan kepada siapa.",
+    "updateNote": "Kami telah mengubah apa yang dikirim Argus atau siapa yang menerimanya. Harap tinjau pengungkapan ini sebelum melanjutkan.",
+    "localTitle": "Tidak pernah meninggalkan perangkat Anda",
+    "localItems": "Frasa pemulihan, kunci privat, dan kata sandi Anda. Juga daftar situs yang telah Anda hubungkan dan bahasa antarmuka Anda. Tidak ada akun, tidak ada pendaftaran, dan tidak ada alamat email.",
+    "backendTitle": "Dikirim ke backend Argus",
+    "backendAddresses": "Alamat dompet publik Anda — untuk membaca saldo, riwayat transaksi, dan statistik biaya dari blockchain publik.",
+    "backendTx": "Rincian transaksi yang belum ditandatangani — untuk menyimulasikannya, menilai risikonya, dan menjelaskannya dengan bahasa sederhana sebelum Anda menandatangani.",
+    "backendSigned": "Transaksi yang sudah ditandatangani — untuk menyiarkannya ke jaringan. Transaksi yang sudah ditandatangani tidak mengandung kunci privat.",
+    "backendIp": "Alamat IP Anda — terlihat oleh server mana pun yang Anda hubungi. Hanya digunakan untuk pembatasan laju permintaan, disimpan di memori, dan tidak pernah dikaitkan dengan alamat Anda.",
+    "thirdPartyTitle": "Diteruskan oleh backend kami",
+    "thirdPartyAi": "Penyedia AI (OpenAI atau Groq) — rincian transaksi dan isi pesan chat Anda. Hanya jika Anda mengaktifkan fitur AI di bawah ini.",
+    "thirdPartyRpc": "Node blockchain dan explorer — alamat publik Anda dan transaksi Anda yang sudah ditandatangani. Membaca blockchain mustahil dilakukan tanpa mereka.",
+    "thirdPartyPrices": "CoinGecko — hanya pengenal koin (“ethereum”, “bitcoin”). Tanpa alamat, tanpa data pribadi.",
+    "aiTitle": "Fitur AI (opsional)",
+    "aiHint": "Penjelasan transaksi oleh AI dan chat asisten mengirimkan rincian transaksi serta pesan Anda ke penyedia AI. Ini adalah satu-satunya data yang meninggalkan infrastruktur kami sendiri menuju model pihak ketiga.",
+    "aiToggle": "Aktifkan fitur AI",
+    "aiToggleHint": "Nonaktif secara default. Dengan AI nonaktif, penjelasan transaksi berasal dari templat lokal berbasis aturan, chat tidak tersedia, dan segala hal lainnya — saldo, pengiriman, riwayat, analitik, peringatan risiko — bekerja persis sama. Anda dapat mengubahnya kapan saja di Lainnya → Privasi dan data.",
+    "policyLink": "Baca kebijakan privasi selengkapnya",
+    "accept": "Setuju dan lanjutkan",
+    "decline": "Lanjutkan tanpa mengirim data",
+    "declineHint": "Mode offline: Anda dapat membuat atau mengimpor dompet, melihat alamat Anda, dan mencadangkan frasa pemulihan. Saldo, riwayat, analitik, dan pengiriman akan tetap tidak tersedia sampai Anda mengaktifkan transmisi data di Lainnya → Privasi dan data.",
+    "offlineTitle": "Fitur jaringan nonaktif",
+    "offlineHint": "Anda memilih untuk tidak mengirim data ke backend Argus. Saldo, riwayat, analitik, dan pengiriman memerlukan alamat publik Anda untuk dikirimkan.",
+    "offlineEnable": "Aktifkan transmisi data",
+    "aiOffTitle": "Fitur AI nonaktif",
+    "aiOffHint": "Chat mengirim pesan Anda, dan penjelasan AI mengirim rincian transaksi, ke penyedia AI. Fitur ini nonaktif secara default — belum ada apa pun yang dikirim.",
+    "aiOffEnable": "Aktifkan fitur AI"
   }
 }

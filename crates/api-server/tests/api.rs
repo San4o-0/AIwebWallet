@@ -19,6 +19,17 @@ async fn body_json(resp: axum::response::Response) -> Value {
     serde_json::from_slice(&bytes).unwrap()
 }
 
+/// POST з JSON-тілом. Дані користувача (адреси) ходять ТІЛЬКИ так —
+/// не в query і не в заголовках (Chrome Web Store, код Purple Copper).
+fn post_json(uri: &str, body: &Value) -> Request<Body> {
+    Request::builder()
+        .method("POST")
+        .uri(uri)
+        .header(header::CONTENT_TYPE, "application/json")
+        .body(Body::from(body.to_string()))
+        .unwrap()
+}
+
 #[tokio::test]
 async fn health_returns_ok() {
     let resp = app()
@@ -114,12 +125,13 @@ async fn evm_history_without_etherscan_key_is_graceful() {
     // Config::default() не має ETHERSCAN_API_KEY → порожня історія з note,
     // БЕЗ мережевих запитів і БЕЗ помилки (graceful degradation).
     let resp = app()
-        .oneshot(
-            Request::builder()
-                .uri("/v1/history?address=0xd8da6bf26964af9d7eed9e03e53415d37aa96045&chain=ethereum")
-                .body(Body::empty())
-                .unwrap(),
-        )
+        .oneshot(post_json(
+            "/v1/history",
+            &json!({
+                "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+                "chain": "ethereum"
+            }),
+        ))
         .await
         .unwrap();
 
@@ -130,6 +142,73 @@ async fn evm_history_without_etherscan_key_is_graceful() {
         .as_str()
         .unwrap()
         .contains("ETHERSCAN_API_KEY"));
+}
+
+/// ПРИВАТНІСТЬ (Chrome Web Store, Purple Copper): ендпоінти з даними
+/// користувача більше НЕ відповідають на GET — адресу неможливо передати
+/// в query-рядку, який осідає в логах проксі/CDN.
+#[tokio::test]
+async fn user_data_endpoints_reject_get_with_query_params() {
+    let uris = [
+        "/v1/history?address=0xd8da6bf26964af9d7eed9e03e53415d37aa96045&chain=ethereum",
+        "/v1/analytics/fees?address=0xd8da6bf26964af9d7eed9e03e53415d37aa96045&period=30d",
+        "/v1/analytics/summary?address=0xd8da6bf26964af9d7eed9e03e53415d37aa96045&period=30d",
+        "/v1/tx/params?chain=ethereum&from=0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+    ];
+    for uri in uris {
+        let resp = app()
+            .oneshot(Request::builder().uri(uri).body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(
+            resp.status(),
+            StatusCode::METHOD_NOT_ALLOWED,
+            "GET {uri} має бути заборонений"
+        );
+    }
+}
+
+/// Довідникові ендпоінти лишаються GET: у їхніх параметрах немає даних
+/// користувача (ids — ідентифікатори монет, chain — назва мережі).
+#[tokio::test]
+async fn public_reference_endpoints_stay_get() {
+    for uri in ["/v1/health", "/v1/fees?chain=ethereum", "/v1/prices?ids=ethereum"] {
+        let resp = app()
+            .oneshot(Request::builder().uri(uri).body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_ne!(
+            resp.status(),
+            StatusCode::METHOD_NOT_ALLOWED,
+            "GET {uri} має лишитись доступним"
+        );
+    }
+}
+
+#[tokio::test]
+async fn tx_params_rejects_non_evm_chain_and_bad_address() {
+    // Валідація мережі: Bitcoin не має EIP-1559 параметрів.
+    let resp = app()
+        .oneshot(post_json(
+            "/v1/tx/params",
+            &json!({
+                "chain": "bitcoin",
+                "from": "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq"
+            }),
+        ))
+        .await
+        .unwrap();
+    assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
+
+    // Валідація адреси (Address::new) лишилась на місці.
+    let resp = app()
+        .oneshot(post_json(
+            "/v1/tx/params",
+            &json!({ "chain": "ethereum", "from": "не-адреса" }),
+        ))
+        .await
+        .unwrap();
+    assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
 }
 
 #[tokio::test]
@@ -177,24 +256,23 @@ async fn simulate_rejects_unknown_chain_and_bad_signer() {
 async fn analytics_rejects_unknown_period_and_bad_address() {
     // Період перевіряється ДО збору історії → без мережі.
     let resp = app()
-        .oneshot(
-            Request::builder()
-                .uri("/v1/analytics/fees?address=bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq&period=14d")
-                .body(Body::empty())
-                .unwrap(),
-        )
+        .oneshot(post_json(
+            "/v1/analytics/fees",
+            &json!({
+                "address": "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq",
+                "period": "14d"
+            }),
+        ))
         .await
         .unwrap();
     assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
 
     // Нерозпізнана адреса → 400 (EVM-гілка без ключа теж без мережі).
     let resp = app()
-        .oneshot(
-            Request::builder()
-                .uri("/v1/analytics/summary?address=%21%21%21&period=30d")
-                .body(Body::empty())
-                .unwrap(),
-        )
+        .oneshot(post_json(
+            "/v1/analytics/summary",
+            &json!({ "address": "!!!", "period": "30d" }),
+        ))
         .await
         .unwrap();
     assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
@@ -204,12 +282,13 @@ async fn analytics_rejects_unknown_period_and_bad_address() {
 async fn analytics_for_evm_address_without_key_returns_note() {
     // EVM-адреса без ETHERSCAN_API_KEY: мережі пропущено, note пояснює чому.
     let resp = app()
-        .oneshot(
-            Request::builder()
-                .uri("/v1/analytics/fees?address=0xd8da6bf26964af9d7eed9e03e53415d37aa96045&period=30d")
-                .body(Body::empty())
-                .unwrap(),
-        )
+        .oneshot(post_json(
+            "/v1/analytics/fees",
+            &json!({
+                "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+                "period": "30d"
+            }),
+        ))
         .await
         .unwrap();
     assert_eq!(resp.status(), StatusCode::OK);

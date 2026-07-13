@@ -1,16 +1,16 @@
-//! GET /v1/tx/params?chain=&from=[&token=1] — параметри для збірки
-//! EIP-1559 транзакції у розширенні: nonce, оцінка gas limit, три рівні
-//! комісій та EIP-155 chain_id.
+//! POST /v1/tx/params — параметри для збірки EIP-1559 транзакції у
+//! розширенні: nonce, оцінка gas limit, три рівні комісій та EIP-155 chain_id.
+//!
+//! Тіло: `{ chain, from, token? }`. Адреса відправника — дані користувача,
+//! тому йде в тілі, а не в query: query-рядок пишеться в логи серверів,
+//! проксі й CDN навіть по HTTPS (політика Chrome Web Store, Purple Copper).
 //!
 //! Реальні дані з ноди: `eth_getTransactionCount` (pending) +
 //! `eth_feeHistory` через реєстр chain-adapters. Gas limit — консервативний
 //! дефолт (21000 нативний переказ / 65000 ERC-20 transfer); точніший
 //! `eth_estimateGas` — TODO, коли форма запиту включатиме calldata.
 
-use axum::{
-    extract::{Query, State},
-    Json,
-};
+use axum::{extract::State, Json};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::time::Duration;
@@ -29,14 +29,14 @@ const GAS_LIMIT_ERC20: u64 = 65_000;
 // --- DTO (локальні для цього хендлера; dto.rs не чіпаємо) ------------------
 
 #[derive(Debug, Deserialize)]
-pub struct TxParamsQuery {
+pub struct TxParamsRequest {
     /// Мережа (`ethereum` | `polygon` | `bsc` | `arbitrum` | `base`).
     pub chain: String,
-    /// Адреса відправника (`0x…`).
+    /// Адреса відправника (`0x…`) — дані користувача, тільки в тілі запиту.
     pub from: String,
-    /// Непорожнє значення (`1`/`true`) — переказ ERC-20: інший дефолт gas.
+    /// `true` — переказ ERC-20: інший дефолт gas limit.
     #[serde(default)]
-    pub token: Option<String>,
+    pub token: bool,
 }
 
 /// Один рівень комісії EIP-1559. Значення — десяткові рядки у wei
@@ -84,7 +84,7 @@ fn fee_tier(rate: &FeeRate, chain: ChainId) -> Result<FeeTierDto, ApiError> {
 
 pub async fn tx_params(
     State(state): State<Arc<AppState>>,
-    Query(q): Query<TxParamsQuery>,
+    Json(q): Json<TxParamsRequest>,
 ) -> Result<Json<TxParamsResponse>, ApiError> {
     let chain: ChainId = q
         .chain
@@ -95,10 +95,7 @@ pub async fn tx_params(
         .ok_or_else(|| ApiError::bad_request(format!("{chain}: /tx/params підтримує лише EVM-мережі")))?;
     let from = Address::new(chain, q.from.as_str())?;
 
-    let is_token = q
-        .token
-        .as_deref()
-        .is_some_and(|v| !v.is_empty() && v != "0" && v != "false");
+    let is_token = q.token;
 
     let adapter = state.adapter(chain);
     // Nonce і комісії — паралельно, зі спільним таймаутом.

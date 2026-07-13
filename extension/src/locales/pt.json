@@ -232,7 +232,42 @@
     "sign": "Assinar",
     "noRequestTitle": "Nenhum pedido de assinatura",
     "noRequestHint": "Esta tela abre quando uma dApp pede que você assine. No momento não há nada para revisar.",
-    "close": "Fechar"
+    "close": "Fechar",
+    "factsEyebrow": "O que você vai assinar",
+    "action": {
+      "native": "Envio",
+      "tokenTransfer": "Transferência de token",
+      "tokenApprove": "Aprovação de token",
+      "contractCall": "Chamada de contrato",
+      "deploy": "Implantação de contrato",
+      "signMessage": "Mensagem"
+    },
+    "amountLabel": "Valor",
+    "allowanceLabel": "Limite de gasto",
+    "recipientLabel": "Destinatário",
+    "spenderLabel": "Autorizado a gastar",
+    "contractLabel": "Contrato",
+    "tokenContractLabel": "Contrato do token",
+    "networkLabel": "Rede",
+    "feeLabel": "Taxa máxima da rede",
+    "feeLoading": "Obtendo a taxa…",
+    "feeFormula": "{{gas}} gas × {{gwei}} gwei",
+    "feeBlocked": "A assinatura está bloqueada até a taxa ser conhecida: {{detail}}",
+    "unlimited": "{{symbol}} sem limite",
+    "unlimitedWarning": "O autorizado poderá retirar este token da sua carteira a qualquer momento e sem limite, até você revogar a aprovação.",
+    "unknownToken": "Este token não está no registro do Argus: o símbolo e as casas decimais não podem ser verificados, então o valor aparece em unidades brutas.",
+    "unknownTokenShort": "tokens",
+    "unknownSelector": "Função desconhecida {{selector}}",
+    "plusNative": "Além disso, {{amount}} {{symbol}} são enviados junto com a chamada",
+    "deployWarning": "Sem destinatário: esta transação implanta um novo contrato.",
+    "messageLabel": "Mensagem",
+    "messageHexNote": "A mensagem não é texto válido — os bytes brutos são exibidos.",
+    "signerLabel": "Endereço que assina",
+    "shareAddressLabel": "Endereço que o site verá",
+    "connectHint": "O site verá este endereço e os saldos dele. Não poderá mover fundos sem uma assinatura separada.",
+    "aiAdvisory": "A análise da IA é auxiliar. Decida pelos fatos acima.",
+    "signing": "Assinando…",
+    "invalidTxParams": "O site enviou uma transação que o Argus não consegue ler. A assinatura está bloqueada."
   },
   "risk": {
     "low": "Risco baixo",
@@ -291,7 +326,16 @@
     "revealSeedShow": "Mostrar frase",
     "revealSeedHide": "Ocultar frase",
     "lock": "Bloquear a carteira",
-    "footer": "Argus {{version}} · {{networks}} redes · non-custodial"
+    "footer": "Argus {{version}} · {{networks}} redes · non-custodial",
+    "privacy": "Privacidade e dados",
+    "dataSharing": "Transmissão de dados",
+    "dataSharingHint": "Os endereços públicos e os detalhes das transações são enviados para o backend do Argus. Desativada: a carteira funciona offline — sem saldos, histórico, análises ou envios.",
+    "aiFeatures": "Funções de IA",
+    "aiFeaturesHint": "Os detalhes das transações e o conteúdo do chat são enviados para um fornecedor de IA. Desativadas: as explicações são locais e baseadas em regras, o chat fica indisponível.",
+    "aiRequiresData": "Requer que a transmissão de dados esteja ativada.",
+    "reviewConsent": "Que dados enviamos",
+    "reviewConsentHint": "Reveja esta informação e altere as suas escolhas.",
+    "privacyPolicy": "Política de privacidade"
   },
   "wallets": {
     "defaultName": "Carteira {{number}}",
@@ -348,6 +392,13 @@
       "broadcastFailed": "Não foi possível transmitir a transação: {{detail}}",
       "broadcastUnavailable": "Não foi possível transmitir a transação: o backend está indisponível ({{url}}). Inicie o api-server e tente novamente.",
       "insecureBaseUrl": "Pedido bloqueado: esta build aponta para o backend por uma ligação não encriptada ({{url}}). Em texto simples um atacante pode trocar o id de rede e as taxas de uma transação, por isso os pedidos estão desativados. Reconstrua a extensão com um endereço https."
+    },
+    "approvalGone": "Esta solicitação não está mais na fila: já foi resolvida ou retirada.",
+    "approvalFailed": "Não foi possível concluir a solicitação.",
+    "feeSnapshotMissing": "Assinatura bloqueada: a taxa exibida na tela não chegou ao assinador. Abra a solicitação novamente.",
+    "consent": {
+      "networkDenied": "A transmissão de dados está desativada — a carteira funciona offline. Ative-a em Mais → Privacidade e dados.",
+      "aiDisabled": "As funções de IA estão desativadas. Ative-as em Mais → Privacidade e dados."
     }
   },
   "mock": {
@@ -379,5 +430,37 @@
       "chainId": "Pedido de serviço do identificador de rede."
     },
     "chatAnswer": "Nos últimos 30 dias gastou cerca de $14.62 em taxas: $11.20 em Ethereum, $2.10 em Bitcoin, $0.90 em Polygon e $0.42 em Solana. A mais cara foi uma transação approve para a Uniswap ($4.80). Dica: em Ethereum, as taxas à noite (UTC) costumam ser 30–50% mais baixas. \n\n_(Esta é uma resposta simulada: o backend /v1/chat está indisponível.)_"
+  },
+  "consent": {
+    "eyebrowFirstRun": "Passo 1 · Privacidade",
+    "eyebrowUpdate": "Atualização da política",
+    "title": "Que dados enviamos",
+    "intro": "O Argus é non-custodial: as suas chaves nunca saem deste dispositivo. Para mostrar os saldos e explicar as transações, tem de comunicar com o nosso servidor. Eis exatamente o que é enviado, e a quem.",
+    "updateNote": "Alterámos o que o Argus envia ou quem o recebe. Reveja esta informação antes de continuar.",
+    "localTitle": "Nunca sai do seu dispositivo",
+    "localItems": "A sua frase de recuperação, as suas chaves privadas e a sua palavra-passe. Também a lista de sites que conectou e o idioma da interface. Não há conta, nem registo, nem endereço de e-mail.",
+    "backendTitle": "Enviado para o backend do Argus",
+    "backendAddresses": "Os seus endereços públicos da carteira — para ler os saldos, o histórico de transações e as estatísticas de taxas das blockchains públicas.",
+    "backendTx": "Os detalhes das transações não assinadas — para as simular, avaliar o seu risco e explicá-las em linguagem simples antes de assinar.",
+    "backendSigned": "As transações assinadas — para as transmitir à rede. Uma transação assinada não contém qualquer chave privada.",
+    "backendIp": "O seu endereço IP — visível para qualquer servidor que contacte. Usado apenas para limitar a frequência dos pedidos, mantido em memória, nunca associado aos seus endereços.",
+    "thirdPartyTitle": "Transmitido pelo nosso backend",
+    "thirdPartyAi": "Fornecedor de IA (OpenAI ou Groq) — os detalhes das transações e o conteúdo das suas mensagens do chat. Apenas se ativar as funções de IA abaixo.",
+    "thirdPartyRpc": "Nós e exploradores de blockchain — os seus endereços públicos e as suas transações assinadas. Sem eles é impossível ler uma blockchain.",
+    "thirdPartyPrices": "CoinGecko — apenas identificadores de moedas (“ethereum”, “bitcoin”). Sem endereços nem dados pessoais.",
+    "aiTitle": "Funções de IA (opcionais)",
+    "aiHint": "As explicações de transações por IA e o chat do assistente enviam os detalhes das transações e as suas mensagens para um fornecedor de IA. São os únicos dados que saem da nossa própria infraestrutura para um modelo de terceiros.",
+    "aiToggle": "Ativar as funções de IA",
+    "aiToggleHint": "Desativadas por predefinição. Com a IA desativada, as explicações das transações vêm de modelos de texto locais baseados em regras, o chat fica indisponível e tudo o resto — saldos, envios, histórico, análises, avisos de risco — funciona exatamente da mesma forma. Pode alterar isto a qualquer momento em Mais → Privacidade e dados.",
+    "policyLink": "Ler a política de privacidade completa",
+    "accept": "Aceitar e continuar",
+    "decline": "Continuar sem enviar dados",
+    "declineHint": "Modo offline: pode criar ou importar uma carteira, ver os seus endereços e guardar uma cópia da sua frase de recuperação. Os saldos, o histórico, as análises e os envios continuarão indisponíveis até ativar a transmissão de dados em Mais → Privacidade e dados.",
+    "offlineTitle": "As funções de rede estão desativadas",
+    "offlineHint": "Escolheu não enviar dados para o backend do Argus. Os saldos, o histórico, as análises e os envios exigem que os seus endereços públicos sejam transmitidos.",
+    "offlineEnable": "Ativar a transmissão de dados",
+    "aiOffTitle": "As funções de IA estão desativadas",
+    "aiOffHint": "O chat envia as suas mensagens, e as explicações por IA enviam os detalhes das transações, para um fornecedor de IA. Está desativado por predefinição — nada foi enviado.",
+    "aiOffEnable": "Ativar as funções de IA"
   }
 }

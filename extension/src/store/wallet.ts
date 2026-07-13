@@ -56,6 +56,13 @@ interface WalletStore {
    * паролем у тому самому записі).
    */
   restoringPassword: boolean;
+  /**
+   * Повторний показ екрана згоди на передачу даних («Ще → Приватність і дані»,
+   * а також кнопки «Увімкнути» зі станів офлайн/AI-вимкнено). Саме рішення
+   * живе не тут, а в chrome.storage.local (src/lib/consent.ts) — тут лише
+   * прапорець «показати екран».
+   */
+  consentReview: boolean;
 
   setScreen: (screen: Screen) => void;
   /** Початкова ініціалізація при відкритті попапа. */
@@ -83,6 +90,11 @@ interface WalletStore {
   startRestorePassword: () => void;
   /** Скасувати відновлення і повернутись до Unlock. */
   cancelRestorePassword: () => void;
+
+  /** Показати екран «Які дані ми надсилаємо» (перегляд/зміна рішення). */
+  openConsentReview: () => void;
+  /** Закрити екран згоди і повернутись до Налаштувань. */
+  closeConsentReview: () => void;
   /**
    * Відновити доступ до активного гаманця seed-фразою + новим паролем.
    * Успіх — сесію розблоковано (Home); повертає null або типізовану помилку.
@@ -110,6 +122,7 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
   activeWalletId: null,
   addingWallet: false,
   restoringPassword: false,
+  consentReview: false,
 
   setScreen: (screen) => set({ screen }),
 
@@ -273,6 +286,12 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
   startRestorePassword: () => set({ restoringPassword: true }),
 
   cancelRestorePassword: () => set({ restoringPassword: false, screen: 'unlock' }),
+
+  // Екран згоди відкривається поверх Налаштувань — повертаємось саме туди
+  // (звідки б його не викликали: тумблер, офлайн-стан на Home, чат).
+  openConsentReview: () => set({ consentReview: true }),
+
+  closeConsentReview: () => set({ consentReview: false, screen: 'settings' }),
 
   restorePassword: async (mnemonic, newPassword) => {
     try {

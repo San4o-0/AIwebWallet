@@ -26,6 +26,17 @@ async fn body_json(resp: axum::response::Response) -> Value {
     serde_json::from_slice(&bytes).unwrap()
 }
 
+/// POST з JSON-тілом — єдиний спосіб передати адресу гаманця (дані
+/// користувача не ходять у query/заголовках; Chrome Web Store, Purple Copper).
+fn post_json(uri: &str, body: &Value) -> Request<Body> {
+    Request::builder()
+        .method("POST")
+        .uri(uri)
+        .header(header::CONTENT_TYPE, "application/json")
+        .body(Body::from(body.to_string()))
+        .unwrap()
+}
+
 #[tokio::test]
 #[ignore = "потребує доступу до публічних нод"]
 async fn live_balances_return_real_data_or_per_chain_errors() {
@@ -282,14 +293,10 @@ async fn live_simulate_solana_is_real_simulate_transaction() {
 async fn live_bitcoin_analytics_fees_and_summary() {
     for endpoint in ["fees", "summary"] {
         let resp = app()
-            .oneshot(
-                Request::builder()
-                    .uri(format!(
-                        "/v1/analytics/{endpoint}?address={BITCOIN_ADDR}&period=1y"
-                    ))
-                    .body(Body::empty())
-                    .unwrap(),
-            )
+            .oneshot(post_json(
+                &format!("/v1/analytics/{endpoint}"),
+                &json!({ "address": BITCOIN_ADDR, "period": "1y" }),
+            ))
             .await
             .unwrap();
         assert_eq!(resp.status(), StatusCode::OK, "analytics/{endpoint}");
@@ -307,12 +314,10 @@ async fn live_evm_history_via_etherscan() {
         return;
     }
     let resp = app()
-        .oneshot(
-            Request::builder()
-                .uri(format!("/v1/history?address={VITALIK}&chain=ethereum&limit=10"))
-                .body(Body::empty())
-                .unwrap(),
-        )
+        .oneshot(post_json(
+            "/v1/history",
+            &json!({ "address": VITALIK, "chain": "ethereum", "limit": 10 }),
+        ))
         .await
         .unwrap();
     assert_eq!(resp.status(), StatusCode::OK);
@@ -364,12 +369,10 @@ async fn live_simulate_with_alchemy_asset_changes() {
 #[ignore = "потребує доступу до mempool.space"]
 async fn live_bitcoin_history_is_real() {
     let resp = app()
-        .oneshot(
-            Request::builder()
-                .uri(format!("/v1/history?address={BITCOIN_ADDR}&chain=bitcoin&limit=5"))
-                .body(Body::empty())
-                .unwrap(),
-        )
+        .oneshot(post_json(
+            "/v1/history",
+            &json!({ "address": BITCOIN_ADDR, "chain": "bitcoin", "limit": 5 }),
+        ))
         .await
         .unwrap();
 

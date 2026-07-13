@@ -210,6 +210,64 @@ async fn root_health_is_not_rate_limited() {
     }
 }
 
+/// Мідлвар лімітера навішано на РОУТЕР /v1 (за шляхом), а не на метод, тож
+/// переведення ендпоінтів з даними користувача GET→POST (Purple Copper) не
+/// пробило дірку в захисті ключів/квот. Перевіряємо саме POST-ендпоінти.
+#[tokio::test]
+async fn converted_post_endpoints_are_still_rate_limited() {
+    // Тіла свідомо такі, що хендлер відкидає їх ДО будь-якого мережевого
+    // виклику (невідома мережа/період): нас цікавить лише те, чи спрацював
+    // лімітер, а він стоїть ПЕРЕД хендлером.
+    const ADDR: &str = "0xd8da6bf26964af9d7eed9e03e53415d37aa96045";
+    let cases: [(&str, Value); 4] = [
+        ("/v1/history", json!({"address": ADDR, "chain": "dogecoin"})),
+        (
+            "/v1/analytics/fees",
+            json!({"address": ADDR, "period": "14d"}),
+        ),
+        (
+            "/v1/analytics/summary",
+            json!({"address": ADDR, "period": "14d"}),
+        ),
+        (
+            "/v1/tx/params",
+            json!({"chain": "dogecoin", "from": ADDR}),
+        ),
+    ];
+
+    for (uri, body) in cases {
+        // burst 1 → другий запит поспіль з тієї ж «IP» уже 429.
+        let app = app_with(Config {
+            rate_limit_rpm: 1,
+            rate_limit_burst: 1,
+            ..Config::default()
+        });
+        let req = || {
+            Request::builder()
+                .method("POST")
+                .uri(uri)
+                .header(header::CONTENT_TYPE, "application/json")
+                .body(Body::from(body.to_string()))
+                .unwrap()
+        };
+
+        // Перший запит крізь лімітер проходить (статус залежить від хендлера).
+        let resp = app.clone().oneshot(req()).await.unwrap();
+        assert_ne!(
+            resp.status(),
+            StatusCode::TOO_MANY_REQUESTS,
+            "перший POST {uri} мав пройти лімітер"
+        );
+
+        let resp = app.clone().oneshot(req()).await.unwrap();
+        assert_eq!(
+            resp.status(),
+            StatusCode::TOO_MANY_REQUESTS,
+            "другий POST {uri} мав упертись у ліміт"
+        );
+    }
+}
+
 #[tokio::test]
 async fn chat_limit_is_stricter_than_global() {
     // Глобальний ліміт щедрий, AI-ліміт — burst 1.

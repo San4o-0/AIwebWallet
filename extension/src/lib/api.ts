@@ -15,6 +15,20 @@
  * вигадані цифри. Єдиний локальний fallback лишається для аналізу ризику
  * підпису dApp (Approve) — це функція безпеки, а не фінансові дані: без
  * оцінки ризику кнопку підпису не розблокувати.
+ *
+ * ЗГОДА НА ПЕРЕДАЧУ ДАНИХ (src/lib/consent.ts) — другий інваріант цього
+ * модуля поряд із безпекою транспорту. Обидва стоять в ОДНІЙ точці —
+ * `request()` (+ streamChat, який має власний fetch для SSE), — щоб їх
+ * неможливо було забути в новому ендпоінті:
+ *   assertTransportSecure() — прод + не-https → жодного запиту;
+ *   assertNetworkConsent()  — немає згоди → жодного запиту (Chrome вимагає
+ *                             явну згоду в UI ДО першої передачі);
+ *   assertAiConsent()       — AI-функції вимкнено → /v1/chat і /v1/tx/explain
+ *                             не викликаються (дані не йдуть AI-провайдеру);
+ *                             пояснення беруться з локальних rule-based
+ *                             шаблонів (mock-data.ts).
+ * /v1/tx/risk — rule-based скоринг НА БЕКЕНДІ (crates/api-server/src/risk),
+ * без AI, тож гейтиться лише згодою на мережу, а не AI-тумблером.
  */
 import type {
   AnalyticsPeriod,
@@ -39,6 +53,7 @@ import type {
 } from './api-types';
 import type { TokenBalance } from './api-types';
 import type { Chain } from './chains';
+import { assertAiConsent, assertNetworkConsent, isAiAllowed, isNetworkAllowed } from './consent';
 import { verifyTxParams } from './evm';
 import { sharedLocale } from './i18n-bridge';
 import type { PendingSignRequest } from './messaging';
@@ -94,6 +109,10 @@ class ApiError extends Error {
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   assertTransportSecure();
+  // ЄДИНИЙ гейт згоди на всі ендпоінти (окрім SSE-чату — там свій fetch, і
+  // свої assert-и). Стоїть ПЕРЕД fetch: доки згоди немає, з пристрою не йде
+  // жоден байт.
+  await assertNetworkConsent();
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
     headers: { 'Content-Type': 'application/json', ...init?.headers },
@@ -271,16 +290,19 @@ export async function fetchPortfolio(req: BalancesRequest): Promise<Portfolio> {
   return normalizePortfolio(await post<unknown>('/balances', req));
 }
 
-/** GET /v1/history — історія транзакцій з людськими описами (F3.6). */
+/**
+ * POST /v1/history — історія транзакцій з людськими описами (F3.6).
+ *
+ * ПРИВАТНІСТЬ: адреса йде в ТІЛІ, а не в query. Query-рядок і заголовки
+ * осідають у логах серверів, проксі й CDN навіть по HTTPS — політика
+ * Chrome Web Store забороняє так передавати дані користувача.
+ */
 export async function fetchHistory(
   address: string,
   chain?: Chain,
   cursor?: string,
 ): Promise<HistoryResponse> {
-  const params = new URLSearchParams({ address });
-  if (chain) params.set('chain', chain);
-  if (cursor) params.set('cursor', cursor);
-  return normalizeHistory(await request<unknown>(`/history?${params.toString()}`));
+  return normalizeHistory(await post<unknown>('/history', { address, chain, cursor }));
 }
 
 /** POST /v1/tx/decode — структурований розбір транзакції (F4.2). */
@@ -298,14 +320,25 @@ export function fetchTxRisk(req: RiskRequest): Promise<RiskResult> {
   return post<RiskResult>('/tx/risk', req);
 }
 
-/** POST /v1/tx/explain — людське пояснення (F4.1). */
-export function explainTx(req: ExplainRequest): Promise<ExplainResponse> {
+/**
+ * POST /v1/tx/explain — людське пояснення (F4.1).
+ *
+ * AI-ЕНДПОІНТ: бекенд віддає нетривіальні/high-risk випадки OpenAI-сумісному
+ * провайдеру (crates/api-server/src/handlers/tx.rs → ai_explainer), тобто
+ * деталі транзакції залишають наш периметр. Тому — гейт AI-згоди. Вимкнено →
+ * викликач бере локальні rule-based шаблони (mockExplainForRequest).
+ */
+export async function explainTx(req: ExplainRequest): Promise<ExplainResponse> {
+  await assertAiConsent();
   return post<ExplainResponse>('/tx/explain', req);
 }
 
 /**
- * GET /v1/tx/params — nonce, gas limit та EIP-1559 комісії для збірки
+ * POST /v1/tx/params — nonce, gas limit та EIP-1559 комісії для збірки
  * транзакції. БЕЗ мок-fallback: без реальних параметрів підписувати не можна.
+ *
+ * ПРИВАТНІСТЬ: адреса відправника — у ТІЛІ запиту, не в query (див.
+ * fetchHistory): дані користувача не мають потрапляти в логи інфраструктури.
  *
  * ЄДИНА точка входу цих даних у клієнт — тому саме тут стоїть перевірка
  * довіри (verifyTxParams): chain_id звіряється з ЛОКАЛЬНОЮ константою мережі,
@@ -320,10 +353,8 @@ export async function fetchTxParams(
   from: string,
   isToken = false,
 ): Promise<TxParams> {
-  const query = new URLSearchParams({ chain, from });
-  if (isToken) query.set('token', '1');
   return withBackendRequired(async () => {
-    const params = await request<TxParams>(`/tx/params?${query.toString()}`);
+    const params = await post<TxParams>('/tx/params', { chain, from, token: isToken });
     verifyTxParams(chain, params);
     return params;
   }, 'txParams');
@@ -341,25 +372,35 @@ export function broadcastTx(req: BroadcastRequest): Promise<BroadcastResponse> {
   );
 }
 
-/** GET /v1/analytics/fees — витрати на комісії за період (F6.1). */
+/**
+ * POST /v1/analytics/fees — витрати на комісії за період (F6.1).
+ * Адреса — у тілі (приватність, див. fetchHistory).
+ */
 export function fetchFeeAnalytics(
   address: string,
   period: AnalyticsPeriod,
 ): Promise<FeesResponse> {
-  const params = new URLSearchParams({ address, period });
-  return request<FeesResponse>(`/analytics/fees?${params.toString()}`);
+  return post<FeesResponse>('/analytics/fees', { address, period });
 }
 
-/** GET /v1/analytics/summary — зведення транзакцій для екрана «Аналітика». */
+/**
+ * POST /v1/analytics/summary — зведення транзакцій для екрана «Аналітика».
+ * Адреса — у тілі (приватність, див. fetchHistory).
+ */
 export function fetchAnalyticsSummary(
   address: string,
   period: AnalyticsPeriod,
 ): Promise<SummaryResponse> {
-  const params = new URLSearchParams({ address, period });
-  return request<SummaryResponse>(`/analytics/summary?${params.toString()}`);
+  return post<SummaryResponse>('/analytics/summary', { address, period });
 }
 
-/** GET /v1/prices — ціни (кешуються на бекенді, F2.5). */
+/**
+ * GET /v1/prices — ціни (кешуються на бекенді, F2.5).
+ *
+ * Лишається GET свідомо: `ids` — це публічні ідентифікатори монет
+ * (`ethereum,solana`), а не дані користувача. Приховувати нема чого, а GET
+ * дає кешування на рівні HTTP.
+ */
 export function fetchPrices(ids: readonly string[]): Promise<PricesResponse> {
   return request<PricesResponse>(`/prices?ids=${ids.join(',')}`);
 }
@@ -378,6 +419,11 @@ export async function* streamChat(
   signal?: AbortSignal,
 ): AsyncGenerator<string, void, void> {
   assertTransportSecure();
+  // Власний fetch (SSE) → власні гейти. Зміст чату йде AI-провайдеру, тож
+  // потрібні ОБИДВА дозволи: мережа + AI. Екран Chat не доходить сюди з
+  // вимкненим AI (показує стан «AI вимкнено»), але гейт — на рівні клієнта.
+  await assertNetworkConsent();
+  await assertAiConsent();
   // Активна локаль UI → поле lang (бекенд поки ігнорує його — TODO на боці
   // crates/api-server: враховувати lang у промпті чату).
   const payload: ChatRequest = { lang: sharedLocale(), ...req };
@@ -423,10 +469,13 @@ function toTxRequestDto(request: PendingSignRequest): RiskRequest | null {
   };
 }
 
-export function assessPendingRequest(request: PendingSignRequest): Promise<RiskResult> {
+export async function assessPendingRequest(request: PendingSignRequest): Promise<RiskResult> {
   const riskReq = toTxRequestDto(request);
-  if (riskReq === null) {
-    return Promise.resolve(mockRiskForRequest(request));
+  // Офлайн-режим (немає згоди на передачу даних): скоринг лишається — просто
+  // локальний. Кнопку підпису має бути чим розблокувати, і попередження про
+  // unlimited approve мусить працювати без бекенду.
+  if (riskReq === null || !(await isNetworkAllowed())) {
+    return mockRiskForRequest(request);
   }
   return withRiskFallback(
     () => fetchTxRisk(riskReq),
@@ -434,13 +483,16 @@ export function assessPendingRequest(request: PendingSignRequest): Promise<RiskR
   );
 }
 
-export function explainPendingRequest(
+export async function explainPendingRequest(
   request: PendingSignRequest,
   risk: RiskResult | null,
 ): Promise<string> {
   const riskReq = toTxRequestDto(request);
-  if (riskReq === null) {
-    return Promise.resolve(mockExplainForRequest(request));
+  // AI вимкнено (або офлайн) → пояснення з локальних rule-based шаблонів.
+  // Перевіряємо ЗАЗДАЛЕГІДЬ, а не через catch: так /v1/tx/explain не
+  // викликається взагалі, і в логах немає фальшивого «бекенд недоступний».
+  if (riskReq === null || !(await isAiAllowed())) {
+    return mockExplainForRequest(request);
   }
   return withRiskFallback(
     async () => {

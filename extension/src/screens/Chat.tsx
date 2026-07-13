@@ -6,6 +6,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { AiOffNote, useAiAllowed } from '@/src/components/consent';
 import { IconSend, IconSparkle } from '@/src/components/icons';
 import { Eyebrow, ScreenTitle } from '@/src/components/ui';
 import { streamChat } from '@/src/lib/api';
@@ -18,6 +19,9 @@ const SUGGESTION_KEYS = ['chat.suggestion1', 'chat.suggestion2', 'chat.suggestio
 export default function Chat() {
   const { t } = useTranslation();
   const account = useWalletStore((s) => s.account);
+  // AI-функції — opt-in (src/lib/consent.ts). Вимкнено → екран не шле ЖОДНОГО
+  // запиту: ані форми, ані підказок. Гейт продубльовано в streamChat.
+  const aiAllowed = useAiAllowed();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
@@ -79,13 +83,28 @@ export default function Chat() {
     }
   };
 
+  const header = (
+    <div className="border-b border-hairline p-5 pb-4">
+      <Eyebrow className="mb-1">{t('chat.eyebrow')}</Eyebrow>
+      <ScreenTitle>{t('chat.title')}</ScreenTitle>
+      <p className="mt-1.5 text-xs leading-relaxed text-muted">{t('chat.disclaimer')}</p>
+    </div>
+  );
+
+  if (!aiAllowed) {
+    return (
+      <div className="screen-in flex h-full flex-col pb-14">
+        {header}
+        <div className="flex flex-1 items-center p-5">
+          <AiOffNote />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="screen-in flex h-full flex-col pb-14">
-      <div className="border-b border-hairline p-5 pb-4">
-        <Eyebrow className="mb-1">{t('chat.eyebrow')}</Eyebrow>
-        <ScreenTitle>{t('chat.title')}</ScreenTitle>
-        <p className="mt-1.5 text-xs leading-relaxed text-muted">{t('chat.disclaimer')}</p>
-      </div>
+      {header}
 
       <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-5">
         {messages.length === 0 && (

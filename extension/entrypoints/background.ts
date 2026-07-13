@@ -11,7 +11,12 @@ import { browser } from 'wxt/browser';
 import { defineBackground } from 'wxt/utils/define-background';
 
 import { broadcastTx, fetchTxParams } from '@/src/lib/api';
-import { CHAINS, type Chain } from '@/src/lib/chains';
+import {
+  buildDappTxParams,
+  screenNewRequest,
+  requiresFeeSnapshot,
+} from '@/src/lib/approval-queue';
+import { CHAINS, DAPP_CHAIN, type Chain } from '@/src/lib/chains';
 import {
   addConnectedSite,
   isOriginConnected,
@@ -21,7 +26,7 @@ import {
 } from '@/src/lib/connections';
 import {
   decodePersonalSignMessage,
-  type Eip1559TxParams,
+  readDappTx,
   type SignedEvmTx,
 } from '@/src/lib/evm';
 import {
@@ -44,9 +49,11 @@ import {
   type BgVaultSignTransaction,
   type BgVaultUnlock,
   type ConnectedSite,
+  type FeeSnapshot,
   type Json,
   type PendingSignRequest,
   type PublicAccount,
+  type ResolveApprovalResult,
   type RestoreVaultResult,
   type RpcOutcome,
   type SessionState,
@@ -69,8 +76,7 @@ import {
 } from '@/src/lib/vault-storage';
 import { loadWalletCoreWasm, toWasmError } from '@/src/wasm';
 
-/** Мережа для dApp-запитів (eth_chainId → 0x1). TODO: wallet_switchEthereumChain. */
-const DAPP_CHAIN: Chain = 'ethereum';
+/** Мережа для dApp-запитів (eth_chainId → 0x1); спільна з екраном Approve. */
 const DAPP_CHAIN_ID_HEX = CHAINS[DAPP_CHAIN].evmChainIdHex ?? '0x1';
 const AUTO_LOCK_MS = 5 * 60_000;
 
@@ -523,47 +529,93 @@ export default defineBackground(() => {
 
   // -------------------------------------------------------------------------
   // Черга запитів на підпис (F3.5, F5.3).
+  //
+  // АДРЕСАЦІЯ ВІКНА. Кожен запит отримує ВЛАСНЕ вікно, і в URL цього вікна йде
+  // `requestId`. Раніше вікно відкривалось без id, а екран Approve брав
+  // pending[0] (найстаріший запит): за ≥2 запитів вікно показувало не той, що
+  // його спричинив, — тобто користувач схвалював транзакцію, якої не бачив.
+  //
+  // ЖИТТЄВИЙ ЦИКЛ. Закриття вікна без рішення = відмова (windows.onRemoved):
+  // інакше запит висів би в черзі вічно, з'їдав ліміт на origin і блокував
+  // сайту можливість надіслати новий.
   // -------------------------------------------------------------------------
   interface PendingEntry {
     request: PendingSignRequest;
     resolve: (outcome: RpcOutcome) => void;
+    /** Вікно підтвердження цього запиту (для onRemoved). */
+    windowId?: number;
   }
   const pendingRequests = new Map<string, PendingEntry>();
 
-  async function openApprovalPopup(): Promise<void> {
-    // Окреме вікно з екраном Approve (ТЗ: екран підпису).
-    await browser.windows.create({
-      url: `${browser.runtime.getURL('/popup.html')}?view=approve`,
+  /** Черга у стабільному порядку (найстаріші першими) — для попапа. */
+  function pendingList(): PendingSignRequest[] {
+    return [...pendingRequests.values()]
+      .map((entry) => entry.request)
+      .sort((a, b) => a.createdAt - b.createdAt);
+  }
+
+  /** Окреме вікно Approve саме для цього запиту (id — у query). */
+  async function openApprovalPopup(requestId: string): Promise<number | undefined> {
+    const url = `${browser.runtime.getURL('/popup.html')}?view=approve&requestId=${encodeURIComponent(requestId)}`;
+    const created = await browser.windows.create({
+      url,
       type: 'popup',
       width: 392,
       height: 660,
     });
+    // Firefox може не повернути вікно — тоді просто не звʼязуємо запит із
+    // windowId (закриття вікна не буде трактовано як відмова, запит лишиться
+    // в черзі до явного рішення).
+    return created?.id;
   }
 
   function queueApproval(request: PendingSignRequest): Promise<RpcOutcome> {
+    // Дедуплікація + ліміт вікон на origin — ДО відкриття вікна.
+    const rejection = screenNewRequest(pendingList(), request);
+    if (rejection !== null) return Promise.resolve({ ok: false, error: rejection });
+
     return new Promise<RpcOutcome>((resolve) => {
-      pendingRequests.set(request.id, { request, resolve });
-      openApprovalPopup().catch((error: unknown) => {
-        pendingRequests.delete(request.id);
-        console.error('[aiwallet] Не вдалося відкрити вікно підтвердження:', error);
-        resolve({ ok: false, error: RPC_ERRORS.internal });
-      });
+      const entry: PendingEntry = { request, resolve };
+      pendingRequests.set(request.id, entry);
+      openApprovalPopup(request.id).then(
+        (windowId) => {
+          if (windowId !== undefined) entry.windowId = windowId;
+        },
+        (error: unknown) => {
+          pendingRequests.delete(request.id);
+          console.error('[aiwallet] Не вдалося відкрити вікно підтвердження:', error);
+          resolve({ ok: false, error: RPC_ERRORS.internal });
+        },
+      );
     });
   }
 
-  /** Рядкове поле обʼєкта транзакції від dApp (params[0]). */
-  function txField(tx: Record<string, unknown>, key: string): string | undefined {
-    const value = tx[key];
-    return typeof value === 'string' && value.length > 0 ? value : undefined;
-  }
+  // Вікно закрито «хрестиком», без рішення — трактуємо як відмову.
+  browser.windows.onRemoved.addListener((windowId: number) => {
+    for (const [id, entry] of pendingRequests) {
+      if (entry.windowId !== windowId) continue;
+      pendingRequests.delete(id);
+      entry.resolve({ ok: false, error: RPC_ERRORS.userRejected });
+    }
+  });
 
   /**
    * Повний цикл eth_sendTransaction від dApp (після схвалення користувачем):
-   * GET /v1/tx/params (nonce + EIP-1559 комісії з реальної ноди) → збірка
-   * type-2 транзакції → keccak256 + secp256k1-підпис у WASM → RLP →
-   * POST /v1/tx/broadcast → СПРАВЖНІЙ tx hash від ноди.
+   * свіжий nonce (GET /v1/tx/params) + комісії ЗІ СНАПШОТА, показаного
+   * користувачу → збірка type-2 транзакції → keccak256 + secp256k1-підпис у
+   * WASM → RLP → POST /v1/tx/broadcast → СПРАВЖНІЙ tx hash від ноди.
+   *
+   * КЛЮЧОВЕ: комісії сюди приходять із попапа (fee), а НЕ беруться з мережі
+   * повторно. Раніше /v1/tx/params смикався вже ПІСЛЯ схвалення — користувач
+   * апрувив комісію, якої не бачив. Тепер: немає снапшота → немає підпису
+   * (buildDappTxParams кидає errors.feeSnapshotMissing), а сам снапшот
+   * проходить ті самі перевірки, що й дані з бекенду (chain_id проти локальної
+   * константи + санітарні межі комісій).
    */
-  async function sendDappTransaction(request: PendingSignRequest): Promise<RpcOutcome> {
+  async function sendDappTransaction(
+    request: PendingSignRequest,
+    fee: FeeSnapshot | undefined,
+  ): Promise<RpcOutcome> {
     if (session.address === null) return { ok: false, error: RPC_ERRORS.unauthorized };
     // Дозвіл по origin перевіряється ще на вході (handleRpcRequest), але
     // повторюємо тут: між постановкою в чергу і схваленням користувач міг
@@ -571,32 +623,20 @@ export default defineBackground(() => {
     if (!(await isOriginConnected(request.origin))) {
       return { ok: false, error: RPC_ERRORS.unauthorized };
     }
-    const rawTx = request.params[0];
-    if (typeof rawTx !== 'object' || rawTx === null || Array.isArray(rawTx)) {
+    const tx = readDappTx(request.params);
+    if (tx === null) {
       return { ok: false, error: { code: -32602, message: 'Invalid transaction parameters.' } };
     }
-    const tx = rawTx as Record<string, unknown>;
-    const data = txField(tx, 'data') ?? txField(tx, 'input');
-    const hasData = data !== undefined && data !== '0x';
 
     try {
-      // fetchTxParams звіряє chain_id із ЛОКАЛЬНОЮ константою мережі і
-      // санітарними межами комісій (verifyTxParams, src/lib/evm.ts) — тобто
-      // кидає помилку ЗАМІСТЬ того, щоб дати підписати транзакцію з підміненим
-      // chain_id (валідний підпис у чужій мережі) чи захмарною комісією.
+      // Свіжим береться ЛИШЕ nonce: він механічний (користувач ним не оперує),
+      // а протухлий nonce означав би відхилення транзакції нодою. chain_id і
+      // комісії — зі снапшота. fetchTxParams дорогою ще раз звіряє chain_id із
+      // локальною константою мережі (verifyTxParams).
+      const hasData = tx.data !== null && tx.data !== '0x';
       const params = await fetchTxParams(DAPP_CHAIN, session.address, hasData);
-      const txParams: Eip1559TxParams = {
-        chain_id: String(params.chain_id),
-        nonce: String(params.nonce),
-        // Тариф standard; вибір slow/fast користувачем — TODO (екран Approve).
-        max_priority_fee_per_gas: params.fees.standard.max_priority_fee_per_gas,
-        max_fee_per_gas: params.fees.standard.max_fee_per_gas,
-        // gas від dApp (hex) або консервативна оцінка бекенду.
-        gas_limit: txField(tx, 'gas') ?? params.gas_limit_estimate,
-        to: txField(tx, 'to'),
-        value: txField(tx, 'value') ?? '0',
-        data,
-      };
+      const txParams = buildDappTxParams(DAPP_CHAIN, tx, fee, params.nonce);
+
       const signed = await signEvmTransactionWithSession(JSON.stringify(txParams), 0);
       if (!signed.ok) return { ok: false, error: { code: -32603, message: signed.error } };
       const { raw_tx } = JSON.parse(signed.value) as SignedEvmTx;
@@ -612,7 +652,10 @@ export default defineBackground(() => {
    * Результат для схваленого користувачем запиту. Підпис — реальний
    * (keccak256/EIP-191/EIP-1559 у WASM-ядрі), трансляція — через бекенд.
    */
-  async function approvedOutcome(request: PendingSignRequest): Promise<RpcOutcome> {
+  async function approvedOutcome(
+    request: PendingSignRequest,
+    fee: FeeSnapshot | undefined,
+  ): Promise<RpcOutcome> {
     if (!session.unlocked) return { ok: false, error: RPC_ERRORS.unauthorized };
     switch (request.method) {
       case 'eth_requestAccounts': {
@@ -628,7 +671,7 @@ export default defineBackground(() => {
         return { ok: true, result: [session.address] };
       }
       case 'eth_sendTransaction':
-        return sendDappTransaction(request);
+        return sendDappTransaction(request, fee);
       case 'personal_sign': {
         // Підпис лише для підключеного origin (доступ міг бути відкликаний,
         // поки запит стояв у черзі).
@@ -738,15 +781,38 @@ export default defineBackground(() => {
     }
   }
 
-  async function resolveApproval(message: BgResolveApproval): Promise<{ ok: boolean }> {
+  /**
+   * Рішення користувача щодо КОНКРЕТНОГО запиту (за id, а не «першого в черзі»).
+   *
+   * Схвалений eth_sendTransaction БЕЗ снапшота комісій не підписується взагалі:
+   * requiresFeeSnapshot ловить це ще до звернення до мережі й до WASM-ядра —
+   * навіть якщо попап колись «забуде» передати fee, blind signing не станеться.
+   *
+   * Якщо схвалений запит впав на ВИКОНАННІ (бекенд недоступний, підпис не
+   * вдався) — запит ЛИШАЄТЬСЯ в черзі, а вікно отримує текст помилки: тихо
+   * закрити вікно означало б лишити користувача в невіданні, чи пішла
+   * транзакція. Відмову ж застосовуємо завжди.
+   */
+  async function resolveApproval(message: BgResolveApproval): Promise<ResolveApprovalResult> {
     const entry = pendingRequests.get(message.requestId);
-    if (entry === undefined) return { ok: false };
+    // Запиту немає: інше вікно вже вирішило його, або він відкликаний.
+    if (entry === undefined) return { ok: false, error: 'errors.approvalGone' };
+
+    if (!message.approved) {
+      pendingRequests.delete(message.requestId);
+      entry.resolve({ ok: false, error: RPC_ERRORS.userRejected });
+      return { ok: true };
+    }
+
+    if (requiresFeeSnapshot(entry.request.method) && message.fee === undefined) {
+      return { ok: false, error: 'errors.feeSnapshotMissing' };
+    }
+
+    const outcome = await approvedOutcome(entry.request, message.fee);
+    if (!outcome.ok) return { ok: false, error: outcome.error.message };
+
     pendingRequests.delete(message.requestId);
-    entry.resolve(
-      message.approved
-        ? await approvedOutcome(entry.request)
-        : { ok: false, error: RPC_ERRORS.userRejected },
-    );
+    entry.resolve(outcome);
     return { ok: true };
   }
 
@@ -760,9 +826,7 @@ export default defineBackground(() => {
         lockSession();
         return session;
       case MessageType.GetPendingRequests:
-        return [...pendingRequests.values()]
-          .map((entry) => entry.request)
-          .sort((a, b) => a.createdAt - b.createdAt);
+        return pendingList();
       case MessageType.ResolveApproval:
         return resolveApproval(message);
       case MessageType.VaultCreate:

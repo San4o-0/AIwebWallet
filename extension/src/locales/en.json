@@ -232,7 +232,42 @@
     "sign": "Sign",
     "noRequestTitle": "No signing request",
     "noRequestHint": "This screen opens when a dApp asks you to sign. There is nothing to review right now.",
-    "close": "Close"
+    "close": "Close",
+    "factsEyebrow": "What you are signing",
+    "action": {
+      "native": "Send",
+      "tokenTransfer": "Token transfer",
+      "tokenApprove": "Token approval",
+      "contractCall": "Contract call",
+      "deploy": "Contract deployment",
+      "signMessage": "Message"
+    },
+    "amountLabel": "Amount",
+    "allowanceLabel": "Spending limit",
+    "recipientLabel": "Recipient",
+    "spenderLabel": "Spender",
+    "contractLabel": "Contract",
+    "tokenContractLabel": "Token contract",
+    "networkLabel": "Network",
+    "feeLabel": "Max network fee",
+    "feeLoading": "Fetching the fee…",
+    "feeFormula": "{{gas}} gas × {{gwei}} gwei",
+    "feeBlocked": "Signing is blocked until the fee is known: {{detail}}",
+    "unlimited": "Unlimited {{symbol}}",
+    "unlimitedWarning": "The spender will be able to move this token out of your wallet at any time, without limit, until you revoke the approval.",
+    "unknownToken": "This token is not in the Argus registry: its symbol and decimals cannot be verified, so the amount is shown in raw units.",
+    "unknownTokenShort": "tokens",
+    "unknownSelector": "Unknown function {{selector}}",
+    "plusNative": "Plus {{amount}} {{symbol}} sent with the call",
+    "deployWarning": "No recipient: this transaction deploys a new contract.",
+    "messageLabel": "Message",
+    "messageHexNote": "The message is not valid text — the raw bytes are shown as is.",
+    "signerLabel": "Signing address",
+    "shareAddressLabel": "Address the site will see",
+    "connectHint": "The site will see this address and its balances. It cannot move funds without a separate signature.",
+    "aiAdvisory": "The AI review is advisory. Decide by the facts above.",
+    "signing": "Signing…",
+    "invalidTxParams": "The site sent a transaction Argus cannot read. Signing is blocked."
   },
   "risk": {
     "low": "Low risk",
@@ -291,7 +326,16 @@
     "revealSeedShow": "Show phrase",
     "revealSeedHide": "Hide phrase",
     "lock": "Lock wallet",
-    "footer": "Argus {{version}} · {{networks}} networks · non-custodial"
+    "footer": "Argus {{version}} · {{networks}} networks · non-custodial",
+    "privacy": "Privacy and data",
+    "dataSharing": "Data transmission",
+    "dataSharingHint": "Public addresses and transaction details go to the Argus backend. Off — the wallet runs offline: no balances, history, analytics or sending.",
+    "aiFeatures": "AI features",
+    "aiFeaturesHint": "Transaction details and chat content go to an AI provider. Off — explanations are local and rule-based, the chat is unavailable.",
+    "aiRequiresData": "Requires data transmission to be on.",
+    "reviewConsent": "What data we send",
+    "reviewConsentHint": "Review the disclosure and change your choices.",
+    "privacyPolicy": "Privacy policy"
   },
   "wallets": {
     "defaultName": "Wallet {{number}}",
@@ -348,6 +392,13 @@
       "broadcastFailed": "Failed to broadcast the transaction: {{detail}}",
       "broadcastUnavailable": "Failed to broadcast the transaction: the backend is unavailable ({{url}}). Start the api-server and try again.",
       "insecureBaseUrl": "Request blocked: this build points at the backend over an unencrypted connection ({{url}}). Over cleartext an attacker can swap the network id and fees of a transaction, so requests are disabled. Rebuild the extension with an https address."
+    },
+    "approvalGone": "This request is no longer in the queue: it was already resolved or withdrawn.",
+    "approvalFailed": "Could not complete the request.",
+    "feeSnapshotMissing": "Signing was blocked: the fee shown on screen was not passed to the signer. Reopen the request.",
+    "consent": {
+      "networkDenied": "Data transmission is off — the wallet is running offline. Turn it on in More → Privacy and data.",
+      "aiDisabled": "AI features are off. Turn them on in More → Privacy and data."
     }
   },
   "mock": {
@@ -379,5 +430,37 @@
       "chainId": "A service request for the network identifier."
     },
     "chatAnswer": "Over the last 30 days you spent about $14.62 on fees: $11.20 on Ethereum, $2.10 on Bitcoin, $0.90 on Polygon and $0.42 on Solana. The most expensive was an approve transaction for Uniswap ($4.80). Tip: on Ethereum, fees at night (UTC) are usually 30–50% lower. \n\n_(This is a mock answer: the /v1/chat backend is unavailable.)_"
+  },
+  "consent": {
+    "eyebrowFirstRun": "Step 1 · Privacy",
+    "eyebrowUpdate": "Policy update",
+    "title": "What data we send",
+    "intro": "Argus is non-custodial: your keys never leave this device. To show balances and explain transactions, it has to talk to our server. Here is exactly what is sent, and to whom.",
+    "updateNote": "We have changed what Argus sends or who receives it. Please review the disclosure before continuing.",
+    "localTitle": "Never leaves your device",
+    "localItems": "Your recovery phrase, private keys and password. Also the list of sites you have connected and your interface language. There is no account, no registration and no email address.",
+    "backendTitle": "Sent to the Argus backend",
+    "backendAddresses": "Your public wallet addresses — to read balances, transaction history and fee statistics from public blockchains.",
+    "backendTx": "Details of unsigned transactions — to simulate them, assess their risk and explain them in plain language before you sign.",
+    "backendSigned": "Signed transactions — to broadcast them to the network. A signed transaction contains no private key.",
+    "backendIp": "Your IP address — visible to any server you contact. Used only for rate limiting, kept in memory, never linked to your addresses.",
+    "thirdPartyTitle": "Passed on by our backend",
+    "thirdPartyAi": "AI provider (OpenAI or Groq) — transaction details and the content of your chat messages. Only if you enable AI features below.",
+    "thirdPartyRpc": "Blockchain nodes and explorers — your public addresses and your signed transactions. Reading a blockchain is impossible without them.",
+    "thirdPartyPrices": "CoinGecko — coin identifiers only (\"ethereum\", \"bitcoin\"). No addresses, no personal data.",
+    "aiTitle": "AI features (optional)",
+    "aiHint": "AI explanations of transactions and the assistant chat send transaction details and your messages to an AI provider. This is the only data that leaves our own infrastructure for a third-party model.",
+    "aiToggle": "Enable AI features",
+    "aiToggleHint": "Off by default. With AI off, transaction explanations come from local rule-based templates, the chat is unavailable, and everything else — balances, sending, history, analytics, risk warnings — works exactly the same. You can change this at any time in More → Privacy and data.",
+    "policyLink": "Read the full privacy policy",
+    "accept": "Agree and continue",
+    "decline": "Continue without sending data",
+    "declineHint": "Offline mode: you can create or import a wallet, see your addresses and back up your recovery phrase. Balances, history, analytics and sending will stay unavailable until you turn data transmission on in More → Privacy and data.",
+    "offlineTitle": "Network features are off",
+    "offlineHint": "You chose not to send data to the Argus backend. Balances, history, analytics and sending need your public addresses to be transmitted.",
+    "offlineEnable": "Turn on data transmission",
+    "aiOffTitle": "AI features are off",
+    "aiOffHint": "The chat sends your messages, and AI explanations send transaction details, to an AI provider. This is off by default — nothing has been sent.",
+    "aiOffEnable": "Turn on AI features"
   }
 }

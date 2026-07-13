@@ -231,7 +231,42 @@
     "sign": "서명",
     "noRequestTitle": "서명 요청 없음",
     "noRequestHint": "이 화면은 dApp이 서명을 요청할 때 열립니다. 지금은 검토할 항목이 없습니다.",
-    "close": "닫기"
+    "close": "닫기",
+    "factsEyebrow": "서명하려는 내용",
+    "action": {
+      "native": "전송",
+      "tokenTransfer": "토큰 전송",
+      "tokenApprove": "토큰 승인",
+      "contractCall": "컨트랙트 호출",
+      "deploy": "컨트랙트 배포",
+      "signMessage": "메시지"
+    },
+    "amountLabel": "금액",
+    "allowanceLabel": "사용 한도",
+    "recipientLabel": "받는 주소",
+    "spenderLabel": "승인 대상",
+    "contractLabel": "컨트랙트",
+    "tokenContractLabel": "토큰 컨트랙트",
+    "networkLabel": "네트워크",
+    "feeLabel": "최대 네트워크 수수료",
+    "feeLoading": "수수료를 가져오는 중…",
+    "feeFormula": "{{gas}} gas × {{gwei}} gwei",
+    "feeBlocked": "수수료를 알기 전에는 서명이 차단됩니다: {{detail}}",
+    "unlimited": "무제한 {{symbol}}",
+    "unlimitedWarning": "승인을 취소하기 전까지 승인 대상은 언제든지 제한 없이 이 토큰을 지갑에서 빼낼 수 있습니다.",
+    "unknownToken": "이 토큰은 Argus 등록부에 없습니다. 심볼과 소수점 자릿수를 검증할 수 없어 금액을 원시 단위로 표시합니다.",
+    "unknownTokenShort": "토큰",
+    "unknownSelector": "알 수 없는 함수 {{selector}}",
+    "plusNative": "호출과 함께 {{amount}} {{symbol}}도 전송됩니다",
+    "deployWarning": "받는 주소가 없습니다. 이 트랜잭션은 새 컨트랙트를 배포합니다.",
+    "messageLabel": "메시지",
+    "messageHexNote": "메시지가 올바른 텍스트가 아닙니다 — 원시 바이트를 표시합니다.",
+    "signerLabel": "서명 주소",
+    "shareAddressLabel": "사이트가 보게 될 주소",
+    "connectHint": "사이트는 이 주소와 잔액을 봅니다. 별도의 서명 없이는 자금을 옮길 수 없습니다.",
+    "aiAdvisory": "AI 평가는 참고용입니다. 위의 사실을 근거로 결정하세요.",
+    "signing": "서명 중…",
+    "invalidTxParams": "사이트가 보낸 트랜잭션을 Argus가 읽을 수 없습니다. 서명이 차단되었습니다."
   },
   "risk": {
     "low": "낮은 위험",
@@ -290,7 +325,16 @@
     "revealSeedShow": "구문 보기",
     "revealSeedHide": "구문 숨기기",
     "lock": "지갑 잠금",
-    "footer": "Argus {{version}} · 네트워크 {{networks}}개 · 비수탁형"
+    "footer": "Argus {{version}} · 네트워크 {{networks}}개 · 비수탁형",
+    "privacy": "개인정보 및 데이터",
+    "dataSharing": "데이터 전송",
+    "dataSharingHint": "공개 주소와 트랜잭션 세부 정보가 Argus 백엔드로 전송됩니다. 끄면 지갑은 오프라인으로 작동합니다: 잔액, 기록, 분석, 보내기를 사용할 수 없습니다.",
+    "aiFeatures": "AI 기능",
+    "aiFeaturesHint": "트랜잭션 세부 정보와 채팅 내용이 AI 제공업체로 전송됩니다. 끄면 설명은 로컬 규칙 기반으로 제공되고 채팅은 사용할 수 없습니다.",
+    "aiRequiresData": "데이터 전송이 켜져 있어야 합니다.",
+    "reviewConsent": "전송되는 데이터",
+    "reviewConsentHint": "고지 내용을 확인하고 선택을 변경합니다.",
+    "privacyPolicy": "개인정보처리방침"
   },
   "wallets": {
     "defaultName": "지갑 {{number}}",
@@ -347,6 +391,13 @@
       "broadcastFailed": "트랜잭션을 브로드캐스트하지 못했습니다: {{detail}}",
       "broadcastUnavailable": "트랜잭션을 브로드캐스트하지 못했습니다. 백엔드를 사용할 수 없습니다({{url}}). api-server를 시작한 후 다시 시도해 주십시오.",
       "insecureBaseUrl": "요청이 차단되었습니다: 이 빌드는 암호화되지 않은 연결로 백엔드({{url}})를 가리킵니다. 평문 통신에서는 공격자가 거래의 네트워크 id와 수수료를 바꿔치기할 수 있으므로 요청을 비활성화했습니다. https 주소로 확장 프로그램을 다시 빌드하세요."
+    },
+    "approvalGone": "이 요청은 더 이상 대기열에 없습니다. 이미 처리되었거나 철회되었습니다.",
+    "approvalFailed": "요청을 완료하지 못했습니다.",
+    "feeSnapshotMissing": "서명이 차단되었습니다: 화면에 표시된 수수료가 서명자에게 전달되지 않았습니다. 요청을 다시 여세요.",
+    "consent": {
+      "networkDenied": "데이터 전송이 꺼져 있습니다 — 지갑이 오프라인으로 작동 중입니다. 더보기 → 개인정보 및 데이터에서 켜세요.",
+      "aiDisabled": "AI 기능이 꺼져 있습니다. 더보기 → 개인정보 및 데이터에서 켜세요."
     }
   },
   "mock": {
@@ -378,5 +429,37 @@
       "chainId": "네트워크 식별자를 요청하는 서비스성 요청입니다."
     },
     "chatAnswer": "지난 30일 동안 수수료로 약 $14.62를 지출하셨습니다. Ethereum에서 $11.20, Bitcoin에서 $2.10, Polygon에서 $0.90, Solana에서 $0.42입니다. 가장 비쌌던 것은 Uniswap에 대한 approve 트랜잭션($4.80)이었습니다. 팁: Ethereum에서는 야간(UTC)에 수수료가 보통 30~50% 낮습니다.\n\n_(모의 답변입니다: /v1/chat 백엔드를 사용할 수 없습니다.)_"
+  },
+  "consent": {
+    "eyebrowFirstRun": "1단계 · 개인정보",
+    "eyebrowUpdate": "정책 업데이트",
+    "title": "전송되는 데이터",
+    "intro": "Argus는 비수탁형입니다. 회원님의 키는 이 기기를 절대 벗어나지 않습니다. 다만 잔액을 표시하고 트랜잭션을 설명하려면 저희 서버와 통신해야 합니다. 무엇이 누구에게 전송되는지 아래에 정확히 밝힙니다.",
+    "updateNote": "Argus가 전송하는 내용 또는 그 수신자가 변경되었습니다. 계속하기 전에 고지 내용을 확인해 주세요.",
+    "localTitle": "기기를 절대 벗어나지 않습니다",
+    "localItems": "복구 구문, 개인 키, 비밀번호. 연결한 사이트 목록과 인터페이스 언어도 마찬가지입니다. 계정도, 가입도, 이메일 주소도 없습니다.",
+    "backendTitle": "Argus 백엔드로 전송됩니다",
+    "backendAddresses": "회원님의 공개 지갑 주소 — 공개 블록체인에서 잔액, 트랜잭션 기록, 수수료 통계를 읽기 위해서입니다.",
+    "backendTx": "서명되지 않은 트랜잭션의 세부 정보 — 서명하기 전에 시뮬레이션하고, 위험을 평가하고, 쉬운 말로 설명하기 위해서입니다.",
+    "backendSigned": "서명된 트랜잭션 — 네트워크에 브로드캐스트하기 위해서입니다. 서명된 트랜잭션에는 개인 키가 포함되지 않습니다.",
+    "backendIp": "회원님의 IP 주소 — 접속하는 모든 서버가 볼 수 있습니다. 요청 속도 제한에만 사용되며, 메모리에만 보관하고 회원님의 주소와 절대 연결하지 않습니다.",
+    "thirdPartyTitle": "저희 백엔드가 제3자에게 전달합니다",
+    "thirdPartyAi": "AI 제공업체(OpenAI 또는 Groq) — 트랜잭션 세부 정보와 회원님의 채팅 메시지 내용. 아래에서 AI 기능을 켠 경우에만 해당합니다.",
+    "thirdPartyRpc": "블록체인 노드 및 탐색기 — 회원님의 공개 주소와 서명된 트랜잭션. 이들 없이는 블록체인을 읽을 수 없습니다.",
+    "thirdPartyPrices": "CoinGecko — 코인 식별자만(“ethereum”, “bitcoin”). 주소도, 개인정보도 포함되지 않습니다.",
+    "aiTitle": "AI 기능(선택 사항)",
+    "aiHint": "트랜잭션에 대한 AI 설명과 어시스턴트 채팅은 트랜잭션 세부 정보와 회원님의 메시지를 AI 제공업체로 전송합니다. 이는 저희 자체 인프라를 벗어나 제3자 모델로 전달되는 유일한 데이터입니다.",
+    "aiToggle": "AI 기능 켜기",
+    "aiToggleHint": "기본값은 꺼짐입니다. AI를 끄면 트랜잭션 설명은 로컬의 규칙 기반 템플릿에서 생성되고 채팅은 사용할 수 없으며, 그 밖의 모든 기능 — 잔액, 보내기, 기록, 분석, 위험 경고 — 은 완전히 동일하게 작동합니다. 이 설정은 더보기 → 개인정보 및 데이터에서 언제든지 변경할 수 있습니다.",
+    "policyLink": "개인정보처리방침 전문 읽기",
+    "accept": "동의하고 계속",
+    "decline": "데이터를 보내지 않고 계속",
+    "declineHint": "오프라인 모드: 지갑을 만들거나 가져오고, 주소를 확인하고, 복구 구문을 백업할 수 있습니다. 더보기 → 개인정보 및 데이터에서 데이터 전송을 켜기 전까지 잔액, 기록, 분석, 보내기는 사용할 수 없습니다.",
+    "offlineTitle": "네트워크 기능이 꺼져 있습니다",
+    "offlineHint": "Argus 백엔드로 데이터를 보내지 않기로 선택하셨습니다. 잔액, 기록, 분석, 보내기에는 회원님의 공개 주소 전송이 필요합니다.",
+    "offlineEnable": "데이터 전송 켜기",
+    "aiOffTitle": "AI 기능이 꺼져 있습니다",
+    "aiOffHint": "채팅은 회원님의 메시지를, AI 설명은 트랜잭션 세부 정보를 AI 제공업체로 전송합니다. 이 기능은 기본적으로 꺼져 있으며, 아무것도 전송되지 않았습니다.",
+    "aiOffEnable": "AI 기능 켜기"
   }
 }

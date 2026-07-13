@@ -232,7 +232,42 @@
     "sign": "Signieren",
     "noRequestTitle": "Keine Signaturanfrage",
     "noRequestHint": "Dieser Bildschirm öffnet sich, wenn eine dApp Sie zum Signieren auffordert. Derzeit gibt es nichts zu prüfen.",
-    "close": "Schließen"
+    "close": "Schließen",
+    "factsEyebrow": "Was Sie signieren",
+    "action": {
+      "native": "Senden",
+      "tokenTransfer": "Token-Überweisung",
+      "tokenApprove": "Token-Freigabe",
+      "contractCall": "Contract-Aufruf",
+      "deploy": "Contract-Deployment",
+      "signMessage": "Nachricht"
+    },
+    "amountLabel": "Betrag",
+    "allowanceLabel": "Ausgabelimit",
+    "recipientLabel": "Empfänger",
+    "spenderLabel": "Freigabe für",
+    "contractLabel": "Contract",
+    "tokenContractLabel": "Token-Contract",
+    "networkLabel": "Netzwerk",
+    "feeLabel": "Maximale Netzwerkgebühr",
+    "feeLoading": "Gebühr wird abgerufen…",
+    "feeFormula": "{{gas}} Gas × {{gwei}} Gwei",
+    "feeBlocked": "Signieren ist gesperrt, solange die Gebühr unbekannt ist: {{detail}}",
+    "unlimited": "{{symbol}} unbegrenzt",
+    "unlimitedWarning": "Der Freigabeempfänger kann diesen Token jederzeit und unbegrenzt aus Ihrer Wallet abziehen, bis Sie die Freigabe widerrufen.",
+    "unknownToken": "Dieser Token steht nicht im Argus-Register: Symbol und Nachkommastellen lassen sich nicht prüfen, deshalb wird der Betrag in Roheinheiten angezeigt.",
+    "unknownTokenShort": "Token",
+    "unknownSelector": "Unbekannte Funktion {{selector}}",
+    "plusNative": "Zusätzlich werden {{amount}} {{symbol}} mit dem Aufruf gesendet",
+    "deployWarning": "Kein Empfänger: Diese Transaktion deployt einen neuen Contract.",
+    "messageLabel": "Nachricht",
+    "messageHexNote": "Die Nachricht ist kein gültiger Text — die Rohbytes werden angezeigt.",
+    "signerLabel": "Signierende Adresse",
+    "shareAddressLabel": "Adresse, die die Website sieht",
+    "connectHint": "Die Website sieht diese Adresse und ihre Guthaben. Ohne separate Signatur kann sie kein Geld bewegen.",
+    "aiAdvisory": "Die KI-Einschätzung ist nur ein Hinweis. Entscheiden Sie nach den Fakten oben.",
+    "signing": "Wird signiert…",
+    "invalidTxParams": "Die Website hat eine Transaktion gesendet, die Argus nicht lesen kann. Das Signieren ist gesperrt."
   },
   "risk": {
     "low": "Geringes Risiko",
@@ -291,7 +326,16 @@
     "revealSeedShow": "Phrase anzeigen",
     "revealSeedHide": "Phrase verbergen",
     "lock": "Wallet sperren",
-    "footer": "Argus {{version}} · {{networks}} Netzwerke · non-custodial"
+    "footer": "Argus {{version}} · {{networks}} Netzwerke · non-custodial",
+    "privacy": "Privatsphäre und Daten",
+    "dataSharing": "Datenübertragung",
+    "dataSharingHint": "Öffentliche Adressen und Transaktionsdetails gehen an das Argus-Backend. Aus: Die Wallet läuft offline — keine Guthaben, kein Verlauf, keine Analysen, kein Senden.",
+    "aiFeatures": "AI-Funktionen",
+    "aiFeaturesHint": "Transaktionsdetails und Chat-Inhalte gehen an einen AI-Anbieter. Aus: Erklärungen sind lokal und regelbasiert, der Chat ist nicht verfügbar.",
+    "aiRequiresData": "Erfordert eingeschaltete Datenübertragung.",
+    "reviewConsent": "Welche Daten wir senden",
+    "reviewConsentHint": "Die Offenlegung ansehen und Ihre Auswahl ändern.",
+    "privacyPolicy": "Datenschutzerklärung"
   },
   "wallets": {
     "defaultName": "Wallet {{number}}",
@@ -348,6 +392,13 @@
       "broadcastFailed": "Transaktion konnte nicht übertragen werden: {{detail}}",
       "broadcastUnavailable": "Transaktion konnte nicht übertragen werden: Das Backend ist nicht erreichbar ({{url}}). Starten Sie den api-server und versuchen Sie es erneut.",
       "insecureBaseUrl": "Anfrage blockiert: Dieser Build zeigt über eine unverschlüsselte Verbindung auf das Backend ({{url}}). Im Klartext kann ein Angreifer Netzwerk-ID und Gebühren einer Transaktion austauschen, deshalb sind Anfragen deaktiviert. Bauen Sie die Erweiterung mit einer https-Adresse neu."
+    },
+    "approvalGone": "Diese Anfrage steht nicht mehr in der Warteschlange: Sie wurde bereits entschieden oder zurückgezogen.",
+    "approvalFailed": "Die Anfrage konnte nicht ausgeführt werden.",
+    "feeSnapshotMissing": "Signieren gesperrt: Die auf dem Bildschirm gezeigte Gebühr erreichte den Signierer nicht. Öffnen Sie die Anfrage erneut.",
+    "consent": {
+      "networkDenied": "Die Datenübertragung ist ausgeschaltet — die Wallet läuft offline. Schalten Sie sie unter Mehr → Privatsphäre und Daten ein.",
+      "aiDisabled": "Die AI-Funktionen sind ausgeschaltet. Schalten Sie sie unter Mehr → Privatsphäre und Daten ein."
     }
   },
   "mock": {
@@ -379,5 +430,37 @@
       "chainId": "Eine Dienstanfrage für die Netzwerkkennung."
     },
     "chatAnswer": "In den letzten 30 Tagen haben Sie rund $14.62 für Gebühren ausgegeben: $11.20 auf Ethereum, $2.10 auf Bitcoin, $0.90 auf Polygon und $0.42 auf Solana. Am teuersten war eine Approve-Transaktion für Uniswap ($4.80). Tipp: Auf Ethereum sind die Gebühren nachts (UTC) meist 30–50 % niedriger. \n\n_(Dies ist eine Mock-Antwort: Das /v1/chat-Backend ist nicht erreichbar.)_"
+  },
+  "consent": {
+    "eyebrowFirstRun": "Schritt 1 · Privatsphäre",
+    "eyebrowUpdate": "Aktualisierung der Richtlinie",
+    "title": "Welche Daten wir senden",
+    "intro": "Argus ist non-custodial: Ihre Schlüssel verlassen dieses Gerät nie. Um Guthaben anzuzeigen und Transaktionen zu erklären, muss die Wallet mit unserem Server sprechen. Hier steht genau, was gesendet wird und an wen.",
+    "updateNote": "Wir haben geändert, was Argus sendet oder wer es erhält. Bitte prüfen Sie die Offenlegung, bevor Sie fortfahren.",
+    "localTitle": "Verlässt Ihr Gerät nie",
+    "localItems": "Ihre Wiederherstellungsphrase, Ihre privaten Schlüssel und Ihr Passwort. Außerdem die Liste der von Ihnen verbundenen Websites und Ihre Sprache der Oberfläche. Es gibt kein Konto, keine Registrierung und keine E-Mail-Adresse.",
+    "backendTitle": "Wird an das Argus-Backend gesendet",
+    "backendAddresses": "Ihre öffentlichen Wallet-Adressen — um Guthaben, Transaktionsverlauf und Gebührenstatistiken aus öffentlichen Blockchains zu lesen.",
+    "backendTx": "Details unsignierter Transaktionen — um sie zu simulieren, ihr Risiko zu bewerten und sie Ihnen vor dem Signieren verständlich zu erklären.",
+    "backendSigned": "Signierte Transaktionen — um sie an das Netzwerk zu übertragen. Eine signierte Transaktion enthält keinen privaten Schlüssel.",
+    "backendIp": "Ihre IP-Adresse — für jeden Server sichtbar, den Sie kontaktieren. Wird nur zur Begrenzung der Anfragerate verwendet, im Arbeitsspeicher gehalten und nie mit Ihren Adressen verknüpft.",
+    "thirdPartyTitle": "Von unserem Backend weitergegeben",
+    "thirdPartyAi": "AI-Anbieter (OpenAI oder Groq) — Transaktionsdetails und der Inhalt Ihrer Chat-Nachrichten. Nur wenn Sie die AI-Funktionen unten aktivieren.",
+    "thirdPartyRpc": "Blockchain-Nodes und -Explorer — Ihre öffentlichen Adressen und Ihre signierten Transaktionen. Ohne sie lässt sich eine Blockchain nicht lesen.",
+    "thirdPartyPrices": "CoinGecko — nur Coin-Bezeichner („ethereum“, „bitcoin“). Keine Adressen, keine personenbezogenen Daten.",
+    "aiTitle": "AI-Funktionen (optional)",
+    "aiHint": "AI-Erklärungen von Transaktionen und der Assistenz-Chat senden Transaktionsdetails und Ihre Nachrichten an einen AI-Anbieter. Das sind die einzigen Daten, die unsere eigene Infrastruktur verlassen und an ein Modell eines Drittanbieters gehen.",
+    "aiToggle": "AI-Funktionen aktivieren",
+    "aiToggleHint": "Standardmäßig aus. Bei ausgeschalteter AI stammen Transaktionserklärungen aus lokalen, regelbasierten Textvorlagen, der Chat ist nicht verfügbar, und alles andere — Guthaben, Senden, Verlauf, Analysen, Risikohinweise — funktioniert genau gleich. Sie können das jederzeit unter Mehr → Privatsphäre und Daten ändern.",
+    "policyLink": "Vollständige Datenschutzerklärung lesen",
+    "accept": "Zustimmen und fortfahren",
+    "decline": "Ohne Datenübertragung fortfahren",
+    "declineHint": "Offline-Modus: Sie können eine Wallet erstellen oder importieren, Ihre Adressen sehen und Ihre Wiederherstellungsphrase sichern. Guthaben, Verlauf, Analysen und Senden bleiben nicht verfügbar, bis Sie die Datenübertragung unter Mehr → Privatsphäre und Daten einschalten.",
+    "offlineTitle": "Netzwerkfunktionen sind ausgeschaltet",
+    "offlineHint": "Sie haben sich entschieden, keine Daten an das Argus-Backend zu senden. Guthaben, Verlauf, Analysen und Senden setzen voraus, dass Ihre öffentlichen Adressen übertragen werden.",
+    "offlineEnable": "Datenübertragung einschalten",
+    "aiOffTitle": "AI-Funktionen sind ausgeschaltet",
+    "aiOffHint": "Der Chat sendet Ihre Nachrichten und die AI-Erklärungen senden Transaktionsdetails an einen AI-Anbieter. Das ist standardmäßig ausgeschaltet — es wurde nichts gesendet.",
+    "aiOffEnable": "AI-Funktionen einschalten"
   }
 }

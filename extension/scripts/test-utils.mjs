@@ -29,8 +29,11 @@ function resolveEsbuild() {
  * персистить у globalThis, як справжній chrome.storage.local).
  *
  * @param {string} entry шлях від кореня extension/, напр. 'src/lib/connections.ts'
+ * @param {{ define?: Record<string, string> }} [options] build-time константи
+ *   (`import.meta.env.*` вшиває wxt.config.ts через vite `define` — у тесті це
+ *   треба відтворити, інакше модуль впаде на читанні env)
  */
-export async function bundleModule(entry) {
+export async function bundleModule(entry, options = {}) {
   const esbuild = resolveEsbuild();
   const outDir = await mkdtemp(join(tmpdir(), 'aiwallet-test-'));
   const outfile = join(outDir, 'module.bundle.mjs');
@@ -41,6 +44,7 @@ export async function bundleModule(entry) {
     platform: 'neutral',
     outfile,
     alias: { 'wxt/browser': fileURLToPath(new URL('./wxt-browser-stub.mjs', import.meta.url)) },
+    define: options.define ?? {},
     logLevel: 'silent',
   });
   let generation = 0;

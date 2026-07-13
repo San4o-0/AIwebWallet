@@ -18,7 +18,7 @@ use serde_json::{json, Value};
 use chain_adapters::{Address, ChainId};
 
 use crate::chains::native_coingecko_id;
-use crate::dto::{AddressBook, BalancesRequest, FeeEstimateQuery, HistoryQuery};
+use crate::dto::{AddressBook, BalancesRequest, FeeEstimateQuery, HistoryRequest};
 use crate::handlers;
 use crate::state::AppState;
 
@@ -141,13 +141,13 @@ pub async fn execute_tool(state: &Arc<AppState>, name: &str, arguments: &str) ->
                 return json!({ "error": "параметр address обовʼязковий" });
             };
             let chain = args["chain"].as_str().unwrap_or("ethereum").to_string();
-            let query = HistoryQuery {
+            let req = HistoryRequest {
                 address: address.to_string(),
                 chain: Some(chain),
                 cursor: None,
                 limit: Some(HISTORY_LIMIT),
             };
-            match handlers::history::history(State(Arc::clone(state)), Query(query)).await {
+            match handlers::history::history(State(Arc::clone(state)), Json(req)).await {
                 Ok(Json(resp)) => to_value(&resp),
                 Err(e) => json!({ "error": e.message }),
             }

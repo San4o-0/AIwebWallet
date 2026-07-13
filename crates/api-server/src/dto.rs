@@ -90,11 +90,14 @@ pub struct BalancesResponse {
 }
 
 // ---------------------------------------------------------------------------
-// GET /v1/history?address=&chain=&cursor=
+// POST /v1/history
 // ---------------------------------------------------------------------------
 
+/// ПРИВАТНІСТЬ: адреса гаманця — дані користувача, тому йде в ТІЛІ POST,
+/// а не в query. Query-рядок осідає в логах серверів/проксі/CDN навіть по
+/// HTTPS (політика Chrome Web Store, код Purple Copper).
 #[derive(Debug, Clone, Deserialize)]
-pub struct HistoryQuery {
+pub struct HistoryRequest {
     pub address: String,
     pub chain: Option<Chain>,
     pub cursor: Option<String>,
@@ -328,11 +331,12 @@ pub struct ChatRequest {
 }
 
 // ---------------------------------------------------------------------------
-// GET /v1/analytics/fees, GET /v1/analytics/summary
+// POST /v1/analytics/fees, POST /v1/analytics/summary
 // ---------------------------------------------------------------------------
 
+/// ПРИВАТНІСТЬ: адреса гаманця — у тілі POST, не в query (див. HistoryRequest).
 #[derive(Debug, Clone, Deserialize)]
-pub struct AnalyticsQuery {
+pub struct AnalyticsRequest {
     pub address: String,
     /// "7d" | "30d" | "90d" | "1y" (F6.1).
     pub period: Option<String>,
