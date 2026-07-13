@@ -54,6 +54,9 @@ impl From<AdapterError> for ApiError {
                 StatusCode::BAD_REQUEST
             }
             AdapterError::Unsupported(_) => StatusCode::NOT_IMPLEMENTED,
+            // Провайдер тротлив запити (429/5xx) і ретраї в chain-adapters
+            // вичерпані — клієнту варто повторити пізніше.
+            AdapterError::RateLimited { .. } => StatusCode::TOO_MANY_REQUESTS,
             // Помилки транспорту/ноди — проблема upstream, не клієнта.
             AdapterError::Http(_)
             | AdapterError::Rpc { .. }
