@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { BackendWakingNote } from '@/src/components/backend-status';
 import { NetworkOffNote, useNetworkAllowed } from '@/src/components/consent';
 import { IconActivity, IconGrid } from '@/src/components/icons';
 import { Card, EmptyState, ErrorNote, ScreenHeader } from '@/src/components/ui';
@@ -77,6 +78,10 @@ export default function Activity() {
       {view === 'history' && (
         <>
       {!networkAllowed && <NetworkOffNote />}
+
+      {/* Холодний старт бекенду (безкоштовний хостинг) — пояснення замість
+          мовчазного скелетона на 30–60 с. */}
+      <BackendWakingNote pending={networkAllowed && isLoading} />
 
       {networkAllowed && isLoading && (
         <div className="flex flex-col gap-2">

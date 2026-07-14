@@ -14,6 +14,10 @@
     "passwordPlaceholder": "Mínimo 8 caracteres",
     "seedPlaceholder": "palabra palabra palabra …"
   },
+  "backend": {
+    "wakingTitle": "Despertando el servidor…",
+    "wakingHint": "El backend funciona en un alojamiento gratuito y se suspende tras 15 minutos de inactividad. La primera solicitud puede tardar hasta un minuto. No hay ningún fallo: el servidor solo está despertando."
+  },
   "nav": {
     "label": "Navegación principal",
     "home": "Inicio",

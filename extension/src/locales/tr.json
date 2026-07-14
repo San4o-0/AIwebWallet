@@ -14,6 +14,10 @@
     "passwordPlaceholder": "En az 8 karakter",
     "seedPlaceholder": "kelime kelime kelime …"
   },
+  "backend": {
+    "wakingTitle": "Sunucu uyanıyor…",
+    "wakingHint": "Arka uç ücretsiz bir barındırmada çalışıyor ve 15 dakika işlem yapılmazsa uykuya geçiyor. İlk istek bir dakikaya kadar sürebilir. Bir arıza yok — sunucu yalnızca uyanıyor."
+  },
   "nav": {
     "label": "Ana gezinme",
     "home": "Ana sayfa",

@@ -127,13 +127,21 @@ interface Eip6963ProviderInfo {
   rdns: string;
 }
 
+/**
+ * Іконка гаманця у списку dApp (EIP-6963) — знак Argus: діафрагма-око-щит,
+ * та сама геометрія, що й в assets/icon.svg (щит + око + зіниця, бурштин на
+ * темному тайлі). Inline data-URI: dApp не має ходити по неї в мережу.
+ */
 const PROVIDER_ICON =
   'data:image/svg+xml,' +
   encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">' +
-      '<rect width="32" height="32" rx="8" fill="#0f172a"/>' +
-      '<circle cx="16" cy="16" r="9" fill="none" stroke="#34d399" stroke-width="2.5"/>' +
-      '<circle cx="16" cy="16" r="3" fill="#34d399"/>' +
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">' +
+      '<rect width="128" height="128" rx="28" fill="#0B0C0F"/>' +
+      '<path d="M64 22 100.4 43 100.4 85 64 106 27.6 85 27.6 43Z" ' +
+      'stroke="#E8A33D" stroke-width="5" stroke-linejoin="round"/>' +
+      '<path d="M30 64Q64 40 98 64 64 88 30 64Z" ' +
+      'stroke="#E8A33D" stroke-width="5" stroke-linejoin="round"/>' +
+      '<circle cx="64" cy="64" r="9" fill="#E8A33D"/>' +
       '</svg>',
   );
 
@@ -142,7 +150,9 @@ export function announceEip6963(provider: AiWalletProvider): void {
     uuid: crypto.randomUUID(),
     name: 'Argus',
     icon: PROVIDER_ICON,
-    rdns: 'app.aiwallet',
+    // Ідентифікатор гаманця для dApp (EIP-6963). Оновлено під бренд разом із
+    // gecko-id: до релізу жоден dApp його ще не запам'ятав, тож зміна безпечна.
+    rdns: 'wallet.argus',
   };
   const announce = (): void => {
     window.dispatchEvent(

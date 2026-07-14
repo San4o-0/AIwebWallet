@@ -138,6 +138,10 @@ export default defineConfig({
       // Явний ID для Firefox (about:debugging приймає і без нього, але для
       // підпису/оновлень addons.mozilla.org ID обов'язковий).
       //
+      // ID НЕЗМІННИЙ ПІСЛЯ ПЕРШОЇ ПУБЛІКАЦІЇ в AMO: інший id — це інше
+      // розширення, і ланцюжок оновлень рветься. Тому бренд у ньому зафіксовано
+      // ЗАРАЗ, до релізу (формат ^[a-zA-Z0-9-._]*@[a-zA-Z0-9-._]+$).
+      //
       // data_collection_permissions — ХАРД-БЛОКЕР AMO: з 3 листопада 2025
       // нові розширення НЕ ПІДПИСУЮТЬСЯ без цього ключа. Категорії — закритий
       // енум Mozilla (extensionworkshop.com/documentation/develop/
@@ -167,7 +171,7 @@ export default defineConfig({
         ? {
             browser_specific_settings: {
               gecko: {
-                id: 'ai-wallet@aiwallet.dev',
+                id: 'argus@argus.wallet',
                 strict_min_version: '115.0',
                 data_collection_permissions: {
                   required: ['financialAndPaymentInfo'],

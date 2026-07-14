@@ -14,6 +14,10 @@
     "passwordPlaceholder": "至少 8 个字符",
     "seedPlaceholder": "word word word …"
   },
+  "backend": {
+    "wakingTitle": "正在唤醒服务器…",
+    "wakingHint": "后端运行在免费托管上，闲置 15 分钟后会休眠。首次请求最长可能需要一分钟。这不是故障——服务器正在启动。"
+  },
   "nav": {
     "label": "主导航",
     "home": "首页",

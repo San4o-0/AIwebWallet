@@ -28,7 +28,7 @@ import {
   type Locale,
 } from '@/src/i18n';
 import { CHAIN_IDS } from '@/src/lib/chains';
-import { PRIVACY_POLICY_URL, setAiEnabled, setNetworkEnabled } from '@/src/lib/consent';
+import { openPrivacyPolicy, setAiEnabled, setNetworkEnabled } from '@/src/lib/consent';
 import { shortenAddress } from '@/src/lib/format';
 import { MAX_WALLETS } from '@/src/lib/vault-storage';
 import { walletCore, type WalletSummary } from '@/src/lib/wallet-core';
@@ -319,16 +319,17 @@ function PrivacySection() {
           </span>
           <IconChevronRight size={16} className="shrink-0 text-muted rtl:-scale-x-100" />
         </button>
-        <a
-          href={PRIVACY_POLICY_URL}
-          target="_blank"
-          rel="noreferrer noopener"
+        {/* Політика — у новій ВКЛАДЦІ (browser.tabs.create): у попапі 360×600
+            зовнішня сторінка без адресного рядка й навігації нечитабельна. */}
+        <button
+          type="button"
+          onClick={openPrivacyPolicy}
           className="flex w-full items-center gap-3 border-t border-hairline px-4 py-3 text-start transition-colors hover:bg-raised/60"
         >
           <IconGlobe size={17} className="shrink-0 text-muted" />
           <span className="flex-1 text-sm font-medium text-ink">{t('settings.privacyPolicy')}</span>
           <IconChevronRight size={16} className="shrink-0 text-muted rtl:-scale-x-100" />
-        </a>
+        </button>
       </Card>
     </section>
   );

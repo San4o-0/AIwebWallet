@@ -14,6 +14,10 @@
     "passwordPlaceholder": "Minimal 8 karakter",
     "seedPlaceholder": "word word word …"
   },
+  "backend": {
+    "wakingTitle": "Membangunkan server…",
+    "wakingHint": "Backend berjalan di hosting gratis dan tertidur setelah 15 menit tanpa aktivitas. Permintaan pertama bisa memakan waktu hingga satu menit. Tidak ada yang rusak — server hanya sedang bangun."
+  },
   "nav": {
     "label": "Navigasi utama",
     "home": "Beranda",

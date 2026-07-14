@@ -14,6 +14,10 @@
     "passwordPlaceholder": "Pelo menos 8 caracteres",
     "seedPlaceholder": "palavra palavra palavra …"
   },
+  "backend": {
+    "wakingTitle": "Acordando o servidor…",
+    "wakingHint": "O backend roda em hospedagem gratuita e hiberna após 15 minutos de inatividade. A primeira requisição pode levar até um minuto. Nada quebrou — o servidor está apenas acordando."
+  },
   "nav": {
     "label": "Navegação principal",
     "home": "Início",

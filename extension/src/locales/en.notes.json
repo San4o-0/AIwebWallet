@@ -13,6 +13,8 @@
   "common.passwordRepeatLabel": "Form field label for the confirmation password input.",
   "common.passwordPlaceholder": "Placeholder inside password inputs; states the 8-character minimum.",
   "common.seedPlaceholder": "Placeholder in the seed-phrase textarea; three lowercase example words and an ellipsis.",
+  "backend.wakingTitle": "Headline of the \"server is waking up\" note shown on Home/Activity/Analytics/Send/Approve when a request takes longer than ~3.5s. The backend is hosted on a free tier that suspends the instance after 15 minutes of inactivity, so the first request after a pause needs 30-60s. Keep it calm and short (one line) — it is not an error.",
+  "backend.wakingHint": "Body of that note: explains the free hosting sleeps after 15 minutes of inactivity and the first request may take up to a minute, and reassures that nothing is broken. Keep the \"15 minutes\" and \"a minute\" figures. Max ~3 lines in a 360px popup.",
   "nav.label": "aria-label of the bottom navigation bar (screen readers only).",
   "nav.home": "Bottom nav tab label. Max ~10 chars, one word.",
   "nav.activity": "Bottom nav tab label (transaction history). Max ~10 chars.",

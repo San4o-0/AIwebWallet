@@ -36,10 +36,25 @@ export const CONSENT_VERSION = 1;
 
 /**
  * Політика конфіденційності (посилання з екрана згоди й Налаштувань).
- * TODO(release): замінити на реальний URL опублікованої docs/PRIVACY.md —
- * обидва стори вимагають робоче посилання в лістингу і в самому розширенні.
+ * Опублікована docs/PRIVACY.md на GitHub Pages — робоче посилання потрібне
+ * і в лістингу стора, і всередині розширення.
  */
-export const PRIVACY_POLICY_URL = 'https://argus.example/privacy';
+export const PRIVACY_POLICY_URL = 'https://san4o-0.github.io/AIwebWallet/PRIVACY.html';
+
+/**
+ * Відкриває політику в НОВІЙ ВКЛАДЦІ браузера.
+ *
+ * Саме tabs.create, а не <a target="_blank">: у попапі розширення навігація за
+ * посиланням у частині випадків відкриває сторінку ВСЕРЕДИНІ попапа (360×600),
+ * де немає ані адресного рядка, ані навігації — користувач опиняється в
+ * пастці й мусить закрити попап, втративши стан екрана згоди. Патерн уже
+ * використовується для explorer-посилань (Receive, TxDetail).
+ *
+ * Додаткової permission не потребує: tabs.create з URL доступний без "tabs".
+ */
+export function openPrivacyPolicy(): void {
+  void browser.tabs.create({ url: PRIVACY_POLICY_URL });
+}
 
 export interface DataConsent {
   /** CONSENT_VERSION на момент рішення. */

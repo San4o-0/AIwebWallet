@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 
+import { BackendWakingNote } from '@/src/components/backend-status';
 import { ChainIcon } from '@/src/components/chain-icons';
 import { NetworkOffNote, useNetworkAllowed } from '@/src/components/consent';
 import {
@@ -88,6 +89,11 @@ export default function Home() {
       </section>
 
       {!networkAllowed && <NetworkOffNote />}
+
+      {/* Холодний старт безкоштовного хостингу: замість спінера, що крутиться
+          хвилину «без причини», — чесне пояснення (з'являється лише коли
+          завантаження справді затягнулось). */}
+      <BackendWakingNote pending={networkAllowed && isLoading} />
 
       {networkAllowed && isError && (
         <ErrorNote onRetry={() => void refetch()}>

@@ -14,6 +14,10 @@
     "passwordPlaceholder": "Ít nhất 8 ký tự",
     "seedPlaceholder": "word word word …"
   },
+  "backend": {
+    "wakingTitle": "Đang đánh thức máy chủ…",
+    "wakingHint": "Backend chạy trên hosting miễn phí và sẽ ngủ sau 15 phút không hoạt động. Yêu cầu đầu tiên có thể mất đến một phút. Không có gì hỏng — máy chủ chỉ đang khởi động lại."
+  },
   "nav": {
     "label": "Điều hướng chính",
     "home": "Trang chủ",

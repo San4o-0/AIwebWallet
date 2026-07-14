@@ -1,0 +1,54 @@
+# Render Blueprint — безкоштовний деплой бекенду Argus.
+# Підключається автоматично: Render → New → Blueprint → цей репозиторій.
+#
+# Free tier присипляє сервіс через 15 хв простою (холодний старт 30–60 с).
+# Розширення це переживає (довгий таймаут + стан «сервер прокидається»), але
+# для миттєвого відгуку варто додати безкоштовний пінг /health кожні 10 хв
+# (UptimeRobot / cron-job.org) — див. docs/DEPLOY.md.
+
+services:
+  - type: web
+    name: argus-api
+    runtime: docker
+    plan: free
+    region: frankfurt # найближчий до України з безкоштовних
+    dockerfilePath: ./Dockerfile
+    # Кореневий /health навмисно без rate-limit — щоб проби й keep-alive
+    # не з'їдали бюджет запитів (див. crates/api-server/src/routes.rs).
+    healthCheckPath: /health
+    autoDeploy: true
+
+    envVars:
+      # --- Rate limiting -----------------------------------------------------
+      # ОБОВ'ЯЗКОВО на Render: сервіс стоїть за проксі, і без цього всі запити
+      # злічаться на IP проксі — один клієнт заблокує всіх.
+      - key: TRUST_PROXY_HEADERS
+        value: '1'
+
+      # --- AI: Groq (безкоштовний tier), OpenAI-сумісний API ------------------
+      - key: OPENAI_API_BASE
+        value: https://api.groq.com/openai/v1
+      # Назви моделей Groq змінюються — звір актуальні в консолі Groq.
+      - key: AI_CHAT_MODEL
+        value: llama-3.3-70b-versatile
+      - key: AI_EXPLAIN_MODEL
+        value: llama-3.1-8b-instant
+      # Секрети — вводяться в дашборді Render, НЕ в git.
+      - key: OPENAI_API_KEY
+        sync: false
+      # Опційно: вмикає історію/аналітику EVM-мереж (free tier Etherscan).
+      - key: ETHERSCAN_API_KEY
+        sync: false
+
+      # --- Логи --------------------------------------------------------------
+      - key: RUST_LOG
+        value: api_server=info,tower_http=warn
+
+      # --- CORS --------------------------------------------------------------
+      # ALLOWED_ORIGINS свідомо НЕ задаємо. Причина: Firefox видає розширенню
+      # origin `moz-extension://<UUID>`, де UUID унікальний для КОЖНОЇ
+      # інсталяції — перелічити їх у allowlist фізично неможливо.
+      # Без цієї змінної діє predicate-режим: дозволені лише схеми
+      # chrome-extension:// і moz-extension:// (і localhost для розробки),
+      # а звичайні веб-сторінки (https://будь-який-сайт) блокуються — саме
+      # від них CORS і захищає. Реальний захист ключів — rate limiting.

@@ -23,6 +23,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { BackendWakingNote } from '@/src/components/backend-status';
 import { ChainIcon } from '@/src/components/chain-icons';
 import { IconCheck, IconCopy, IconShield } from '@/src/components/icons';
 import {
@@ -358,6 +359,11 @@ export default function Approve() {
           </span>
         </p>
       </header>
+
+      {/* Холодний старт бекенду: комісія (/tx/params) і саме схвалення
+          (/tx/broadcast) можуть чекати підняття інстансу до хвилини. Поки
+          користувач дивиться на «Отримуємо комісію…», він має розуміти, чому. */}
+      <BackendWakingNote pending={feeLoading || busy} />
 
       {/* --- ФАКТИ: те, за чим ухвалюється рішення --- */}
 

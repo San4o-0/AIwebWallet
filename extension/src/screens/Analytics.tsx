@@ -18,6 +18,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { BackendWakingNote } from '@/src/components/backend-status';
 import { NetworkOffNote, useNetworkAllowed } from '@/src/components/consent';
 import { Card, EmptyState, ErrorNote, Eyebrow } from '@/src/components/ui';
 import { fetchAnalyticsSummary, fetchFeeAnalytics } from '@/src/lib/api';
@@ -109,6 +110,9 @@ export default function Analytics() {
       </div>
 
       {!networkAllowed && <NetworkOffNote />}
+
+      {/* Холодний старт бекенду (безкоштовний хостинг). */}
+      <BackendWakingNote pending={networkAllowed && isLoading} />
 
       {networkAllowed && isError && (
         <ErrorNote

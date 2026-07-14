@@ -22,7 +22,7 @@ import { useTranslation } from 'react-i18next';
 
 import { BrandMark, IconShield } from '@/src/components/icons';
 import { Button, Card, Eyebrow, ScreenTitle, Toggle } from '@/src/components/ui';
-import { PRIVACY_POLICY_URL, saveConsent, type DataConsent } from '@/src/lib/consent';
+import { openPrivacyPolicy, saveConsent, type DataConsent } from '@/src/lib/consent';
 import { useWalletStore } from '@/src/store/wallet';
 
 export type ConsentMode = 'firstRun' | 'update' | 'review';
@@ -169,14 +169,15 @@ export default function DataConsent({
           </section>
         )}
 
-        <a
-          href={PRIVACY_POLICY_URL}
-          target="_blank"
-          rel="noreferrer noopener"
-          className="text-xs font-medium text-accent underline-offset-2 hover:underline"
+        {/* Нова ВКЛАДКА (browser.tabs.create), а не навігація всередині попапа:
+            інакше екран згоди зникає разом із незбереженим вибором. */}
+        <button
+          type="button"
+          onClick={openPrivacyPolicy}
+          className="w-fit text-start text-xs font-medium text-accent underline-offset-2 hover:underline"
         >
           {t('consent.policyLink')}
-        </a>
+        </button>
       </div>
 
       {/* Дії. Обидва варіанти — справжні кнопки однакового розміру: відмова не

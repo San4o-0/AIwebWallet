@@ -14,6 +14,10 @@
     "passwordPlaceholder": "Au moins 8 caractères",
     "seedPlaceholder": "mot mot mot …"
   },
+  "backend": {
+    "wakingTitle": "Réveil du serveur…",
+    "wakingHint": "Le backend est hébergé gratuitement et se met en veille après 15 minutes d'inactivité. La première requête peut prendre jusqu'à une minute. Rien n'est cassé : le serveur se réveille."
+  },
   "nav": {
     "label": "Navigation principale",
     "home": "Accueil",

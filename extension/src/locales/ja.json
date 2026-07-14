@@ -14,6 +14,10 @@
     "passwordPlaceholder": "8文字以上",
     "seedPlaceholder": "word word word …"
   },
+  "backend": {
+    "wakingTitle": "サーバーを起動しています…",
+    "wakingHint": "バックエンドは無料ホスティングで動作しており、15分間操作がないとスリープします。最初のリクエストには最大1分ほどかかることがあります。故障ではなく、サーバーが起動しているだけです。"
+  },
   "nav": {
     "label": "メインナビゲーション",
     "home": "ホーム",

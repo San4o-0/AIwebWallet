@@ -95,7 +95,64 @@ function assertTransportSecure(): void {
   }
 }
 
-const REQUEST_TIMEOUT_MS = 3_000;
+// ---------------------------------------------------------------------------
+// ХОЛОДНИЙ СТАРТ БЕЗКОШТОВНОГО ХОСТИНГУ
+//
+// Бекенд живе на free tier (Render): інстанс присипляється після ~15 хв
+// простою, і ПЕРШИЙ запит після сну чекає на підняття процесу — 30–60 с.
+// Попередній єдиний таймаут 3 с означав, що користувач, який відкрив гаманець
+// після паузи, ГАРАНТОВАНО бачив «бекенд не відповідає». Гаманець виглядав
+// зламаним, хоча все працювало.
+//
+// Рішення — таймаут за КЛАСОМ операції; обидва класи переживають холодний
+// старт, але стеля різна:
+//
+//   read (45 с) — усе, що читає: /balances, /history, /analytics/*, /prices,
+//     /tx/risk, /tx/explain, /tx/decode, /tx/simulate. Чекати тут безпечно
+//     (нічого не підписується), а екран увесь цей час чесно каже «сервер
+//     прокидається», а не крутить порожній спінер.
+//
+//   sign (30 с) — /tx/params і /tx/broadcast. Теж мусять пережити холодний
+//     старт: інакше підпис зривався б на півдорозі (комісії не приїхали) або,
+//     що гірше, підписана транзакція не потрапляла б у мережу. Але стеля
+//     нижча: тут відкрите модальне вікно підпису, і зависання на хвилину
+//     гірше за чесну помилку з кнопкою «Спробувати ще раз».
+//
+// Чому НЕ «адаптивно» (перший запит довгий, наступні короткі): попап — свіжий
+// JS-контекст на КОЖНЕ відкриття, тож «перший запит» там щоразу; тримати
+// прогрітість у storage — зайва рухома частина з власними режимами відмови.
+// Головне: велика стеля нічого не коштує на прогрітому бекенді (він відповідає
+// за ~200 мс незалежно від стелі). Єдина її ціна — довше чекання, коли бекенд
+// СПРАВДІ лежить; саме це закривають нота «сервер прокидається» (UI) і ретраї
+// нижче, а не занижений таймаут.
+// ---------------------------------------------------------------------------
+
+/** Таймаут читання: з запасом на холодний старт Render (30–60 с). */
+const TIMEOUT_READ_MS = 45_000;
+
+/** Таймаут операцій підпису (/tx/params, /tx/broadcast). */
+const TIMEOUT_SIGN_MS = 30_000;
+
+/**
+ * Поріг, після якого UI показує ноту «сервер прокидається» замість голого
+ * спінера (src/components/backend-status.tsx). 3.5 с — свідомо вище за
+ * будь-яку нормальну відповідь прогрітого бекенду, тож на «теплому» шляху
+ * ноти не видно взагалі.
+ */
+export const COLD_START_HINT_MS = 3_500;
+
+/** Скільки АВТОМАТИЧНИХ повторів після транзієнтного збою (усього 3 спроби). */
+const RETRY_ATTEMPTS = 2;
+
+/** База експоненційного бекофу: 1 с → 2 с. */
+const RETRY_BASE_DELAY_MS = 1_000;
+
+/**
+ * Коди, якими фронт-проксі безкоштовного хостингу відповідає, ПОКИ інстанс ще
+ * встає (Render повертає 502/503 у вікні між «запит прийшов» і «процес готовий»).
+ * Це не помилка застосунку — це той самий холодний старт, тільки видимий як HTTP.
+ */
+const TRANSIENT_STATUS = new Set([502, 503, 504]);
 
 class ApiError extends Error {
   constructor(
@@ -107,23 +164,56 @@ class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  assertTransportSecure();
-  // ЄДИНИЙ гейт згоди на всі ендпоінти (окрім SSE-чату — там свій fetch, і
-  // свої assert-и). Стоїть ПЕРЕД fetch: доки згоди немає, з пристрою не йде
-  // жоден байт.
-  await assertNetworkConsent();
+/**
+ * Чи має сенс повторити запит. Транзієнтне — це таймаут (AbortSignal.timeout →
+ * DOMException TimeoutError), обрив мережі/DNS (fetch кидає TypeError) і
+ * 502/503/504 від проксі, що будить інстанс. Усе інше (4xx, 5xx застосунку,
+ * відмова гейта згоди, помилки безпеки verifyTxParams) повторювати НЕ можна:
+ * друга спроба дасть той самий результат, лише повільніше.
+ */
+function isTransient(error: unknown): boolean {
+  if (error instanceof ApiError) return TRANSIENT_STATUS.has(error.status);
+  // Ручне скасування (AbortError) сюди не потрапляє — його повторювати не треба.
+  if (typeof DOMException !== 'undefined' && error instanceof DOMException) {
+    return error.name === 'TimeoutError';
+  }
+  return error instanceof TypeError;
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+interface RequestOptions {
+  /** Клас операції → таймаут (див. блок про холодний старт вище). */
+  kind?: 'read' | 'sign';
+  /** Тіло POST. undefined → GET. */
+  body?: unknown;
+  /**
+   * Чи можна безпечно повторити запит автоматично. false — ТІЛЬКИ
+   * /tx/broadcast: якщо відповідь загубилась уже ПІСЛЯ того, як нода прийняла
+   * транзакцію, повтор отримав би «already known», і користувач побачив би
+   * помилку на транзакції, яка НАСПРАВДІ пішла в мережу. Решта ендпоінтів —
+   * читання (навіть POST /tx/params лише читає nonce і комісії), повтор для
+   * них ідемпотентний.
+   */
+  retriable?: boolean;
+}
+
+/** Одна спроба: fetch із власним таймаутом і розбором помилки бекенду. */
+async function fetchOnce<T>(path: string, body: unknown, timeoutMs: number): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...init,
-    headers: { 'Content-Type': 'application/json', ...init?.headers },
-    signal: init?.signal ?? AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    method: body === undefined ? 'GET' : 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    signal: AbortSignal.timeout(timeoutMs),
   });
   if (!response.ok) {
     // Бекенд повертає {"error": "..."} — дістаємо людський текст, якщо є.
     let detail = `HTTP ${response.status}`;
     try {
-      const body = (await response.json()) as { error?: string };
-      if (typeof body.error === 'string' && body.error.length > 0) detail = body.error;
+      const payload = (await response.json()) as { error?: string };
+      if (typeof payload.error === 'string' && payload.error.length > 0) detail = payload.error;
     } catch {
       /* тіло не JSON — залишаємо HTTP-статус */
     }
@@ -132,8 +222,39 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return (await response.json()) as T;
 }
 
-function post<T>(path: string, body: unknown): Promise<T> {
-  return request<T>(path, { method: 'POST', body: JSON.stringify(body) });
+async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const { kind = 'read', body, retriable = true } = options;
+  assertTransportSecure();
+  // ЄДИНИЙ гейт згоди на всі ендпоінти (окрім SSE-чату — там свій fetch, і
+  // свої assert-и). Стоїть ПЕРЕД fetch (і ПЕРЕД циклом ретраїв): доки згоди
+  // немає, з пристрою не йде жоден байт — і жодна спроба не повторюється.
+  await assertNetworkConsent();
+
+  const timeoutMs = kind === 'sign' ? TIMEOUT_SIGN_MS : TIMEOUT_READ_MS;
+  const attempts = retriable ? RETRY_ATTEMPTS + 1 : 1;
+
+  let lastError: unknown;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      return await fetchOnce<T>(path, body, timeoutMs);
+    } catch (error) {
+      lastError = error;
+      if (!isTransient(error) || attempt === attempts - 1) throw error;
+      // Ключова властивість холодного старту: інстанс уже почав вставати ВІД
+      // НАШОГО Ж запиту, тож після короткого бекофу наступна спроба з великою
+      // ймовірністю потрапляє у вже прогрітий процес.
+      await delay(RETRY_BASE_DELAY_MS * 2 ** attempt);
+    }
+  }
+  throw lastError;
+}
+
+function post<T>(
+  path: string,
+  body: unknown,
+  options: Omit<RequestOptions, 'body'> = {},
+): Promise<T> {
+  return request<T>(path, { ...options, body });
 }
 
 /**
@@ -354,7 +475,16 @@ export async function fetchTxParams(
   isToken = false,
 ): Promise<TxParams> {
   return withBackendRequired(async () => {
-    const params = await post<TxParams>('/tx/params', { chain, from, token: isToken });
+    // kind: 'sign' — таймаут 30 с: параметри мусять доїхати навіть крізь
+    // холодний старт, інакше підпис зривається ще до збірки транзакції.
+    // Запит ідемпотентний (читає nonce/комісії) — автоматичний повтор безпечний.
+    const params = await post<TxParams>(
+      '/tx/params',
+      { chain, from, token: isToken },
+      { kind: 'sign' },
+    );
+    // verifyTxParams — ПІСЛЯ ретраїв: відмова в підписі через chain_id-mismatch
+    // чи абсурдні комісії не є транзієнтною помилкою і не повторюється.
     verifyTxParams(chain, params);
     return params;
   }, 'txParams');
@@ -364,10 +494,16 @@ export async function fetchTxParams(
  * POST /v1/tx/broadcast — трансляція підписаної транзакції.
  * БЕЗ мок-fallback: якщо бекенд недоступний — зрозуміла помилка,
  * жодних фейкових tx-хешів.
+ *
+ * ЄДИНИЙ ендпоінт БЕЗ автоматичного повтору (retriable: false). Він
+ * не ідемпотентний з погляду користувача: якщо нода вже прийняла транзакцію,
+ * а відповідь загубилась, повтор поверне «already known» — і людина побачить
+ * помилку на транзакції, яка насправді пішла. Холодний старт тут закривається
+ * таймаутом (30 с), а не повторами.
  */
 export function broadcastTx(req: BroadcastRequest): Promise<BroadcastResponse> {
   return withBackendRequired(
-    () => post<BroadcastResponse>('/tx/broadcast', req),
+    () => post<BroadcastResponse>('/tx/broadcast', req, { kind: 'sign', retriable: false }),
     'broadcast',
   );
 }

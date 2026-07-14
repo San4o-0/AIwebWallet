@@ -14,6 +14,10 @@
     "passwordPlaceholder": "Co najmniej 8 znaków",
     "seedPlaceholder": "słowo słowo słowo …"
   },
+  "backend": {
+    "wakingTitle": "Budzenie serwera…",
+    "wakingHint": "Backend działa na darmowym hostingu i zasypia po 15 minutach bezczynności. Pierwsze żądanie może potrwać do minuty. Nic się nie zepsuło — serwer się właśnie budzi."
+  },
   "nav": {
     "label": "Nawigacja główna",
     "home": "Start",

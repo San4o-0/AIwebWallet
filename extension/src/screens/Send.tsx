@@ -12,6 +12,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { BackendWakingNote } from '@/src/components/backend-status';
 import { ChainIcon } from '@/src/components/chain-icons';
 import { NetworkOffNote, useNetworkAllowed } from '@/src/components/consent';
 import { IconCheck, IconChevronLeft } from '@/src/components/icons';
@@ -277,6 +278,11 @@ export default function Send() {
           </button>
         </div>
       </div>
+
+      {/* Надсилання = /tx/params + підпис + /tx/broadcast. На холодному старті
+          перші два кроки чекають підняття інстансу — пояснюємо це, поки кнопка
+          в стані «Підписуємо…», щоб пауза не читалась як зависання. */}
+      <BackendWakingNote pending={busy} />
 
       {error !== null && <p className="text-xs leading-relaxed text-danger">{error}</p>}
       {txHash !== null && (

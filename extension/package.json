@@ -16,7 +16,8 @@
     "test:vault": "node scripts/test-vault-migration.mjs",
     "test:security": "node scripts/test-security.mjs",
     "smoke:multivault": "node scripts/smoke-multivault.mjs",
-    "postinstall": "wxt prepare"
+    "postinstall": "wxt prepare",
+    "build:local": "VITE_API_BASE_URL=http://localhost:8080/v1 wxt build -b firefox --mode development"
   },
   "dependencies": {
     "@fontsource/ibm-plex-sans": "^5.2.8",
