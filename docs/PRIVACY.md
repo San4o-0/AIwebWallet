@@ -1,3 +1,7 @@
+---
+title: Argus — Privacy Policy
+---
+
 # Argus — Privacy Policy
 
 **Last updated:** 2026-07-13
@@ -76,6 +80,5 @@ If we change what data is transmitted or who receives it, we will update this po
 
 ## 10. Contact
 
-<!-- TODO: replace with a real contact address and repository URL before publishing. Both stores require a working contact channel. -->
-- Email: `TODO@example.com`
-- Source code: `TODO — repository URL`
+- **Email:** san4ok07@gmail.com
+- **Source code:** https://github.com/San4o-0/AIwebWallet

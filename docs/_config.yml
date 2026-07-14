@@ -1,0 +1,15 @@
+# GitHub Pages (Settings → Pages → Deploy from branch: main, folder /docs).
+#
+# Front matter у PRIVACY.md + ця тема потрібні, щоб Jekyll ЗРЕНДЕРИВ markdown
+# у PRIVACY.html. Без front matter файл віддавався б як сирий .md, а адреса
+# https://san4o-0.github.io/AIwebWallet/PRIVACY.html (вона вшита в екран згоди
+# розширення) повертала б 404.
+
+title: Argus
+description: Non-custodial AI crypto wallet — privacy policy and documentation
+theme: jekyll-theme-minimal
+
+# Внутрішні документи розробки в публічну сторінку не тягнемо.
+exclude:
+  - DEPLOY.md
+  - AMO_BUILD.md
